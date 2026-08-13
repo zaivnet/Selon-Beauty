@@ -33,7 +33,7 @@ Aplikasi Sistem Presensi, Penjadwalan Kerja, dan Manajemen Karyawan Berbasis Web
 
 ```bash
 # 1. Clone Repository
-git clone <REPOSITORY_URL> <PROJECT_ROOT>
+git clone https://github.com/zaivnet/Selon-Beauty <PROJECT_ROOT>
 cd <PROJECT_ROOT>
 
 # 2. Install Dependensi Composer (Production)
