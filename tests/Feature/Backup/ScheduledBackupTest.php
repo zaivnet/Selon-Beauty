@@ -113,4 +113,19 @@ class ScheduledBackupTest extends TestCase
         $this->assertEquals('completed', $safetyBackup->status);
         $this->assertTrue($safetyBackup->is_pre_restore);
     }
+
+    public function test_scheduler_executes_scheduled_backup_in_process_without_child_php_binary(): void
+    {
+        $nowStr = now('Asia/Jakarta')->format('H:i');
+        AppSetting::set('backup_scheduled_enabled', true, 'boolean', true);
+        AppSetting::set('backup_scheduled_time', $nowStr, 'string', true);
+        AppSetting::set('backup_scheduled_type', 'database', 'string', true);
+
+        $this->artisan('schedule:run')->assertExitCode(0);
+
+        $this->assertEquals(1, BackupRecord::count());
+        $record = BackupRecord::first();
+        $this->assertNull($record->created_by);
+        $this->assertEquals('completed', $record->status);
+    }
 }

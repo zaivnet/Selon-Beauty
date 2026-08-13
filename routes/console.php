@@ -8,7 +8,10 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('app:run-scheduled-backup')
+Schedule::call(function () {
+    Artisan::call('app:run-scheduled-backup');
+})
+    ->name('app-run-scheduled-backup')
     ->everyMinute()
     ->withoutOverlapping()
     ->timezone('Asia/Jakarta');

@@ -30,7 +30,7 @@ class BrandingService
 
     public function getAppShortName(): string
     {
-        return $this->getSetting('app_short_name', config('app.name', 'Attendance & Scheduling'));
+        return $this->getSetting('app_short_name', 'SELON BEAUTY');
     }
 
     public function getCompanyName(): string
