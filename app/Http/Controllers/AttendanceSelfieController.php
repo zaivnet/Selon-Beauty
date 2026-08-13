@@ -29,7 +29,7 @@ class AttendanceSelfieController extends Controller
         // Authorization check:
         // Owner/Admin: allowed to view any employee's selfie.
         // Employee: allowed ONLY IF record belongs to their employee_id.
-        $isOwnerOrAdmin = in_array($user->role, ['owner', 'admin'], true);
+        $isOwnerOrAdmin = in_array($user->role, ['superadmin', 'owner', 'admin'], true);
         $isOwnRecord = $user->employee && $record->employee_id === $user->employee->id;
 
         if (! $isOwnerOrAdmin && ! $isOwnRecord) {

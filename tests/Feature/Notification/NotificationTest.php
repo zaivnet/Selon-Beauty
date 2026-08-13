@@ -18,8 +18,10 @@ use App\Services\LeaveRequestService;
 use App\Services\OvertimeRequestService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class NotificationTest extends TestCase
@@ -27,13 +29,21 @@ class NotificationTest extends TestCase
     use RefreshDatabase;
 
     protected User $ownerUser;
+
     protected User $adminUser;
+
     protected User $employeeUser1;
+
     protected Employee $employee1;
+
     protected User $employeeUser2;
+
     protected Employee $employee2;
+
     protected Shift $shiftNormal;
+
     protected LeaveRequestService $leaveService;
+
     protected OvertimeRequestService $overtimeService;
 
     protected function setUp(): void
@@ -333,6 +343,26 @@ class NotificationTest extends TestCase
         $response = $this->actingAs($this->employeeUser1)->post(route('notifications.read', $notification->id));
 
         $response->assertRedirect(route('employee.leave-requests.index'));
+    }
+
+    public function test_legacy_action_url_notification_remains_clickable(): void
+    {
+        $id = (string) Str::uuid();
+        DB::table('notifications')->insert([
+            'id' => $id,
+            'type' => 'LegacyNotification',
+            'notifiable_type' => User::class,
+            'notifiable_id' => $this->employeeUser1->id,
+            'data' => json_encode(['title' => 'Legacy', 'action_url' => route('employee.dashboard')]),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($this->employeeUser1)
+            ->post(route('notifications.read', $id))
+            ->assertRedirect(route('employee.dashboard'));
+
+        $this->assertNotNull($this->employeeUser1->notifications()->findOrFail($id)->read_at);
     }
 
     public function test_application_works_without_redis(): void

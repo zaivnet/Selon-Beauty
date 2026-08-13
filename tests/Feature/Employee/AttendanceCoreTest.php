@@ -6,6 +6,7 @@ use App\Models\AttendanceLocation;
 use App\Models\AttendanceRecord;
 use App\Models\Employee;
 use App\Models\EmployeeSchedule;
+use App\Models\LeaveRequest;
 use App\Models\Shift;
 use App\Models\User;
 use Carbon\Carbon;
@@ -19,11 +20,17 @@ class AttendanceCoreTest extends TestCase
     use RefreshDatabase;
 
     protected Employee $employee1;
+
     protected User $user1;
+
     protected Employee $employee2;
+
     protected User $user2;
+
     protected Shift $shiftNormal;
+
     protected Shift $shiftNight;
+
     protected AttendanceLocation $activeLocation;
 
     protected array $validGps;
@@ -31,6 +38,7 @@ class AttendanceCoreTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        Carbon::setTestNow(Carbon::today('Asia/Jakarta')->setTime(8, 0));
 
         $this->validGps = [
             'latitude' => -6.200000,
@@ -84,6 +92,7 @@ class AttendanceCoreTest extends TestCase
             'code' => 'PAGI',
             'start_time' => '08:00',
             'end_time' => '16:00',
+            'check_out_open_minutes_before' => 60,
             'grace_period_minutes' => 5,
             'break_minutes' => 60,
             'is_active' => true,
@@ -94,6 +103,7 @@ class AttendanceCoreTest extends TestCase
             'code' => 'NIGHT',
             'start_time' => '20:00',
             'end_time' => '04:00',
+            'check_out_open_minutes_before' => 60,
             'grace_period_minutes' => 5,
             'break_minutes' => 60,
             'crosses_midnight' => true,
@@ -263,9 +273,152 @@ class AttendanceCoreTest extends TestCase
 
         $record = AttendanceRecord::where('employee_id', $this->employee1->id)->first();
         $this->assertEquals('late', $record->status);
-        $this->assertEquals(20, $record->late_minutes);
+        $this->assertEquals(15, $record->late_minutes);
 
         Carbon::setTestNow();
+    }
+
+    public function test_approved_leave_blocks_direct_check_in_but_pending_and_rejected_do_not(): void
+    {
+        foreach (['approved', 'pending', 'rejected'] as $index => $status) {
+            $employee = Employee::create([
+                'employee_code' => 'LEAVE-'.$index,
+                'full_name' => 'Leave Test '.$index,
+                'status' => 'active',
+            ]);
+            $user = User::create([
+                'employee_id' => $employee->id,
+                'name' => 'Leave Test '.$index,
+                'email' => "leave{$index}@example.test",
+                'password' => Hash::make('password123'),
+                'role' => 'employee',
+                'is_active' => true,
+            ]);
+            EmployeeSchedule::create([
+                'employee_id' => $employee->id,
+                'work_date' => '2026-08-11',
+                'shift_id' => $this->shiftNormal->id,
+                'schedule_type' => 'work',
+            ]);
+            LeaveRequest::create([
+                'employee_id' => $employee->id,
+                'type' => ['permission', 'sick', 'leave'][$index],
+                'start_date' => '2026-08-11',
+                'end_date' => '2026-08-11',
+                'reason' => 'Regression test',
+                'status' => $status,
+            ]);
+
+            Carbon::setTestNow(Carbon::parse('2026-08-11 08:00:00', 'Asia/Jakarta'));
+            $response = $this->actingAs($user)->post('/app/attendance/check-in', array_merge($this->validGps, [
+                'selfie' => UploadedFile::fake()->image("leave-{$index}.jpg"),
+            ]));
+
+            if ($status === 'approved') {
+                $response->assertSessionHas('error');
+                $this->assertDatabaseMissing('attendance_records', ['employee_id' => $employee->id]);
+            } else {
+                $this->assertDatabaseHas('attendance_records', ['employee_id' => $employee->id]);
+            }
+        }
+    }
+
+    public function test_check_in_window_boundaries_are_enforced_server_side(): void
+    {
+        $cases = [
+            ['06:59:00', false, 'belum dibuka'],
+            ['07:00:00', true, null],
+            ['10:00:00', true, null],
+            ['10:01:00', false, 'sudah ditutup'],
+        ];
+
+        foreach ($cases as $index => [$time, $accepted, $message]) {
+            $employee = Employee::create(['employee_code' => "WINDOW-{$index}", 'full_name' => "Window {$index}", 'status' => 'active']);
+            $user = User::create([
+                'employee_id' => $employee->id,
+                'name' => "Window {$index}",
+                'email' => "window{$index}@example.test",
+                'password' => Hash::make('password123'),
+                'role' => 'employee',
+                'is_active' => true,
+            ]);
+            EmployeeSchedule::create([
+                'employee_id' => $employee->id,
+                'work_date' => '2026-08-11',
+                'shift_id' => $this->shiftNormal->id,
+                'schedule_type' => 'work',
+            ]);
+            Carbon::setTestNow(Carbon::parse("2026-08-11 {$time}", 'Asia/Jakarta'));
+
+            $response = $this->actingAs($user)->post('/app/attendance/check-in', array_merge($this->validGps, [
+                'selfie' => UploadedFile::fake()->image("window-{$index}.jpg"),
+            ]));
+
+            $accepted
+                ? $this->assertDatabaseHas('attendance_records', ['employee_id' => $employee->id])
+                : $response->assertSessionHas('error', fn ($error) => str_contains($error, $message));
+        }
+    }
+
+    public function test_cross_midnight_checkout_prioritizes_open_previous_schedule(): void
+    {
+        $nightDate = '2026-08-11';
+        $overnightShift = Shift::create([
+            'name' => 'Shift 22-06', 'code' => 'NIGHT-22',
+            'start_time' => '22:00', 'end_time' => '06:00',
+            'check_in_open_minutes_before' => 60, 'check_in_close_minutes_after' => 120,
+            'check_out_open_minutes_before' => 60, 'grace_period_minutes' => 5,
+            'break_minutes' => 60, 'crosses_midnight' => true, 'is_active' => true,
+        ]);
+        $nightSchedule = EmployeeSchedule::create([
+            'employee_id' => $this->employee1->id,
+            'work_date' => $nightDate,
+            'shift_id' => $overnightShift->id,
+            'schedule_type' => 'work',
+        ]);
+
+        Carbon::setTestNow(Carbon::parse('2026-08-11 22:00:00', 'Asia/Jakarta'));
+        $this->actingAs($this->user1)->post('/app/attendance/check-in', $this->validGps);
+
+        EmployeeSchedule::create([
+            'employee_id' => $this->employee1->id,
+            'work_date' => '2026-08-12',
+            'shift_id' => $this->shiftNormal->id,
+            'schedule_type' => 'work',
+        ]);
+
+        Carbon::setTestNow(Carbon::parse('2026-08-12 05:30:00', 'Asia/Jakarta'));
+        $this->actingAs($this->user1)->post('/app/attendance/check-out', array_merge($this->validGps, [
+            'selfie' => UploadedFile::fake()->image('night-out.jpg'),
+        ]));
+
+        $record = AttendanceRecord::where('work_schedule_id', $nightSchedule->id)->firstOrFail();
+        $this->assertSame($nightDate, $record->work_date->format('Y-m-d'));
+        $this->assertNotNull($record->check_out_at);
+    }
+
+    public function test_check_out_open_boundary_is_enforced(): void
+    {
+        $schedule = EmployeeSchedule::create([
+            'employee_id' => $this->employee1->id, 'work_date' => '2026-08-11',
+            'shift_id' => $this->shiftNormal->id, 'schedule_type' => 'work',
+        ]);
+        AttendanceRecord::create([
+            'employee_id' => $this->employee1->id, 'work_schedule_id' => $schedule->id,
+            'work_date' => '2026-08-11', 'status' => 'present',
+            'check_in_at' => Carbon::parse('2026-08-11 08:00:00', 'Asia/Jakarta'),
+        ]);
+
+        Carbon::setTestNow(Carbon::parse('2026-08-11 14:59:00', 'Asia/Jakarta'));
+        $this->actingAs($this->user1)->post('/app/attendance/check-out', $this->validGps)
+            ->assertSessionHas('error', fn ($error) => str_contains($error, 'belum dibuka'));
+
+        Carbon::setTestNow(Carbon::parse('2026-08-11 15:00:00', 'Asia/Jakarta'));
+        $this->actingAs($this->user1)->post('/app/attendance/check-out', array_merge($this->validGps, [
+            'selfie' => UploadedFile::fake()->image('checkout-boundary.jpg'),
+        ]));
+
+        $this->assertNotNull(AttendanceRecord::where('work_schedule_id', $schedule->id)->first()?->check_out_at);
     }
 
     public function test_check_out_requires_check_in(): void

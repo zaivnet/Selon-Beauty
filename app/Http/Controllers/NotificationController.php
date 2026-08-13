@@ -53,7 +53,7 @@ class NotificationController extends Controller
             ]);
         }
 
-        $targetUrl = $notification->data['target_url'] ?? null;
+        $targetUrl = $notification->data['target_url'] ?? $notification->data['action_url'] ?? null;
         if ($targetUrl) {
             return redirect($targetUrl);
         }

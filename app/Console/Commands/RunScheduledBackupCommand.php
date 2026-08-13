@@ -4,6 +4,8 @@ namespace App\Console\Commands;
 
 use App\Models\AppSetting;
 use App\Models\BackupRecord;
+use App\Models\User;
+use App\Notifications\ScheduledBackupFailedNotification;
 use App\Services\BackupService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -35,6 +37,7 @@ class RunScheduledBackupCommand extends Command
 
         if (! $enabled && ! $isForced) {
             $this->info('Scheduled backup tidak aktif (disabled).');
+
             return Command::SUCCESS;
         }
 
@@ -49,11 +52,13 @@ class RunScheduledBackupCommand extends Command
             $currentTimeStr = $now->format('H:i');
             if ($currentTimeStr !== $targetTime) {
                 $this->info("Waktu saat ini ({$currentTimeStr}) belum sesuai jam jadwal ({$targetTime}). Skipped.");
+
                 return Command::SUCCESS;
             }
 
             if ($frequency === 'weekly' && (int) $now->dayOfWeek !== $targetDay) {
                 $this->info("Hari saat ini ({$now->format('l')}) belum sesuai hari jadwal ({$targetDay}). Skipped.");
+
                 return Command::SUCCESS;
             }
         }
@@ -69,6 +74,7 @@ class RunScheduledBackupCommand extends Command
 
         if ($alreadyRun && ! $isForced) {
             $this->info("Scheduled backup untuk hari ini ({$now->toDateString()}) sudah pernah dibuat. Skipped.");
+
             return Command::SUCCESS;
         }
 
@@ -84,7 +90,21 @@ class RunScheduledBackupCommand extends Command
             return Command::SUCCESS;
         } catch (\Throwable $e) {
             $this->error("Gagal menjalankan scheduled backup: {$e->getMessage()}");
-            Log::error("Scheduled backup command failed: {$e->getMessage()}");
+            Log::error('Scheduled backup command failed.', [
+                'exception' => $e,
+            ]);
+
+            try {
+                User::whereIn('role', ['superadmin', 'owner'])
+                    ->where('is_active', true)
+                    ->each(fn (User $user) => $user->notify(new ScheduledBackupFailedNotification($e->getMessage())));
+            } catch (\Throwable $notificationException) {
+                Log::error('Scheduled backup failure notification could not be sent.', [
+                    'primary_exception' => $e->getMessage(),
+                    'notification_exception' => $notificationException,
+                ]);
+            }
+
             return Command::FAILURE;
         }
     }

@@ -259,6 +259,7 @@
             </div>
         </div>
 
+        @if($requireSelfie)
         <!-- Selfie Camera Section -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-4">
             <div class="flex items-center justify-between">
@@ -326,6 +327,7 @@
                 </div>
             </div>
         </div>
+        @endif
 
         <!-- Submit Attendance Form Container -->
         <div id="absen-card" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-3">
@@ -341,7 +343,7 @@
 
                     <button type="submit" id="btn-check-in" disabled class="w-full py-3.5 px-4 bg-gradient-to-r from-rose-600 to-pink-600 text-white font-extrabold rounded-xl text-sm flex items-center justify-center gap-2 shadow-md transition-all opacity-50 cursor-not-allowed">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
-                        <span>Absen Masuk (Lengkapi Lokasi & Selfie)</span>
+                        <span>Absen Masuk (Lengkapi Lokasi{{ $requireSelfie ? ' & Selfie' : '' }})</span>
                     </button>
                 </form>
             @elseif(!$todayAttendance->check_out_at)
@@ -356,7 +358,7 @@
 
                     <button type="submit" id="btn-check-out" disabled class="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-extrabold rounded-xl text-sm flex items-center justify-center gap-2 shadow-md transition-all opacity-50 cursor-not-allowed">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                        <span>Absen Keluar (Lengkapi Lokasi & Selfie)</span>
+                        <span>Absen Keluar (Lengkapi Lokasi{{ $requireSelfie ? ' & Selfie' : '' }})</span>
                     </button>
                 </form>
             @endif
@@ -375,7 +377,8 @@
 <!-- Client-side Browser Geolocation & Camera Script -->
 <script>
 let isGpsValid = false;
-let isSelfieConfirmed = false;
+const isSelfieRequired = @json($requireSelfie);
+let isSelfieConfirmed = !isSelfieRequired;
 let cameraStream = null;
 
 // Haversine Distance Calculation for Instant UX Feedback

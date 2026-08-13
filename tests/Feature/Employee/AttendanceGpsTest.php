@@ -10,6 +10,7 @@ use App\Models\Shift;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -19,16 +20,23 @@ class AttendanceGpsTest extends TestCase
     use RefreshDatabase;
 
     protected Employee $employee1;
+
     protected User $user1;
+
     protected Employee $employee2;
+
     protected User $user2;
+
     protected Shift $shiftNormal;
+
     protected Shift $shiftNight;
+
     protected AttendanceLocation $activeLocation;
 
     protected function setUp(): void
     {
         parent::setUp();
+        Carbon::setTestNow(Carbon::today('Asia/Jakarta')->setTime(8, 0));
 
         $this->employee1 = Employee::create([
             'employee_code' => 'SB-001',
@@ -113,7 +121,7 @@ class AttendanceGpsTest extends TestCase
             'latitude' => -6.200050,
             'longitude' => 106.816666,
             'accuracy' => 15.0,
-            'selfie' => \Illuminate\Http\UploadedFile::fake()->image('selfie.jpg'),
+            'selfie' => UploadedFile::fake()->image('selfie.jpg'),
         ]);
 
         $response->assertRedirect();
@@ -137,7 +145,7 @@ class AttendanceGpsTest extends TestCase
             'latitude' => -6.203000,
             'longitude' => 106.816666,
             'accuracy' => 10.0,
-            'selfie' => \Illuminate\Http\UploadedFile::fake()->image('selfie.jpg'),
+            'selfie' => UploadedFile::fake()->image('selfie.jpg'),
         ]);
 
         $response->assertRedirect();
@@ -162,7 +170,7 @@ class AttendanceGpsTest extends TestCase
             'latitude' => -6.200000,
             'longitude' => 106.816666,
             'accuracy' => 145.0,
-            'selfie' => \Illuminate\Http\UploadedFile::fake()->image('selfie.jpg'),
+            'selfie' => UploadedFile::fake()->image('selfie.jpg'),
         ]);
 
         $response->assertRedirect();
@@ -183,7 +191,7 @@ class AttendanceGpsTest extends TestCase
             'latitude' => 120.0, // Invalid latitude (> 90)
             'longitude' => 106.816666,
             'accuracy' => 10.0,
-            'selfie' => \Illuminate\Http\UploadedFile::fake()->image('selfie.jpg'),
+            'selfie' => UploadedFile::fake()->image('selfie.jpg'),
         ]);
 
         $response->assertRedirect();
@@ -204,7 +212,7 @@ class AttendanceGpsTest extends TestCase
             'latitude' => -6.200000,
             'longitude' => 200.0, // Invalid longitude (> 180)
             'accuracy' => 10.0,
-            'selfie' => \Illuminate\Http\UploadedFile::fake()->image('selfie.jpg'),
+            'selfie' => UploadedFile::fake()->image('selfie.jpg'),
         ]);
 
         $response->assertRedirect();
@@ -227,7 +235,7 @@ class AttendanceGpsTest extends TestCase
             'latitude' => -6.200000,
             'longitude' => 106.816666,
             'accuracy' => 10.0,
-            'selfie' => \Illuminate\Http\UploadedFile::fake()->image('selfie.jpg'),
+            'selfie' => UploadedFile::fake()->image('selfie.jpg'),
         ]);
 
         $response->assertRedirect();
@@ -250,7 +258,7 @@ class AttendanceGpsTest extends TestCase
             'longitude' => 106.816666,
             'accuracy' => 10.0,
             'distance' => 0.0, // Forged distance
-            'selfie' => \Illuminate\Http\UploadedFile::fake()->image('selfie.jpg'),
+            'selfie' => UploadedFile::fake()->image('selfie.jpg'),
         ]);
 
         $record = AttendanceRecord::where('employee_id', $this->employee1->id)->first();
@@ -274,7 +282,7 @@ class AttendanceGpsTest extends TestCase
             'longitude' => 106.816666,
             'accuracy' => 10.0,
             'distance' => 1.0,
-            'selfie' => \Illuminate\Http\UploadedFile::fake()->image('selfie.jpg'),
+            'selfie' => UploadedFile::fake()->image('selfie.jpg'),
         ]);
 
         $response->assertRedirect();
@@ -297,7 +305,7 @@ class AttendanceGpsTest extends TestCase
             'latitude' => -6.200000,
             'longitude' => 106.816666,
             'accuracy' => 10.0,
-            'selfie' => \Illuminate\Http\UploadedFile::fake()->image('selfie.jpg'),
+            'selfie' => UploadedFile::fake()->image('selfie.jpg'),
         ]);
 
         // Must NOT check in for Employee 2
@@ -320,7 +328,7 @@ class AttendanceGpsTest extends TestCase
             'latitude' => -6.200000,
             'longitude' => 106.816666,
             'accuracy' => 12.5,
-            'selfie' => \Illuminate\Http\UploadedFile::fake()->image('selfie.jpg'),
+            'selfie' => UploadedFile::fake()->image('selfie.jpg'),
         ]);
 
         $record = AttendanceRecord::where('employee_id', $this->employee1->id)->first();
@@ -352,7 +360,7 @@ class AttendanceGpsTest extends TestCase
             'latitude' => -6.200000,
             'longitude' => 106.816666,
             'accuracy' => 10.0,
-            'selfie' => \Illuminate\Http\UploadedFile::fake()->image('selfie.jpg'),
+            'selfie' => UploadedFile::fake()->image('selfie.jpg'),
         ]);
 
         // Checkout outside radius (300m away)
@@ -361,7 +369,7 @@ class AttendanceGpsTest extends TestCase
             'latitude' => -6.203000,
             'longitude' => 106.816666,
             'accuracy' => 10.0,
-            'selfie' => \Illuminate\Http\UploadedFile::fake()->image('selfie.jpg'),
+            'selfie' => UploadedFile::fake()->image('selfie.jpg'),
         ]);
 
         $response->assertRedirect();
@@ -390,7 +398,7 @@ class AttendanceGpsTest extends TestCase
             'latitude' => -6.200000,
             'longitude' => 106.816666,
             'accuracy' => 10.0,
-            'selfie' => \Illuminate\Http\UploadedFile::fake()->image('selfie.jpg'),
+            'selfie' => UploadedFile::fake()->image('selfie.jpg'),
         ]);
 
         // Checkout outside radius with setting disabled -> accepted & evidence saved
@@ -399,7 +407,7 @@ class AttendanceGpsTest extends TestCase
             'latitude' => -6.203000,
             'longitude' => 106.816666,
             'accuracy' => 10.0,
-            'selfie' => \Illuminate\Http\UploadedFile::fake()->image('selfie.jpg'),
+            'selfie' => UploadedFile::fake()->image('selfie.jpg'),
         ]);
 
         $response->assertRedirect();
@@ -425,7 +433,7 @@ class AttendanceGpsTest extends TestCase
             'latitude' => -6.200000,
             'longitude' => 106.816666,
             'accuracy' => 10.0,
-            'selfie' => \Illuminate\Http\UploadedFile::fake()->image('selfie.jpg'),
+            'selfie' => UploadedFile::fake()->image('selfie.jpg'),
         ]);
 
         Carbon::setTestNow(Carbon::parse('2026-08-12 04:00:00', 'Asia/Jakarta'));
@@ -433,7 +441,7 @@ class AttendanceGpsTest extends TestCase
             'latitude' => -6.200000,
             'longitude' => 106.816666,
             'accuracy' => 10.0,
-            'selfie' => \Illuminate\Http\UploadedFile::fake()->image('selfie.jpg'),
+            'selfie' => UploadedFile::fake()->image('selfie.jpg'),
         ]);
 
         $record = AttendanceRecord::where('employee_id', $this->employee1->id)->first();

@@ -50,8 +50,8 @@
                 @endphp
                 
                 <!-- Notification Bell -->
-                <div class="relative" x-data="{ open: false }">
-                    <button @click="open = !open" class="relative p-2 text-rose-100 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all cursor-pointer focus:outline-none min-h-[44px] min-w-[44px] flex items-center justify-center" title="Notifikasi">
+                <div id="employee-notification-menu" class="relative">
+                    <button id="employee-notification-toggle" type="button" aria-expanded="false" aria-controls="employee-notification-dropdown" class="relative p-2 text-rose-100 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all cursor-pointer focus:outline-none min-h-[44px] min-w-[44px] flex items-center justify-center" title="Notifikasi">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                         @if($unreadCount > 0)
                             <span class="absolute top-0.5 right-0.5 px-1.5 py-0.5 text-[9px] font-black leading-none text-white bg-pink-500 rounded-full border-2 border-rose-700 min-w-[16px] text-center">
@@ -61,7 +61,7 @@
                     </button>
 
                     <!-- Dropdown Panel (Mobile Optimized) -->
-                    <div x-show="open" @click.away="open = false" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95" class="absolute right-0 mt-2 w-72 sm:w-80 bg-white text-slate-900 rounded-2xl shadow-xl border border-slate-200 py-2 z-50 divide-y divide-slate-100" style="display: none;">
+                    <div id="employee-notification-dropdown" class="hidden absolute right-0 mt-2 w-72 sm:w-80 bg-white text-slate-900 rounded-2xl shadow-xl border border-slate-200 py-2 z-50 divide-y divide-slate-100">
                         <div class="px-4 py-2.5 flex items-center justify-between">
                             <span class="text-xs font-black text-slate-900">Notifikasi ({{ $unreadCount }} Baru)</span>
                             @if($unreadCount > 0)
@@ -155,6 +155,31 @@
     <!-- PWA Install Banner & Service Worker Script -->
     <script>
         let deferredPwaPrompt = null;
+
+        const notificationMenu = document.getElementById('employee-notification-menu');
+        const notificationToggle = document.getElementById('employee-notification-toggle');
+        const notificationDropdown = document.getElementById('employee-notification-dropdown');
+
+        function closeNotificationMenu() {
+            notificationDropdown?.classList.add('hidden');
+            notificationToggle?.setAttribute('aria-expanded', 'false');
+        }
+
+        notificationToggle?.addEventListener('click', function () {
+            const willOpen = notificationDropdown.classList.contains('hidden');
+            notificationDropdown.classList.toggle('hidden', !willOpen);
+            notificationToggle.setAttribute('aria-expanded', String(willOpen));
+        });
+
+        document.addEventListener('click', function (event) {
+            if (notificationMenu && !notificationMenu.contains(event.target)) {
+                closeNotificationMenu();
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') closeNotificationMenu();
+        });
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {

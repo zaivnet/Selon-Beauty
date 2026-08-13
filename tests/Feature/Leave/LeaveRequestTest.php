@@ -3,14 +3,12 @@
 namespace Tests\Feature\Leave;
 
 use App\Models\AttendanceLocation;
-use App\Models\AttendanceRecord;
 use App\Models\Employee;
 use App\Models\EmployeeSchedule;
 use App\Models\LeaveRequest;
 use App\Models\Shift;
 use App\Models\User;
 use App\Services\AttendanceMonitoringService;
-use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
@@ -22,12 +20,19 @@ class LeaveRequestTest extends TestCase
     use RefreshDatabase;
 
     protected User $ownerUser;
+
     protected User $adminUser;
+
     protected User $employeeUser1;
+
     protected Employee $employee1;
+
     protected User $employeeUser2;
+
     protected Employee $employee2;
+
     protected Shift $shiftNormal;
+
     protected AttendanceLocation $location;
 
     protected function setUp(): void
@@ -422,6 +427,25 @@ class LeaveRequestTest extends TestCase
         // Employee 2 attempting to view Employee 1's attachment -> 403 Forbidden
         $response = $this->actingAs($this->employeeUser2)->get("/leave-requests/attachment/{$req->id}");
         $response->assertStatus(403);
+    }
+
+    public function test_superadmin_can_access_private_leave_attachment(): void
+    {
+        $superadmin = User::create([
+            'name' => 'Superadmin', 'email' => 'superadmin@example.test',
+            'password' => Hash::make('password123'), 'role' => 'superadmin', 'is_active' => true,
+        ]);
+        $path = Storage::disk('local')->putFile(
+            'leave-attachments/1/2026/08',
+            UploadedFile::fake()->image('bukti-superadmin.jpg')
+        );
+        $request = LeaveRequest::create([
+            'employee_id' => $this->employee1->id, 'type' => 'sick',
+            'start_date' => '2026-08-15', 'end_date' => '2026-08-15',
+            'reason' => 'Sakit', 'attachment_path' => $path, 'status' => 'approved',
+        ]);
+
+        $this->actingAs($superadmin)->get("/leave-requests/attachment/{$request->id}")->assertOk();
     }
 
     public function test_approved_permission_reflected_in_attendance_dashboard(): void

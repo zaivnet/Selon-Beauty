@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Employee;
 
+use App\Models\AppSetting;
 use App\Models\AttendanceLocation;
 use App\Models\AttendanceRecord;
 use App\Models\Employee;
@@ -20,12 +21,19 @@ class SelfieAttendanceTest extends TestCase
     use RefreshDatabase;
 
     protected Employee $employee1;
+
     protected User $user1;
+
     protected Employee $employee2;
+
     protected User $user2;
+
     protected User $ownerUser;
+
     protected Shift $shiftNormal;
+
     protected Shift $shiftNight;
+
     protected AttendanceLocation $activeLocation;
 
     protected array $validGps = [
@@ -38,6 +46,7 @@ class SelfieAttendanceTest extends TestCase
     {
         parent::setUp();
         Storage::fake('local');
+        Carbon::setTestNow(Carbon::today('Asia/Jakarta')->setTime(8, 0));
 
         $this->employee1 = Employee::create([
             'employee_code' => 'SB-001',
@@ -92,6 +101,7 @@ class SelfieAttendanceTest extends TestCase
             'code' => 'PAGI',
             'start_time' => '08:00',
             'end_time' => '16:00',
+            'check_out_open_minutes_before' => 60,
             'grace_period_minutes' => 5,
             'break_minutes' => 60,
             'is_active' => true,
@@ -102,6 +112,7 @@ class SelfieAttendanceTest extends TestCase
             'code' => 'NIGHT',
             'start_time' => '20:00',
             'end_time' => '04:00',
+            'check_out_open_minutes_before' => 60,
             'grace_period_minutes' => 5,
             'break_minutes' => 60,
             'crosses_midnight' => true,
@@ -310,6 +321,38 @@ class SelfieAttendanceTest extends TestCase
         $response->assertOk();
     }
 
+    public function test_superadmin_can_access_attendance_selfie(): void
+    {
+        $superadmin = User::create([
+            'name' => 'Superadmin', 'email' => 'superadmin@example.test',
+            'password' => Hash::make('password123'), 'role' => 'superadmin', 'is_active' => true,
+        ]);
+        EmployeeSchedule::create([
+            'employee_id' => $this->employee1->id, 'work_date' => date('Y-m-d'),
+            'shift_id' => $this->shiftNormal->id, 'schedule_type' => 'work',
+        ]);
+        $this->actingAs($this->user1)->post('/app/attendance/check-in', array_merge($this->validGps, [
+            'selfie' => UploadedFile::fake()->image('superadmin-evidence.jpg'),
+        ]));
+        $record = AttendanceRecord::where('employee_id', $this->employee1->id)->firstOrFail();
+
+        $this->actingAs($superadmin)->get("/attendance/selfie/{$record->id}/check_in")->assertOk();
+    }
+
+    public function test_selfie_setting_off_allows_attendance_without_selfie(): void
+    {
+        AppSetting::set('attendance_require_selfie', false, 'boolean');
+        EmployeeSchedule::create([
+            'employee_id' => $this->employee1->id, 'work_date' => date('Y-m-d'),
+            'shift_id' => $this->shiftNormal->id, 'schedule_type' => 'work',
+        ]);
+
+        $this->actingAs($this->user1)->post('/app/attendance/check-in', $this->validGps);
+
+        $record = AttendanceRecord::where('employee_id', $this->employee1->id)->firstOrFail();
+        $this->assertNull($record->check_in_selfie_path);
+    }
+
     public function test_gps_still_required_when_selfie_valid(): void
     {
         $today = date('Y-m-d');
@@ -359,6 +402,7 @@ class SelfieAttendanceTest extends TestCase
         $this->assertDatabaseMissing('attendance_records', [
             'employee_id' => $this->employee1->id,
         ]);
+        $this->assertSame([], Storage::disk('local')->allFiles());
     }
 
     public function test_duplicate_check_in_still_rejected(): void

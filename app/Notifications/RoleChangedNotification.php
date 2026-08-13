@@ -35,7 +35,7 @@ class RoleChangedNotification extends Notification
             'message' => "Hak akses akun Anda diubah dari {$beforeLabel} menjadi {$afterLabel}.",
             'before_role' => $this->beforeRole,
             'after_role' => $this->afterRole,
-            'action_url' => $actionUrl,
+            'target_url' => $actionUrl,
         ];
     }
 }

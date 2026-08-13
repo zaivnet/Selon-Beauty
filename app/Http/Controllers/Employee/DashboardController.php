@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
+use App\Models\AppSetting;
 use App\Models\AttendanceLocation;
 use App\Models\AttendanceRecord;
 use App\Models\LeaveRequest;
@@ -53,6 +54,7 @@ class DashboardController extends Controller
             'todayAttendance' => $todayAttendance,
             'todayLeave' => $todayLeave,
             'activeLocation' => $activeLocation,
+            'requireSelfie' => (bool) AppSetting::get('attendance_require_selfie', true),
         ]);
     }
 }

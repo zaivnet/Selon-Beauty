@@ -6,7 +6,6 @@ use App\Models\AppSetting;
 use App\Models\AuditLog;
 use App\Models\BackupRecord;
 use App\Models\User;
-use App\Notifications\ScheduledBackupFailedNotification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -85,7 +84,7 @@ class BackupService
         ]);
 
         try {
-            $tempDir = storage_path('app/private/temp/' . $uuid);
+            $tempDir = storage_path('app/private/temp/'.$uuid);
             if (! is_dir($tempDir)) {
                 mkdir($tempDir, 0755, true);
             }
@@ -94,9 +93,9 @@ class BackupService
             $recordCounts = $this->exportDatabaseData($tempDir);
 
             // 2. Export Files if FULL backup
-            $fileCounts = [];
+            $mediaCategories = [];
             if ($type === 'full') {
-                $fileCounts = $this->exportApplicationFiles($tempDir);
+                $mediaCategories = $this->exportApplicationFiles($tempDir);
             }
 
             // 3. Create Manifest
@@ -109,19 +108,23 @@ class BackupService
                 'backup_type' => $type,
                 'is_pre_restore' => $isPreRestore,
                 'engine_used' => $this->detectEngine(),
-                'included_components' => array_keys($fileCounts),
+                'schema_version' => $this->schemaVersion(),
+                'database_file' => 'database/dump.json',
+                'included_components' => array_keys($mediaCategories),
                 'record_counts' => $recordCounts,
-                'file_counts' => $fileCounts,
+                'file_counts' => array_map(fn (array $category) => $category['file_count'], $mediaCategories),
+                'media_categories' => $mediaCategories,
+                'media_total_size' => array_sum(array_column($mediaCategories, 'total_size')),
             ];
 
-            file_put_contents($tempDir . '/backup-manifest.json', json_encode($manifestData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            file_put_contents($tempDir.'/backup-manifest.json', json_encode($manifestData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
             // 4. Generate Checksums
             $checksums = $this->generateDirectoryChecksums($tempDir);
-            file_put_contents($tempDir . '/checksums.json', json_encode($checksums, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            file_put_contents($tempDir.'/checksums.json', json_encode($checksums, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
             // 5. Create Archive File in private storage
-            $zipPath = storage_path('app/' . $relativeStoragePath);
+            $zipPath = storage_path('app/'.$relativeStoragePath);
             $zipDir = dirname($zipPath);
             if (! is_dir($zipDir)) {
                 mkdir($zipDir, 0755, true);
@@ -149,17 +152,9 @@ class BackupService
             return $backupRecord;
         } catch (\Throwable $e) {
             $backupRecord->update(['status' => 'failed']);
-            Log::error('Backup creation failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error('Backup creation failed: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
 
-            // Notify Owner if scheduled or system
-            if (! $user) {
-                $owners = User::where('role', 'owner')->where('is_active', true)->get();
-                foreach ($owners as $owner) {
-                    $owner->notify(new ScheduledBackupFailedNotification($e->getMessage()));
-                }
-            }
-
-            throw new \RuntimeException('Gagal membuat backup: ' . $e->getMessage(), 0, $e);
+            throw new \RuntimeException('Gagal membuat backup: '.$e->getMessage(), 0, $e);
         } finally {
             if (isset($tempDir) && is_dir($tempDir)) {
                 $this->deleteDirectory($tempDir);
@@ -184,7 +179,7 @@ class BackupService
             throw new \InvalidArgumentException('File backup ini belum selesai atau berstatus gagal/dihapus.');
         }
 
-        $zipPath = storage_path('app/' . $record->file_path);
+        $zipPath = storage_path('app/'.$record->file_path);
         if (! file_exists($zipPath)) {
             throw new \InvalidArgumentException('Physical file backup tidak ditemukan pada storage.');
         }
@@ -202,7 +197,7 @@ class BackupService
             throw new \RuntimeException('Gagal membuat Pre-Restore Safety Backup. Proses restore dibatalkan secara aman.');
         }
 
-        $tempExtractDir = storage_path('app/private/temp/restore_' . Str::uuid());
+        $tempExtractDir = storage_path('app/private/temp/restore_'.Str::uuid());
         if (! is_dir($tempExtractDir)) {
             mkdir($tempExtractDir, 0755, true);
         }
@@ -212,7 +207,7 @@ class BackupService
             $this->extractZipWithProtection($zipPath, $tempExtractDir);
 
             // 3. Verify Manifest & Checksums
-            $manifestFile = $tempExtractDir . '/backup-manifest.json';
+            $manifestFile = $tempExtractDir.'/backup-manifest.json';
             if (! file_exists($manifestFile)) {
                 throw new \InvalidArgumentException('Manifest backup (backup-manifest.json) tidak ditemukan.');
             }
@@ -222,11 +217,11 @@ class BackupService
                 throw new \InvalidArgumentException('Versi format backup tidak kompatibel.');
             }
 
-            $checksumsFile = $tempExtractDir . '/checksums.json';
+            $checksumsFile = $tempExtractDir.'/checksums.json';
             if (file_exists($checksumsFile)) {
                 $checksums = json_decode(file_get_contents($checksumsFile), true);
                 foreach ($checksums as $relFile => $expectedHash) {
-                    $targetPath = $tempExtractDir . '/' . $relFile;
+                    $targetPath = $tempExtractDir.'/'.$relFile;
                     if (file_exists($targetPath)) {
                         if (hash_file('sha256', $targetPath) !== $expectedHash) {
                             throw new \InvalidArgumentException("Integritas file '{$relFile}' gagal diverifikasi (Checksum mismatch).");
@@ -239,8 +234,8 @@ class BackupService
             $this->importDatabaseData($tempExtractDir);
 
             // 5. Restore Files if Full Backup
-            if (is_dir($tempExtractDir . '/files')) {
-                $this->importApplicationFiles($tempExtractDir . '/files');
+            if (is_dir($tempExtractDir.'/files')) {
+                $this->importApplicationFiles($tempExtractDir.'/files');
             }
 
             // Cleanup temp
@@ -253,7 +248,7 @@ class BackupService
         } catch (\Throwable $e) {
             $this->deleteDirectory($tempExtractDir);
             AuditLog::log('restore.failed', $record, null, ['error' => $e->getMessage()], $actor);
-            throw new \RuntimeException('Gagal melakukan restore: ' . $e->getMessage(), 0, $e);
+            throw new \RuntimeException('Gagal melakukan restore: '.$e->getMessage(), 0, $e);
         }
     }
 
@@ -266,7 +261,7 @@ class BackupService
             throw new \InvalidArgumentException('Hanya Superadmin dan Owner yang dapat menghapus data backup.');
         }
 
-        $fullPath = storage_path('app/' . $record->file_path);
+        $fullPath = storage_path('app/'.$record->file_path);
         if (file_exists($fullPath)) {
             @unlink($fullPath);
         }
@@ -299,7 +294,7 @@ class BackupService
         $deletedCount = 0;
 
         foreach ($excess as $backup) {
-            $fullPath = storage_path('app/' . $backup->file_path);
+            $fullPath = storage_path('app/'.$backup->file_path);
             if (file_exists($fullPath)) {
                 @unlink($fullPath);
             }
@@ -316,7 +311,7 @@ class BackupService
 
     protected function exportDatabaseData(string $tempDir): array
     {
-        $dbDir = $tempDir . '/database';
+        $dbDir = $tempDir.'/database';
         mkdir($dbDir, 0755, true);
 
         $dumpData = [];
@@ -333,42 +328,26 @@ class BackupService
             }
         }
 
-        file_put_contents($dbDir . '/dump.json', json_encode($dumpData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        file_put_contents($dbDir.'/dump.json', json_encode($dumpData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
         return $recordCounts;
     }
 
     protected function exportApplicationFiles(string $tempDir): array
     {
-        $filesDir = $tempDir . '/files';
+        $filesDir = $tempDir.'/files';
         mkdir($filesDir, 0755, true);
 
-        $fileCounts = [];
-
-        // 1. Selfies
-        $selfieSource = storage_path('app/selfies');
-        if (is_dir($selfieSource)) {
-            $fileCounts['selfies'] = $this->copyDirectory($selfieSource, $filesDir . '/selfies');
-        }
-
-        // 2. Leave Attachments
-        $leaveSource = storage_path('app/leave-attachments');
-        if (is_dir($leaveSource)) {
-            $fileCounts['leave_attachments'] = $this->copyDirectory($leaveSource, $filesDir . '/leave-attachments');
-        }
-
-        // 3. Branding Assets
-        $brandingSource = storage_path('app/public/branding');
-        if (is_dir($brandingSource)) {
-            $fileCounts['branding'] = $this->copyDirectory($brandingSource, $filesDir . '/branding');
-        }
-
-        return $fileCounts;
+        return [
+            'attendance_selfies' => $this->copyStorageDirectoryToArchive('local', 'attendance', $filesDir.'/attendance'),
+            'leave_attachments' => $this->copyStorageDirectoryToArchive('local', 'leave-attachments', $filesDir.'/leave-attachments'),
+            'branding' => $this->copyStorageDirectoryToArchive('public', 'branding', $filesDir.'/branding'),
+        ];
     }
 
     protected function importDatabaseData(string $tempDir): void
     {
-        $dumpFile = $tempDir . '/database/dump.json';
+        $dumpFile = $tempDir.'/database/dump.json';
         if (! file_exists($dumpFile)) {
             throw new \InvalidArgumentException('Database dump file (database/dump.json) tidak ditemukan dalam archive.');
         }
@@ -421,19 +400,103 @@ class BackupService
 
     protected function importApplicationFiles(string $filesDir): void
     {
-        // 1. Selfies
-        if (is_dir($filesDir . '/selfies')) {
-            $this->copyDirectory($filesDir . '/selfies', storage_path('app/selfies'));
+        // Current format: private attendance media. Keep legacy "selfies" readable.
+        if (is_dir($filesDir.'/attendance')) {
+            $this->copyArchiveDirectoryToStorage($filesDir.'/attendance', 'local', 'attendance');
+        } elseif (is_dir($filesDir.'/selfies')) {
+            $this->copyArchiveDirectoryToStorage($filesDir.'/selfies', 'local', 'attendance');
         }
 
-        // 2. Leave Attachments
-        if (is_dir($filesDir . '/leave-attachments')) {
-            $this->copyDirectory($filesDir . '/leave-attachments', storage_path('app/leave-attachments'));
+        if (is_dir($filesDir.'/leave-attachments')) {
+            $this->copyArchiveDirectoryToStorage($filesDir.'/leave-attachments', 'local', 'leave-attachments');
         }
 
-        // 3. Branding
-        if (is_dir($filesDir . '/branding')) {
-            $this->copyDirectory($filesDir . '/branding', storage_path('app/public/branding'));
+        if (is_dir($filesDir.'/branding')) {
+            $this->copyArchiveDirectoryToStorage($filesDir.'/branding', 'public', 'branding');
+        }
+    }
+
+    protected function schemaVersion(): ?string
+    {
+        if (! Schema::hasTable('migrations')) {
+            return null;
+        }
+
+        return DB::table('migrations')->orderByDesc('id')->value('migration');
+    }
+
+    protected function copyStorageDirectoryToArchive(string $disk, string $source, string $destination): array
+    {
+        $storage = Storage::disk($disk);
+        $files = $storage->allFiles($source);
+        $totalSize = 0;
+
+        foreach ($files as $file) {
+            $relative = ltrim(substr($file, strlen($source)), '/\\');
+            $target = $destination.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $relative);
+            $targetDirectory = dirname($target);
+
+            if (! is_dir($targetDirectory) && ! mkdir($targetDirectory, 0755, true) && ! is_dir($targetDirectory)) {
+                throw new \RuntimeException("Gagal membuat direktori media backup: {$targetDirectory}");
+            }
+
+            $stream = $storage->readStream($file);
+            if ($stream === false) {
+                throw new \RuntimeException("Gagal membaca media backup dari disk {$disk}: {$file}");
+            }
+
+            $targetStream = fopen($target, 'wb');
+            if ($targetStream === false) {
+                fclose($stream);
+                throw new \RuntimeException("Gagal menulis media ke archive: {$file}");
+            }
+
+            try {
+                if (stream_copy_to_stream($stream, $targetStream) === false) {
+                    throw new \RuntimeException("Gagal menyalin media ke archive: {$file}");
+                }
+            } finally {
+                fclose($stream);
+                fclose($targetStream);
+            }
+
+            $totalSize += (int) $storage->size($file);
+        }
+
+        return [
+            'disk' => $disk,
+            'source' => $source,
+            'archive_path' => 'files/'.str_replace('\\', '/', basename($destination)),
+            'file_count' => count($files),
+            'total_size' => $totalSize,
+        ];
+    }
+
+    protected function copyArchiveDirectoryToStorage(string $source, string $disk, string $destination): void
+    {
+        $files = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($source, \RecursiveDirectoryIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::LEAVES_ONLY
+        );
+
+        foreach ($files as $file) {
+            if ($file->isDir()) {
+                continue;
+            }
+
+            $relative = str_replace('\\', '/', substr($file->getPathname(), strlen($source) + 1));
+            $stream = fopen($file->getPathname(), 'rb');
+            if ($stream === false) {
+                throw new \RuntimeException("Gagal membaca media restore: {$relative}");
+            }
+
+            try {
+                if (! Storage::disk($disk)->writeStream(trim($destination.'/'.$relative, '/'), $stream)) {
+                    throw new \RuntimeException("Gagal memulihkan media ke disk {$disk}: {$relative}");
+                }
+            } finally {
+                fclose($stream);
+            }
         }
     }
 
@@ -448,7 +511,7 @@ class BackupService
                 continue;
             }
 
-            $path = $dir . '/' . $item;
+            $path = $dir.'/'.$item;
             $relPath = ltrim(str_replace($baseDir, '', $path), '/\\');
 
             if (is_dir($path)) {
@@ -464,7 +527,7 @@ class BackupService
     protected function zipDirectory(string $sourceDir, string $outZipPath): void
     {
         if (class_exists('\ZipArchive')) {
-            $zip = new \ZipArchive();
+            $zip = new \ZipArchive;
             if ($zip->open($outZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
                 $files = new \RecursiveIteratorIterator(
                     new \RecursiveDirectoryIterator($sourceDir, \RecursiveDirectoryIterator::SKIP_DOTS),
@@ -481,6 +544,7 @@ class BackupService
                 }
 
                 $zip->close();
+
                 return;
             }
         }
@@ -507,7 +571,7 @@ class BackupService
     protected function extractZipWithProtection(string $zipPath, string $extractTo): void
     {
         if (class_exists('\ZipArchive')) {
-            $zip = new \ZipArchive();
+            $zip = new \ZipArchive;
             if ($zip->open($zipPath) === true) {
                 for ($i = 0; $i < $zip->numFiles; $i++) {
                     $filename = $zip->getNameIndex($i);
@@ -518,7 +582,7 @@ class BackupService
                         throw new \InvalidArgumentException("Zip Slip path traversal terdeteksi dalam file backup: {$filename}");
                     }
 
-                    $targetPath = $extractTo . '/' . $filename;
+                    $targetPath = $extractTo.'/'.$filename;
                     if (str_ends_with($filename, '/')) {
                         if (! is_dir($targetPath)) {
                             mkdir($targetPath, 0755, true);
@@ -528,10 +592,11 @@ class BackupService
                         if (! is_dir($dirName)) {
                             mkdir($dirName, 0755, true);
                         }
-                        copy('zip://' . $zipPath . '#' . $filename, $targetPath);
+                        copy('zip://'.$zipPath.'#'.$filename, $targetPath);
                     }
                 }
                 $zip->close();
+
                 return;
             }
         }
@@ -546,7 +611,7 @@ class BackupService
                     throw new \InvalidArgumentException("Zip Slip path traversal terdeteksi dalam file backup: {$filename}");
                 }
 
-                $targetPath = $extractTo . '/' . $filename;
+                $targetPath = $extractTo.'/'.$filename;
                 $dirName = dirname($targetPath);
                 if (! is_dir($dirName)) {
                     mkdir($dirName, 0755, true);
@@ -574,8 +639,8 @@ class BackupService
             if ($item === '.' || $item === '..') {
                 continue;
             }
-            $srcPath = $src . '/' . $item;
-            $dstPath = $dst . '/' . $item;
+            $srcPath = $src.'/'.$item;
+            $dstPath = $dst.'/'.$item;
             if (is_dir($srcPath)) {
                 $count += $this->copyDirectory($srcPath, $dstPath);
             } else {
@@ -598,7 +663,7 @@ class BackupService
             if ($item === '.' || $item === '..') {
                 continue;
             }
-            $path = $dir . '/' . $item;
+            $path = $dir.'/'.$item;
             if (is_dir($path)) {
                 $this->deleteDirectory($path);
             } else {

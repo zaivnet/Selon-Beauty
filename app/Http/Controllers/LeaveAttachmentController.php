@@ -15,7 +15,7 @@ class LeaveAttachmentController extends Controller
         $user = Auth::user();
 
         // Authorization check: Owner, Admin, or the owning Employee
-        $isAuthorized = in_array($user->role, ['owner', 'admin'], true)
+        $isAuthorized = in_array($user->role, ['superadmin', 'owner', 'admin'], true)
             || ($user->role === 'employee' && $user->employee_id === $leaveRequest->employee_id);
 
         if (! $isAuthorized) {

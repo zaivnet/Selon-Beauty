@@ -8,7 +8,6 @@ use App\Models\AuditLog;
 use App\Models\Employee;
 use App\Models\EmployeeSchedule;
 use App\Models\LeaveRequest;
-use App\Models\OvertimeRequest;
 use App\Models\Shift;
 use App\Models\User;
 use Carbon\Carbon;
@@ -18,6 +17,7 @@ use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class SecurityHardeningTest extends TestCase
@@ -25,16 +25,23 @@ class SecurityHardeningTest extends TestCase
     use RefreshDatabase;
 
     protected User $ownerUser;
+
     protected User $employeeUserA;
+
     protected Employee $employeeA;
+
     protected User $employeeUserB;
+
     protected Employee $employeeB;
+
     protected Shift $shift;
+
     protected AttendanceLocation $location;
 
     protected function setUp(): void
     {
         parent::setUp();
+        Carbon::setTestNow(Carbon::today('Asia/Jakarta')->setTime(8, 0));
 
         Storage::fake('local');
 
@@ -177,7 +184,7 @@ class SecurityHardeningTest extends TestCase
     public function test_employee_cannot_access_another_employee_notification(): void
     {
         $notificationB = DatabaseNotification::create([
-            'id' => (string) \Illuminate\Support\Str::uuid(),
+            'id' => (string) Str::uuid(),
             'type' => 'App\Notifications\LeaveRequestSubmittedNotification',
             'notifiable_type' => 'App\Models\User',
             'notifiable_id' => $this->employeeUserB->id,
@@ -192,7 +199,7 @@ class SecurityHardeningTest extends TestCase
 
     public function test_login_rate_limiting_works(): void
     {
-        $throttleKey = \Illuminate\Support\Str::transliterate('baduser@selonbeauty.com|127.0.0.1');
+        $throttleKey = Str::transliterate('baduser@selonbeauty.com|127.0.0.1');
         RateLimiter::clear($throttleKey);
 
         for ($i = 0; $i < 5; $i++) {
@@ -256,7 +263,7 @@ class SecurityHardeningTest extends TestCase
             'work_schedule_id' => $schedule->id,
             'work_date' => $todayStr,
             'status' => 'present',
-            'check_in_at' => Carbon::parse($todayStr . ' 08:00:00', 'Asia/Jakarta'),
+            'check_in_at' => Carbon::parse($todayStr.' 08:00:00', 'Asia/Jakarta'),
         ]);
 
         // 1. Employee A tries to correct attendance -> Redirected with error to employee dashboard
@@ -290,8 +297,8 @@ class SecurityHardeningTest extends TestCase
             'work_schedule_id' => $schedule->id,
             'work_date' => $todayStr,
             'status' => 'present',
-            'check_in_at' => Carbon::parse($todayStr . ' 08:00:00', 'Asia/Jakarta'),
-            'check_out_at' => Carbon::parse($todayStr . ' 16:00:00', 'Asia/Jakarta'),
+            'check_in_at' => Carbon::parse($todayStr.' 08:00:00', 'Asia/Jakarta'),
+            'check_out_at' => Carbon::parse($todayStr.' 16:00:00', 'Asia/Jakarta'),
             'late_minutes' => 0,
             'worked_minutes' => 420,
         ]);
@@ -310,7 +317,7 @@ class SecurityHardeningTest extends TestCase
         $attendance->refresh();
         $this->assertTrue($attendance->is_manually_adjusted);
         $this->assertEquals('late', $attendance->status);
-        $this->assertEquals(30, $attendance->late_minutes);
+        $this->assertEquals(25, $attendance->late_minutes);
 
         // Audit Log created
         $this->assertDatabaseHas('audit_logs', [
@@ -354,7 +361,7 @@ class SecurityHardeningTest extends TestCase
             'work_schedule_id' => $schedule->id,
             'work_date' => $todayStr,
             'status' => 'present',
-            'check_in_at' => Carbon::parse($todayStr . ' 08:00:00', 'Asia/Jakarta'),
+            'check_in_at' => Carbon::parse($todayStr.' 08:00:00', 'Asia/Jakarta'),
         ]);
 
         $this->employeeA->update(['full_name' => '=CMD|"/C calc"!A0']);

@@ -5,11 +5,13 @@ namespace Tests\Feature\Backup;
 use App\Models\AppSetting;
 use App\Models\BackupRecord;
 use App\Models\User;
+use App\Notifications\ScheduledBackupFailedNotification;
 use App\Services\BackupService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -127,5 +129,19 @@ class ScheduledBackupTest extends TestCase
         $record = BackupRecord::first();
         $this->assertNull($record->created_by);
         $this->assertEquals('completed', $record->status);
+    }
+
+    public function test_scheduled_backup_failure_notifies_owner_and_preserves_failure_exit_code(): void
+    {
+        Notification::fake();
+        $backupService = \Mockery::mock(BackupService::class);
+        $backupService->shouldReceive('createBackup')->once()->andThrow(new \RuntimeException('primary backup failure'));
+        $this->app->instance(BackupService::class, $backupService);
+
+        $exitCode = Artisan::call('app:run-scheduled-backup', ['--force' => true]);
+
+        $this->assertSame(1, $exitCode);
+        $this->assertStringContainsString('primary backup failure', Artisan::output());
+        Notification::assertSentTo($this->ownerUser, ScheduledBackupFailedNotification::class);
     }
 }
