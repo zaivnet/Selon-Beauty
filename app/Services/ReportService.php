@@ -234,7 +234,7 @@ class ReportService
 
                 $detailRows[] = [
                     'employee' => $emp,
-                    'date' => $dStr,
+                    'date' => $currDate->copy(),
                     'date_str' => $dStr,
                     'day_name' => $currDate->locale('id')->isoFormat('dddd'),
                     'schedule' => $sch,

@@ -228,12 +228,21 @@
                             @php
                                 $rWHours = (int) floor($row['worked_minutes'] / 60);
                                 $rWMins = $row['worked_minutes'] % 60;
+                                $rowDate = isset($row['date']) && $row['date']
+                                    ? ($row['date'] instanceof \Carbon\CarbonInterface ? $row['date'] : \Carbon\Carbon::parse($row['date']))
+                                    : null;
+                                $checkInAt = isset($row['check_in_at']) && $row['check_in_at']
+                                    ? ($row['check_in_at'] instanceof \Carbon\CarbonInterface ? $row['check_in_at'] : \Carbon\Carbon::parse($row['check_in_at']))
+                                    : null;
+                                $checkOutAt = isset($row['check_out_at']) && $row['check_out_at']
+                                    ? ($row['check_out_at'] instanceof \Carbon\CarbonInterface ? $row['check_out_at'] : \Carbon\Carbon::parse($row['check_out_at']))
+                                    : null;
                             @endphp
                             <tr class="hover:bg-slate-50/80 transition-colors">
                                 <!-- Tanggal -->
                                 <td class="px-4 py-3.5 whitespace-nowrap">
-                                    <div class="font-bold text-slate-900">{{ $row['date']->translatedFormat('d/m/Y') }}</div>
-                                    <div class="text-[10px] text-slate-500 font-medium">{{ $row['date']->translatedFormat('l') }}</div>
+                                    <div class="font-bold text-slate-900">{{ $rowDate ? $rowDate->translatedFormat('d/m/Y') : '-' }}</div>
+                                    <div class="text-[10px] text-slate-500 font-medium">{{ $rowDate ? $rowDate->translatedFormat('l') : '-' }}</div>
                                 </td>
 
                                 <!-- Karyawan -->
@@ -254,12 +263,12 @@
 
                                 <!-- Jam Masuk -->
                                 <td class="px-4 py-3.5 whitespace-nowrap font-mono font-semibold text-slate-800">
-                                    {{ $row['check_in_at'] ? $row['check_in_at']->format('H:i') : '-' }}
+                                    {{ $checkInAt ? $checkInAt->format('H:i') : '-' }}
                                 </td>
 
                                 <!-- Jam Pulang -->
                                 <td class="px-4 py-3.5 whitespace-nowrap font-mono font-semibold text-slate-800">
-                                    {{ $row['check_out_at'] ? $row['check_out_at']->format('H:i') : '-' }}
+                                    {{ $checkOutAt ? $checkOutAt->format('H:i') : '-' }}
                                 </td>
 
                                 <!-- Status Badge -->

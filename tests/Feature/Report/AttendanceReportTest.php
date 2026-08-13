@@ -586,4 +586,122 @@ class AttendanceReportTest extends TestCase
         $response->assertOk();
         $response->assertSee('Belum ada data kehadiran pada periode yang dipilih.');
     }
+
+    public function test_report_detail_row_date_is_carbon_instance_and_view_renders_without_error(): void
+    {
+        $d1 = '2026-08-10'; // A Monday
+        $sch = EmployeeSchedule::create(['employee_id' => $this->employee1->id, 'work_date' => $d1, 'shift_id' => $this->shiftNormal->id, 'schedule_type' => 'work']);
+        AttendanceRecord::create(['employee_id' => $this->employee1->id, 'work_schedule_id' => $sch->id, 'work_date' => $d1, 'status' => 'present', 'worked_minutes' => 480]);
+
+        $report = $this->reportService->generateAttendanceReport([
+            'start_date' => $d1,
+            'end_date' => $d1,
+            'employee_id' => $this->employee1->id,
+        ]);
+
+        $this->assertInstanceOf(\Carbon\CarbonInterface::class, $report['detail_rows'][0]['date']);
+
+        $response = $this->actingAs($this->ownerUser)->get(route('admin.reports.attendance', [
+            'start_date' => $d1,
+            'end_date' => $d1,
+            'employee_id' => $this->employee1->id,
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('10/08/2026');
+        $response->assertSee('Senin');
+    }
+
+    public function test_attendance_report_view_handles_string_and_null_date_safely(): void
+    {
+        $reportData = [
+            'start_date' => '2026-08-10',
+            'end_date' => '2026-08-10',
+            'detail_rows' => [
+                [
+                    'employee' => $this->employee1,
+                    'date' => '2026-08-10', // Raw string instead of Carbon
+                    'date_str' => '2026-08-10',
+                    'day_name' => 'Senin',
+                    'schedule' => null,
+                    'shift' => null,
+                    'attendance' => null,
+                    'leave_request' => null,
+                    'overtime_request' => null,
+                    'status' => 'absent',
+                    'status_key' => 'absent',
+                    'status_label' => 'Tidak Hadir',
+                    'status_badge_class' => 'bg-rose-50 text-rose-700 border-rose-200',
+                    'check_in_at' => null,
+                    'check_out_at' => null,
+                    'late_minutes' => 0,
+                    'worked_minutes' => 0,
+                    'early_leave_minutes' => 0,
+                    'approved_overtime_minutes' => 0,
+                ],
+                [
+                    'employee' => $this->employee1,
+                    'date' => null, // Null date
+                    'date_str' => '-',
+                    'day_name' => '-',
+                    'schedule' => null,
+                    'shift' => null,
+                    'attendance' => null,
+                    'leave_request' => null,
+                    'overtime_request' => null,
+                    'status' => 'absent',
+                    'status_key' => 'absent',
+                    'status_label' => 'Tidak Hadir',
+                    'status_badge_class' => 'bg-rose-50 text-rose-700 border-rose-200',
+                    'check_in_at' => null,
+                    'check_out_at' => null,
+                    'late_minutes' => 0,
+                    'worked_minutes' => 0,
+                    'early_leave_minutes' => 0,
+                    'approved_overtime_minutes' => 0,
+                ],
+            ],
+            'employee_summaries' => [],
+            'global_summary' => [
+                'scheduled_work_days' => 1,
+                'present_count' => 0,
+                'late_count' => 0,
+                'absent_count' => 2,
+                'permission_count' => 0,
+                'sick_count' => 0,
+                'leave_count' => 0,
+                'total_late_minutes' => 0,
+                'total_worked_minutes' => 0,
+                'total_early_leave_minutes' => 0,
+                'total_approved_overtime_minutes' => 0,
+            ],
+            'filters' => [
+                'start_date' => '2026-08-10',
+                'end_date' => '2026-08-10',
+                'employee_id' => null,
+                'status' => 'all',
+                'job_title_id' => null,
+            ],
+        ];
+
+        $allRows = collect($reportData['detail_rows']);
+        $paginatedRows = new \Illuminate\Pagination\LengthAwarePaginator(
+            $allRows,
+            $allRows->count(),
+            25,
+            1,
+            ['path' => '/admin/reports/attendance']
+        );
+
+        $view = (string) $this->actingAs($this->ownerUser)->view('admin.reports.attendance', [
+            'reportData' => $reportData,
+            'employees' => [$this->employee1],
+            'jobTitles' => [],
+            'filters' => $reportData['filters'],
+            'paginatedRows' => $paginatedRows,
+        ]);
+
+        $this->assertStringContainsString('10/08/2026', $view);
+        $this->assertStringContainsString('Senin', $view);
+    }
 }

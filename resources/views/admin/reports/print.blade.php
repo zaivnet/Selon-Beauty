@@ -119,14 +119,23 @@
                         @php
                             $rWHours = (int) floor($row['worked_minutes'] / 60);
                             $rWMins = $row['worked_minutes'] % 60;
+                            $rowDate = isset($row['date']) && $row['date']
+                                ? ($row['date'] instanceof \Carbon\CarbonInterface ? $row['date'] : \Carbon\Carbon::parse($row['date']))
+                                : null;
+                            $checkInAt = isset($row['check_in_at']) && $row['check_in_at']
+                                ? ($row['check_in_at'] instanceof \Carbon\CarbonInterface ? $row['check_in_at'] : \Carbon\Carbon::parse($row['check_in_at']))
+                                : null;
+                            $checkOutAt = isset($row['check_out_at']) && $row['check_out_at']
+                                ? ($row['check_out_at'] instanceof \Carbon\CarbonInterface ? $row['check_out_at'] : \Carbon\Carbon::parse($row['check_out_at']))
+                                : null;
                         @endphp
                         <tr>
-                            <td class="p-2 border border-slate-300 font-bold whitespace-nowrap">{{ $row['date']->format('d/m/Y') }}</td>
+                            <td class="p-2 border border-slate-300 font-bold whitespace-nowrap">{{ $rowDate ? $rowDate->format('d/m/Y') : '-' }}</td>
                             <td class="p-2 border border-slate-300 font-bold">{{ $row['employee']->full_name }} <span class="font-normal text-[10px] block">({{ $row['employee']->employee_code }})</span></td>
                             <td class="p-2 border border-slate-300">{{ $row['employee']->jobTitle?->name ?? '-' }}</td>
                             <td class="p-2 border border-slate-300 whitespace-nowrap">{{ $row['shift']?->name ?? strtoupper($row['schedule']?->schedule_type ?? '-') }}</td>
-                            <td class="p-2 border border-slate-300 font-mono">{{ $row['check_in_at'] ? $row['check_in_at']->format('H:i') : '-' }}</td>
-                            <td class="p-2 border border-slate-300 font-mono">{{ $row['check_out_at'] ? $row['check_out_at']->format('H:i') : '-' }}</td>
+                            <td class="p-2 border border-slate-300 font-mono">{{ $checkInAt ? $checkInAt->format('H:i') : '-' }}</td>
+                            <td class="p-2 border border-slate-300 font-mono">{{ $checkOutAt ? $checkOutAt->format('H:i') : '-' }}</td>
                             <td class="p-2 border border-slate-300 font-extrabold">{{ $row['status_label'] }}</td>
                             <td class="p-2 border border-slate-300 font-mono">{{ $row['late_minutes'] > 0 ? $row['late_minutes'] . 'm' : '0m' }}</td>
                             <td class="p-2 border border-slate-300 font-mono">{{ $row['worked_minutes'] > 0 ? "{$rWHours}j {$rWMins}m" : '0m' }}</td>
