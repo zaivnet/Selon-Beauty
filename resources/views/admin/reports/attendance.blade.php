@@ -7,23 +7,23 @@
 <div class="space-y-6">
 
     <!-- Header Card with Export Actions -->
-    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="bg-white p-5 md:p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h2 class="text-xl font-black text-slate-900 tracking-tight">Laporan Kehadiran Karyawan</h2>
+            <h2 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">Laporan Kehadiran Karyawan</h2>
             <p class="text-xs text-slate-500 font-medium mt-1">
-                Rekapitulasi kehadiran, keterlambatan, izin, sakit, cuti, dan lembur disetujui untuk operasional SELON BEAUTY.
+                Rekapitulasi kehadiran, keterlambatan, izin, sakit, cuti, dan lembur disetujui untuk operasional.
             </p>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <!-- Print View Button -->
-            <a href="{{ route('admin.reports.attendance.print', request()->all()) }}" target="_blank" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold rounded-xl transition-all text-xs flex items-center gap-1.5 cursor-pointer">
+            <a href="{{ route('admin.reports.attendance.print', request()->all()) }}" target="_blank" class="w-full sm:w-auto px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer min-h-[44px]">
                 <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                 <span>Cetak / Print View</span>
             </a>
 
             <!-- CSV Export Button -->
-            <a href="{{ route('admin.reports.attendance.export-csv', request()->all()) }}" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl shadow-md shadow-emerald-600/20 transition-all text-xs flex items-center gap-1.5 cursor-pointer">
+            <a href="{{ route('admin.reports.attendance.export-csv', request()->all()) }}" class="w-full sm:w-auto px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl shadow-md shadow-emerald-600/20 transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer min-h-[44px]">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 <span>Export CSV</span>
             </a>
@@ -36,19 +36,19 @@
             <!-- Start Date -->
             <div>
                 <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Dari Tanggal</label>
-                <input type="date" name="start_date" value="{{ $filters['start_date'] }}" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                <input type="date" name="start_date" value="{{ $filters['start_date'] }}" class="w-full min-w-0 max-w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px]">
             </div>
 
             <!-- End Date -->
             <div>
                 <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Sampai Tanggal</label>
-                <input type="date" name="end_date" value="{{ $filters['end_date'] }}" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                <input type="date" name="end_date" value="{{ $filters['end_date'] }}" class="w-full min-w-0 max-w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px]">
             </div>
 
             <!-- Employee -->
             <div>
                 <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Karyawan</label>
-                <select name="employee_id" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                <select name="employee_id" class="w-full min-w-0 max-w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px]">
                     <option value="">Semua Karyawan</option>
                     @foreach($employees as $emp)
                         <option value="{{ $emp->id }}" {{ $filters['employee_id'] == $emp->id ? 'selected' : '' }}>
@@ -61,7 +61,7 @@
             <!-- Status -->
             <div>
                 <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Status Kehadiran</label>
-                <select name="status" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                <select name="status" class="w-full min-w-0 max-w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px]">
                     <option value="all" {{ $filters['status'] === 'all' ? 'selected' : '' }}>Semua Status</option>
                     <option value="present" {{ $filters['status'] === 'present' ? 'selected' : '' }}>Hadir (Termasuk Terlambat)</option>
                     <option value="late" {{ $filters['status'] === 'late' ? 'selected' : '' }}>Terlambat</option>
@@ -75,11 +75,11 @@
 
             <!-- Submit & Reset Buttons -->
             <div class="flex items-end gap-2">
-                <button type="submit" class="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer">
+                <button type="submit" class="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer min-h-[44px]">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
-                    <span>Filter Laporan</span>
+                    <span>Filter</span>
                 </button>
-                <a href="{{ route('admin.reports.attendance') }}" class="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all text-xs">
+                <a href="{{ route('admin.reports.attendance') }}" class="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold rounded-xl transition-all text-xs flex items-center justify-center cursor-pointer min-h-[44px]">
                     Reset
                 </a>
             </div>

@@ -6,21 +6,22 @@
 <div class="space-y-4">
 
     <!-- Header & Week Navigation -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 flex items-center justify-between">
-        <a href="{{ route('employee.schedules.index', ['start_date' => $prevWeekDate]) }}" class="px-3 py-2 text-xs font-extrabold text-slate-700 hover:text-slate-900 border border-slate-200 rounded-xl bg-slate-50 transition-colors flex items-center gap-1">
-            &larr; Minggu Lalu
-        </a>
-
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 space-y-3">
         <div class="text-center">
-            <h3 class="text-xs font-black text-slate-900">
+            <h3 class="text-xs sm:text-sm font-black text-slate-900 leading-snug">
                 {{ $startDate->locale('id')->isoFormat('D MMM') }} — {{ $endDate->locale('id')->isoFormat('D MMM YYYY') }}
             </h3>
             <span class="text-[10px] text-rose-600 font-extrabold uppercase tracking-wider block mt-0.5">Jadwal Mingguan</span>
         </div>
 
-        <a href="{{ route('employee.schedules.index', ['start_date' => $nextWeekDate]) }}" class="px-3 py-2 text-xs font-extrabold text-slate-700 hover:text-slate-900 border border-slate-200 rounded-xl bg-slate-50 transition-colors flex items-center gap-1">
-            Minggu Depan &rarr;
-        </a>
+        <div class="flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
+            <a href="{{ route('employee.schedules.index', ['start_date' => $prevWeekDate]) }}" class="flex-1 py-2 px-3 text-xs font-extrabold text-slate-700 hover:text-slate-900 border border-slate-200 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors text-center flex items-center justify-center gap-1 min-h-[44px]">
+                &larr; Minggu Lalu
+            </a>
+            <a href="{{ route('employee.schedules.index', ['start_date' => $nextWeekDate]) }}" class="flex-1 py-2 px-3 text-xs font-extrabold text-slate-700 hover:text-slate-900 border border-slate-200 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors text-center flex items-center justify-center gap-1 min-h-[44px]">
+                Minggu Depan &rarr;
+            </a>
+        </div>
     </div>
 
     <!-- Error Alert if account unlinked -->
@@ -45,14 +46,14 @@
                 @php
                     $isToday = $sch->work_date->isToday();
                 @endphp
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 flex items-center justify-between transition-all {{ $isToday ? 'ring-2 ring-rose-500 bg-rose-50/20' : '' }}">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition-all {{ $isToday ? 'ring-2 ring-rose-500 bg-rose-50/20' : '' }}">
                     <div class="space-y-1">
-                        <div class="flex items-center gap-2">
+                        <div class="flex flex-wrap items-center gap-1.5">
                             <span class="text-xs font-black text-slate-900">
                                 {{ $sch->work_date->locale('id')->isoFormat('dddd, D MMMM YYYY') }}
                             </span>
                             @if($isToday)
-                                <span class="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-rose-600 text-white rounded-md">Hari Ini</span>
+                                <span class="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-rose-600 text-white rounded-md shrink-0">Hari Ini</span>
                             @endif
                         </div>
                         
@@ -61,10 +62,10 @@
                         @endif
                     </div>
 
-                    <div>
+                    <div class="sm:text-right">
                         @if($sch->schedule_type === 'work' && $sch->shift)
-                            <div class="text-right space-y-0.5">
-                                <span class="px-2.5 py-1 bg-rose-50 text-rose-800 border border-rose-200 font-mono font-extrabold text-xs rounded-lg inline-block">
+                            <div class="space-y-0.5">
+                                <span class="px-2.5 py-1 bg-rose-50 text-rose-800 border border-rose-200 font-mono font-extrabold text-xs rounded-lg inline-block max-w-full truncate">
                                     {{ $sch->shift->code }} ({{ $sch->shift->name }})
                                 </span>
                                 <div class="text-[11px] font-bold text-slate-700 font-mono">

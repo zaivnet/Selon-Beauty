@@ -26,7 +26,7 @@
 <body class="bg-slate-100 text-slate-900 min-h-screen antialiased flex flex-col justify-between max-w-md mx-auto shadow-2xl border-x border-slate-200/70 relative">
 
     <!-- Top Header -->
-    <header class="bg-gradient-to-r from-rose-700 via-rose-600 to-pink-600 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20 shadow-md">
+    <header class="bg-gradient-to-r from-rose-700 via-rose-600 to-pink-600 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20 shadow-md" style="padding-top: max(0.75rem, env(safe-area-inset-top, 0px));">
         <div class="flex items-center gap-2.5">
             @if($branding['app_logo_url'])
                 <img src="{{ $branding['app_logo_url'] }}" alt="{{ $branding['app_name'] }}" class="w-8 h-8 object-contain rounded-xl shadow-xs">
@@ -51,7 +51,7 @@
                 
                 <!-- Notification Bell -->
                 <div class="relative" x-data="{ open: false }">
-                    <button @click="open = !open" class="relative p-2 text-rose-100 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all cursor-pointer focus:outline-none" title="Notifikasi">
+                    <button @click="open = !open" class="relative p-2 text-rose-100 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all cursor-pointer focus:outline-none min-h-[44px] min-w-[44px] flex items-center justify-center" title="Notifikasi">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                         @if($unreadCount > 0)
                             <span class="absolute top-0.5 right-0.5 px-1.5 py-0.5 text-[9px] font-black leading-none text-white bg-pink-500 rounded-full border-2 border-rose-700 min-w-[16px] text-center">
@@ -99,13 +99,13 @@
 
                 <!-- Admin Link (if Owner/Admin) -->
                 @if(in_array(Auth::user()->role, ['owner', 'admin']))
-                    <a href="{{ route('admin.dashboard') }}" class="text-[10px] font-extrabold bg-white/15 hover:bg-white/25 px-2.5 py-1 rounded-full text-rose-100 border border-white/20 transition-all">
+                    <a href="{{ route('admin.dashboard') }}" class="text-[10px] font-extrabold bg-white/15 hover:bg-white/25 px-2.5 py-1.5 rounded-full text-rose-100 border border-white/20 transition-all min-h-[36px] flex items-center">
                         Admin &rarr;
                     </a>
                 @endif
 
                 <!-- Profile Avatar Shortcut -->
-                <a href="{{ route('employee.profile.index') }}" class="w-8 h-8 rounded-full bg-rose-900/40 hover:bg-rose-900/60 border border-white/30 text-white font-extrabold text-xs flex items-center justify-center transition-all" title="Profil">
+                <a href="{{ route('employee.profile.index') }}" class="w-8 h-8 rounded-full bg-rose-900/40 hover:bg-rose-900/60 border border-white/30 text-white font-extrabold text-xs flex items-center justify-center transition-all min-h-[36px] min-w-[36px]" title="Profil">
                     {{ $userInitials }}
                 </a>
             @endauth
@@ -113,7 +113,7 @@
     </header>
 
     <!-- Main Content Container with Safe Area Padding -->
-    <main class="flex-1 p-4 overflow-y-auto space-y-4" style="padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));">
+    <main class="flex-1 p-4 overflow-y-auto space-y-4" style="padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));">
         @yield('content')
     </main>
 

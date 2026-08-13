@@ -83,7 +83,7 @@
                     <span class="text-[11px] font-extrabold text-rose-800 uppercase tracking-wider">Konteks Absensi (Referensi)</span>
                     <span id="ctx_shift" class="text-[10px] font-bold text-rose-700 bg-rose-100/80 px-2 py-0.5 rounded-full"></span>
                 </div>
-                <div class="grid grid-cols-2 gap-2 text-[11px] font-semibold text-slate-700">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-semibold text-slate-700">
                     <div>Check-in: <span id="ctx_checkin" class="font-bold text-slate-900">-</span></div>
                     <div>Check-out: <span id="ctx_checkout" class="font-bold text-slate-900">-</span></div>
                     <div>Worked Time: <span id="ctx_worked" class="font-bold text-slate-900">-</span></div>
@@ -96,15 +96,15 @@
             <div>
                 <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Durasi Lembur (Menit) <span class="text-rose-600">*</span></label>
                 <div class="flex items-center gap-2">
-                    <input type="number" name="requested_minutes" id="requested_minutes" value="{{ old('requested_minutes', 60) }}" min="1" max="1440" required placeholder="Contoh: 60" class="flex-1 px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-extrabold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
-                    <span class="text-xs font-bold text-slate-500">Menit</span>
+                    <input type="number" name="requested_minutes" id="requested_minutes" value="{{ old('requested_minutes', 60) }}" min="1" max="1440" required placeholder="Contoh: 60" class="flex-1 w-full min-w-0 max-w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-extrabold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px]">
+                    <span class="text-xs font-bold text-slate-500 shrink-0">Menit</span>
                 </div>
                 <!-- Quick Preset Buttons -->
-                <div class="flex gap-2 mt-2">
-                    <button type="button" onclick="setPreset(30)" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-[11px] font-bold text-slate-700 transition-colors">30 Menit</button>
-                    <button type="button" onclick="setPreset(60)" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-[11px] font-bold text-slate-700 transition-colors">60 Menit (1 Jam)</button>
-                    <button type="button" onclick="setPreset(90)" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-[11px] font-bold text-slate-700 transition-colors">90 Menit (1.5 Jam)</button>
-                    <button type="button" onclick="setPreset(120)" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-[11px] font-bold text-slate-700 transition-colors">120 Menit (2 Jam)</button>
+                <div class="flex flex-wrap gap-2 mt-2">
+                    <button type="button" onclick="setPreset(30)" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-[11px] font-bold text-slate-700 transition-colors min-h-[36px]">30 Menit</button>
+                    <button type="button" onclick="setPreset(60)" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-[11px] font-bold text-slate-700 transition-colors min-h-[36px]">60 Menit (1 Jam)</button>
+                    <button type="button" onclick="setPreset(90)" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-[11px] font-bold text-slate-700 transition-colors min-h-[36px]">90 Menit (1.5 Jam)</button>
+                    <button type="button" onclick="setPreset(120)" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-[11px] font-bold text-slate-700 transition-colors min-h-[36px]">120 Menit (2 Jam)</button>
                 </div>
             </div>
 

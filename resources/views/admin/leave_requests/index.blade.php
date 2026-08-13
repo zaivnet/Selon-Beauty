@@ -35,10 +35,10 @@
         </div>
 
         <!-- Filter Form -->
-        <form method="GET" action="{{ route('admin.leave-requests.index') }}" class="grid grid-cols-1 sm:grid-cols-5 gap-3 text-xs">
+        <form method="GET" action="{{ route('admin.leave-requests.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
             <div>
                 <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Status</label>
-                <select name="status" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                <select name="status" class="w-full min-w-0 max-w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px]">
                     <option value="pending" {{ $filters['status'] === 'pending' ? 'selected' : '' }}>Menunggu (Pending)</option>
                     <option value="approved" {{ $filters['status'] === 'approved' ? 'selected' : '' }}>Disetujui</option>
                     <option value="rejected" {{ $filters['status'] === 'rejected' ? 'selected' : '' }}>Ditolak</option>
@@ -49,7 +49,7 @@
 
             <div>
                 <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Jenis</label>
-                <select name="type" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                <select name="type" class="w-full min-w-0 max-w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px]">
                     <option value="all">Semua Jenis</option>
                     <option value="permission" {{ $filters['type'] === 'permission' ? 'selected' : '' }}>Izin</option>
                     <option value="sick" {{ $filters['type'] === 'sick' ? 'selected' : '' }}>Sakit</option>
@@ -59,7 +59,7 @@
 
             <div>
                 <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Karyawan</label>
-                <select name="employee_id" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                <select name="employee_id" class="w-full min-w-0 max-w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px]">
                     <option value="">Semua Karyawan</option>
                     @foreach($employees as $emp)
                         <option value="{{ $emp->id }}" {{ $filters['employee_id'] == $emp->id ? 'selected' : '' }}>
@@ -71,15 +71,15 @@
 
             <div>
                 <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Tanggal Mulai</label>
-                <input type="date" name="start_date" value="{{ $filters['start_date'] }}" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                <input type="date" name="start_date" value="{{ $filters['start_date'] }}" class="w-full min-w-0 max-w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px]">
             </div>
 
             <div class="flex items-end gap-2">
-                <button type="submit" class="flex-1 py-2 px-4 bg-slate-900 hover:bg-slate-800 text-white font-extrabold rounded-xl transition-colors shadow-xs flex items-center justify-center gap-1 cursor-pointer">
+                <button type="submit" class="flex-1 py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white font-extrabold rounded-xl transition-colors shadow-xs flex items-center justify-center gap-1 cursor-pointer min-h-[44px]">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
                     <span>Filter</span>
                 </button>
-                <a href="{{ route('admin.leave-requests.index') }}" class="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold rounded-xl transition-colors cursor-pointer">
+                <a href="{{ route('admin.leave-requests.index') }}" class="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold rounded-xl transition-colors cursor-pointer text-center min-h-[44px] flex items-center justify-center">
                     Reset
                 </a>
             </div>
