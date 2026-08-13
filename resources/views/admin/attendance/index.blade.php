@@ -22,15 +22,15 @@
         </div>
 
         <!-- Filter Form -->
-        <form method="GET" action="{{ route('admin.attendance.index') }}" class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
-            <div>
+        <form method="GET" action="{{ route('admin.attendance.index') }}" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div class="w-full min-w-0 max-w-full">
                 <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Tanggal</label>
-                <input type="date" name="date" value="{{ $filters['date'] }}" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                <input type="date" name="date" value="{{ $filters['date'] }}" class="w-full min-w-0 max-w-full box-border px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px]">
             </div>
 
-            <div>
+            <div class="w-full min-w-0 max-w-full">
                 <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Karyawan</label>
-                <select name="employee_id" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                <select name="employee_id" class="w-full min-w-0 max-w-full box-border px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px]">
                     <option value="">Semua Karyawan</option>
                     @foreach($employees as $emp)
                         <option value="{{ $emp->id }}" {{ $filters['employee_id'] == $emp->id ? 'selected' : '' }}>

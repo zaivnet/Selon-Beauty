@@ -25,3 +25,42 @@ body {
     color: #0f172a;
     -webkit-tap-highlight-color: transparent;
 }
+
+/* Global iOS WebKit date & time input intrinsic overflow & layout fixes */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    display: block;
+}
+
+/* Fix iOS WebKit internal text & date container sizing */
+input[type="date"]::-webkit-date-and-time-value,
+input[type="time"]::-webkit-date-and-time-value,
+input[type="datetime-local"]::-webkit-date-and-time-value {
+    text-align: left;
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0;
+    padding: 0;
+}
+
+input[type="date"]::-webkit-datetime-edit,
+input[type="time"]::-webkit-datetime-edit,
+input[type="datetime-local"]::-webkit-datetime-edit {
+    min-width: 0 !important;
+    padding: 0;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.75;
+    margin-left: auto;
+    flex-shrink: 0;
+}
