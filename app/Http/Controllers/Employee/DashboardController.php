@@ -7,6 +7,7 @@ use App\Models\AppSetting;
 use App\Models\AttendanceLocation;
 use App\Models\AttendanceRecord;
 use App\Models\LeaveRequest;
+use App\Models\OvertimeRequest;
 use App\Services\AttendanceService;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
@@ -29,6 +30,7 @@ class DashboardController extends Controller
         $todayAttendance = null;
         $todayLeave = null;
         $activeLocation = AttendanceLocation::where('is_active', true)->first();
+        $todayOvertime = null;
 
         if ($employee) {
             $todayLeave = LeaveRequest::where('employee_id', $employee->id)
@@ -44,6 +46,15 @@ class DashboardController extends Controller
                     ->where('work_schedule_id', $todaySchedule->id)
                     ->first();
             }
+
+            $todayOvertime = OvertimeRequest::with('session')
+                ->where('employee_id', $employee->id)
+                ->where('status', 'approved')
+                ->where(function ($query) use ($todayStr) {
+                    $query->whereDate('work_date', $todayStr)
+                        ->orWhereHas('session', fn ($session) => $session->where('status', 'active'));
+                })
+                ->first();
         }
 
         return view('employee.dashboard', [
@@ -55,6 +66,7 @@ class DashboardController extends Controller
             'todayLeave' => $todayLeave,
             'activeLocation' => $activeLocation,
             'requireSelfie' => (bool) AppSetting::get('attendance_require_selfie', true),
+            'todayOvertime' => $todayOvertime,
         ]);
     }
 }

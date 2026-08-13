@@ -208,7 +208,13 @@ class NotificationTest extends TestCase
 
         Notification::assertSentTo(
             $this->employeeUser1,
-            OvertimeRequestApprovedNotification::class
+            OvertimeRequestApprovedNotification::class,
+            function (OvertimeRequestApprovedNotification $notification): bool {
+                $data = $notification->toArray($this->employeeUser1);
+
+                return str_contains($data['target_url'], 'highlight='.$notification->overtimeRequest->id)
+                    && str_contains($data['target_url'], '#overtime-'.$notification->overtimeRequest->id);
+            }
         );
     }
 

@@ -141,8 +141,9 @@
                         $dateKey = $req->work_date->format('Y-m-d');
                         $att = $attendances[$dateKey] ?? null;
                         $sch = $schedules[$dateKey] ?? null;
+                        $canStartSession = !$req->session && $req->approved_minutes > 0 && $req->isStartDateValid($sch) && $att?->check_out_at;
                     @endphp
-                    <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/30 hover:bg-white transition-all space-y-2.5">
+                    <div id="overtime-{{ $req->id }}" class="p-4 rounded-xl border {{ request('highlight') == $req->id ? 'border-rose-400 ring-2 ring-rose-100' : 'border-slate-200' }} bg-slate-50/30 hover:bg-white transition-all space-y-2.5">
                         <div class="flex items-start justify-between">
                             <div>
                                 <span class="text-xs font-extrabold text-slate-900">{{ $req->work_date->translatedFormat('l, d F Y') }}</span>
@@ -156,7 +157,7 @@
                         </div>
 
                         <!-- Duration Info Grid -->
-                        <div class="grid grid-cols-2 gap-2 bg-white p-2.5 rounded-lg border border-slate-100 text-xs">
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-white p-2.5 rounded-lg border border-slate-100 text-xs">
                             <div>
                                 <span class="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Requested</span>
                                 <span class="font-extrabold text-slate-800">{{ $req->formatted_requested_duration }}</span>
@@ -169,7 +170,54 @@
                                     <span class="font-bold text-slate-400">-</span>
                                 @endif
                             </div>
+                            <div>
+                                <span class="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Actual</span>
+                                <span class="font-extrabold text-indigo-700">{{ $req->session?->isCompleted() ? \App\Models\OvertimeSession::formatMinutes($req->session->actual_minutes) : '-' }}</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Credited</span>
+                                <span class="font-extrabold text-violet-700">{{ $req->session?->isCompleted() ? \App\Models\OvertimeSession::formatMinutes($req->session->credited_minutes) : '-' }}</span>
+                            </div>
                         </div>
+
+                        @if($req->status === 'approved')
+                            <div class="rounded-xl border border-indigo-100 bg-indigo-50/60 p-3 space-y-2">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-[10px] font-black uppercase tracking-wider text-indigo-800">Sesi Lembur</span>
+                                    <span class="text-[10px] font-bold text-indigo-700">
+                                        {{ !$req->session ? 'Belum Dimulai' : ($req->session->isActive() ? 'Sedang Lembur' : 'Selesai') }}
+                                    </span>
+                                </div>
+
+                                @if($req->session)
+                                    <p class="text-[11px] text-slate-700">
+                                        Mulai: <strong>{{ $req->session->check_in_at?->format('d/m H:i') }}</strong>
+                                        @if($req->session->check_out_at) · Selesai: <strong>{{ $req->session->check_out_at->format('d/m H:i') }}</strong> @endif
+                                    </p>
+                                @endif
+
+                                @if($canStartSession || $req->session?->isActive())
+                                    <form action="{{ !$req->session ? route('employee.overtime-requests.start', $req) : route('employee.overtime-sessions.finish', $req->session) }}" method="POST" enctype="multipart/form-data" class="overtime-session-form space-y-2">
+                                        @csrf
+                                        <input type="hidden" name="latitude" class="overtime-latitude">
+                                        <input type="hidden" name="longitude" class="overtime-longitude">
+                                        <input type="hidden" name="accuracy" class="overtime-accuracy">
+                                        @if($requireSelfie)
+                                            <label class="block text-[10px] font-bold text-slate-600">Selfie bukti</label>
+                                            <input type="file" name="selfie" accept="image/*" capture="user" required class="block w-full text-[11px] text-slate-600 file:mr-2 file:min-h-[36px] file:rounded-lg file:border-0 file:bg-white file:px-3 file:font-bold file:text-indigo-700">
+                                        @endif
+                                        <button type="button" onclick="submitOvertimeWithGps(this)" class="w-full min-h-[44px] rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-extrabold text-white hover:bg-indigo-700">
+                                            {{ !$req->session ? 'Mulai Lembur' : 'Selesai Lembur' }}
+                                        </button>
+                                        <p class="overtime-gps-status text-center text-[10px] text-slate-500">GPS akan diverifikasi saat tombol ditekan.</p>
+                                    </form>
+                                @elseif(!$req->session)
+                                    <p class="text-[11px] font-semibold text-slate-600">
+                                        {{ !$att?->check_out_at ? 'Selesaikan absensi kerja reguler terlebih dahulu.' : 'Tanggal mulai sesi lembur sudah tidak valid.' }}
+                                    </p>
+                                @endif
+                            </div>
+                        @endif
 
                         <!-- Attendance Info if available -->
                         @if($att)
@@ -263,6 +311,27 @@
         } else {
             card.classList.add('hidden');
         }
+    }
+
+    function submitOvertimeWithGps(button) {
+        const form = button.closest('form');
+        const status = form.querySelector('.overtime-gps-status');
+        if (!form.reportValidity()) return;
+        if (!navigator.geolocation) {
+            status.textContent = 'Browser tidak mendukung GPS.';
+            return;
+        }
+        button.disabled = true;
+        status.textContent = 'Mengambil lokasi...';
+        navigator.geolocation.getCurrentPosition((position) => {
+            form.querySelector('.overtime-latitude').value = position.coords.latitude;
+            form.querySelector('.overtime-longitude').value = position.coords.longitude;
+            form.querySelector('.overtime-accuracy').value = position.coords.accuracy;
+            form.submit();
+        }, () => {
+            button.disabled = false;
+            status.textContent = 'Lokasi gagal diperoleh. Aktifkan izin GPS lalu coba lagi.';
+        }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
     }
 
     // Trigger on load if date preselected

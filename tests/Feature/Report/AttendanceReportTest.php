@@ -7,11 +7,14 @@ use App\Models\Employee;
 use App\Models\EmployeeSchedule;
 use App\Models\LeaveRequest;
 use App\Models\OvertimeRequest;
+use App\Models\OvertimeSession;
 use App\Models\Shift;
 use App\Models\User;
 use App\Services\ReportService;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
@@ -20,13 +23,21 @@ class AttendanceReportTest extends TestCase
     use RefreshDatabase;
 
     protected User $ownerUser;
+
     protected User $adminUser;
+
     protected User $employeeUser1;
+
     protected Employee $employee1;
+
     protected User $employeeUser2;
+
     protected Employee $employee2;
+
     protected Shift $shiftNormal;
+
     protected Shift $shiftCrossMidnight;
+
     protected ReportService $reportService;
 
     protected function setUp(): void
@@ -449,6 +460,32 @@ class AttendanceReportTest extends TestCase
         $this->assertEquals(45, $report['detail_rows'][0]['approved_overtime_minutes']);
     }
 
+    public function test_report_keeps_approved_and_actual_session_minutes_separate(): void
+    {
+        $date = '2026-08-10';
+        $schedule = EmployeeSchedule::create(['employee_id' => $this->employee1->id, 'work_date' => $date, 'shift_id' => $this->shiftNormal->id, 'schedule_type' => 'work']);
+        $request = OvertimeRequest::create([
+            'employee_id' => $this->employee1->id, 'work_date' => $date,
+            'requested_minutes' => 360, 'approved_minutes' => 360,
+            'reason' => 'Session report', 'status' => 'approved',
+        ]);
+        OvertimeSession::create([
+            'overtime_request_id' => $request->id, 'employee_id' => $this->employee1->id,
+            'work_schedule_id' => $schedule->id, 'work_date' => $date, 'status' => 'completed',
+            'check_in_at' => "{$date} 18:00:00", 'check_out_at' => "{$date} 22:20:00",
+            'actual_minutes' => 260, 'credited_minutes' => 260,
+        ]);
+
+        $report = $this->reportService->generateAttendanceReport([
+            'start_date' => $date, 'end_date' => $date, 'employee_id' => $this->employee1->id,
+        ]);
+
+        $this->assertSame(360, $report['detail_rows'][0]['approved_overtime_minutes']);
+        $this->assertSame(260, $report['detail_rows'][0]['actual_overtime_minutes']);
+        $this->assertSame(260, $report['detail_rows'][0]['credited_overtime_minutes']);
+        $this->assertSame(260, $report['global_summary']['total_actual_overtime_minutes']);
+    }
+
     public function test_overtime_candidate_not_treated_as_approved_overtime(): void
     {
         $d1 = '2026-08-10';
@@ -477,8 +514,8 @@ class AttendanceReportTest extends TestCase
             'work_schedule_id' => $sch->id,
             'work_date' => $d1,
             'status' => 'present',
-            'check_in_at' => "2026-08-11 19:55:00",
-            'check_out_at' => "2026-08-12 06:15:00",
+            'check_in_at' => '2026-08-11 19:55:00',
+            'check_out_at' => '2026-08-12 06:15:00',
             'worked_minutes' => 620,
         ]);
 
@@ -563,7 +600,7 @@ class AttendanceReportTest extends TestCase
 
         $response->assertOk();
         $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
-        
+
         $content = $response->streamedContent();
         $this->assertStringContainsString('Ayu Pratama', $content);
         $this->assertStringContainsString('SB-001', $content);
@@ -599,7 +636,7 @@ class AttendanceReportTest extends TestCase
             'employee_id' => $this->employee1->id,
         ]);
 
-        $this->assertInstanceOf(\Carbon\CarbonInterface::class, $report['detail_rows'][0]['date']);
+        $this->assertInstanceOf(CarbonInterface::class, $report['detail_rows'][0]['date']);
 
         $response = $this->actingAs($this->ownerUser)->get(route('admin.reports.attendance', [
             'start_date' => $d1,
@@ -685,7 +722,7 @@ class AttendanceReportTest extends TestCase
         ];
 
         $allRows = collect($reportData['detail_rows']);
-        $paginatedRows = new \Illuminate\Pagination\LengthAwarePaginator(
+        $paginatedRows = new LengthAwarePaginator(
             $allRows,
             $allRows->count(),
             25,

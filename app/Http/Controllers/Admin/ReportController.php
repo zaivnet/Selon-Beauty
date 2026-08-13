@@ -132,6 +132,8 @@ class ReportController extends Controller
                 'Worked Minutes',
                 'Early Leave Minutes',
                 'Approved Overtime Minutes',
+                'Actual Overtime Minutes',
+                'Credited Overtime Minutes',
             ]);
 
             // Data Rows
@@ -153,6 +155,8 @@ class ReportController extends Controller
                     $row['worked_minutes'],
                     $row['early_leave_minutes'],
                     $row['approved_overtime_minutes'],
+                    $row['actual_overtime_minutes'],
+                    $row['credited_overtime_minutes'],
                 ];
 
                 $sanitizedRow = array_map(function ($val) {

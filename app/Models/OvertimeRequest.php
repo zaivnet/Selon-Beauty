@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class OvertimeRequest extends Model
 {
@@ -44,6 +46,20 @@ class OvertimeRequest extends Model
         return $this->belongsTo(User::class, 'reviewed_by');
     }
 
+    public function session(): HasOne
+    {
+        return $this->hasOne(OvertimeSession::class);
+    }
+
+    public function isStartDateValid(?EmployeeSchedule $schedule = null, ?Carbon $now = null): bool
+    {
+        $today = ($now ?? Carbon::now(config('app.timezone')))->copy()->startOfDay();
+        $workDate = $this->work_date->copy()->startOfDay();
+
+        return $today->equalTo($workDate)
+            || ($schedule?->shift?->crosses_midnight && $today->equalTo($workDate->copy()->addDay()));
+    }
+
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
@@ -75,6 +91,7 @@ class OvertimeRequest extends Model
         } elseif ($hours > 0) {
             return "{$hours} jam ({$this->requested_minutes} menit)";
         }
+
         return "{$this->requested_minutes} menit";
     }
 
@@ -91,6 +108,7 @@ class OvertimeRequest extends Model
         } elseif ($hours > 0) {
             return "{$hours} jam ({$this->approved_minutes} menit)";
         }
+
         return "{$this->approved_minutes} menit";
     }
 }

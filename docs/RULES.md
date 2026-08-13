@@ -201,3 +201,11 @@ Minimal satu akun Superadmin yang aktif (`is_active = true`) WAJIB selalu tersed
 4. **Session Revocation**: Proses reset password yang berhasil WAJIB secara otomatis mencabut (*invalidate*) seluruh sesi HTTP lama milik target user.
 5. **Domain Agnostic**: URL reset password WAJIB digenerate secara dinamis dari `APP_URL` / request host tanpa hardcoded hostname.
 6. **Administrative Fallback**: Reset password langsung untuk pengguna lain hanya diizinkan untuk role Superadmin dengan wajib mengonfirmasi ulang password Superadmin pribadi (*re-authentication*).
+
+## RULE 034 — Separate Overtime Session
+1. Attendance reguler tetap satu record per employee/work date dan tidak boleh dipakai untuk check-in lembur kedua.
+2. Overtime aktual wajib disimpan di `overtime_sessions`, satu session maksimal untuk satu approved request.
+3. Employee wajib menyelesaikan checkout reguler sebelum memulai lembur.
+4. Timestamp, GPS, geofence, dan perhitungan menit lembur bersifat server-authoritative.
+5. `approved_minutes` adalah batas maksimum otorisasi, `actual_minutes` adalah durasi nyata, dan `credited_minutes` adalah nilai minimum dari keduanya.
+6. Overtime cross-midnight tetap terikat pada `work_date` request asal.

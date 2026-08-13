@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -30,13 +31,13 @@ class SelfieService
     /**
      * Process, validate, optimize, and store selfie image in private storage disk.
      *
-     * @param UploadedFile|string|null $input UploadedFile or Base64 Data URL
-     * @param int $employeeId
-     * @param string $type ('check_in' or 'check_out')
+     * @param  UploadedFile|string|null  $input  UploadedFile or Base64 Data URL
+     * @param  string  $type  ('check_in' or 'check_out')
      * @return string Relative path stored in private disk
+     *
      * @throws \InvalidArgumentException
      */
-    public function processAndStore(mixed $input, int $employeeId, string $type = 'check_in'): string
+    public function processAndStore(mixed $input, int $employeeId, string $type = 'check_in', string $category = 'attendance'): string
     {
         if (empty($input)) {
             throw new \InvalidArgumentException('Foto selfie wajib diambil untuk melakukan absensi.');
@@ -137,10 +138,15 @@ class SelfieService
 
         // Generate random filename & path inside storage/app/private
         // Path format: attendance/{employee_id}/{YYYY}/{MM}/{uuid}.jpg
-        $year = date('Y');
-        $month = date('m');
+        $now = Carbon::now(config('app.timezone'));
+        $year = $now->format('Y');
+        $month = $now->format('m');
         $filename = Str::uuid()->toString().'.jpg';
-        $path = "attendance/{$employeeId}/{$year}/{$month}/{$filename}";
+        if (! in_array($category, ['attendance', 'overtime'], true)) {
+            throw new \InvalidArgumentException('Kategori penyimpanan selfie tidak valid.');
+        }
+
+        $path = "{$category}/{$employeeId}/{$year}/{$month}/{$filename}";
 
         Storage::disk('local')->put($path, $compressedBinary);
 

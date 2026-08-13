@@ -257,3 +257,15 @@ Jangan hanya menampilkan "Terjadi kesalahan".
   - Backup Create / Download / Schedule / Delete: `superadmin` + `owner`
   - Application Branding: `superadmin` + `owner`
   - Audit Logs: `superadmin` + `owner`
+
+## 16. Overtime Session Architecture
+
+- `attendance_records` hanya menyimpan satu sesi attendance reguler per employee dan `work_date`.
+- `overtime_requests` menyimpan permintaan dan otorisasi: `requested_minutes` serta `approved_minutes`.
+- `overtime_sessions` menyimpan aktivitas lembur aktual dan tidak membuat check-in kedua pada attendance reguler.
+- Satu overtime request hanya dapat memiliki satu overtime session.
+- Session hanya dapat dimulai setelah request approved dan attendance reguler untuk `work_date` tersebut selesai checkout.
+- `actual_minutes` adalah selisih timestamp check-in dan check-out overtime yang authoritative dari server.
+- `credited_minutes = min(actual_minutes, approved_minutes)`; durasi aktual tidak mengubah approval.
+- Session cross-midnight tetap memakai `work_date` request/schedule asal dan tidak dipecah menjadi dua record.
+- Evidence selfie disimpan private pada `storage/app/private/overtime/{employee_id}/{YYYY}/{MM}/` dan hanya disajikan oleh authorized controller.

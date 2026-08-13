@@ -127,6 +127,7 @@ class BackupTest extends TestCase
     {
         Storage::fake('public');
         Storage::disk('local')->put('attendance/10/2026/08/check-in.jpg', 'selfie-bytes');
+        Storage::disk('local')->put('overtime/10/2026/08/overtime-in.jpg', 'overtime-bytes');
         Storage::disk('local')->put('leave-attachments/10/2026/08/medical.pdf', 'leave-bytes');
         Storage::disk('public')->put('branding/logo.png', 'branding-bytes');
 
@@ -135,12 +136,14 @@ class BackupTest extends TestCase
 
         $this->assertArrayHasKey('database/dump.json', $entries);
         $this->assertArrayHasKey('files/attendance/10/2026/08/check-in.jpg', $entries);
+        $this->assertArrayHasKey('files/overtime/10/2026/08/overtime-in.jpg', $entries);
         $this->assertArrayHasKey('files/leave-attachments/10/2026/08/medical.pdf', $entries);
         $this->assertArrayHasKey('files/branding/logo.png', $entries);
 
         $manifest = json_decode($entries['backup-manifest.json'], true);
         $this->assertSame('database/dump.json', $manifest['database_file']);
         $this->assertSame(1, $manifest['media_categories']['attendance_selfies']['file_count']);
+        $this->assertSame(1, $manifest['media_categories']['overtime_selfies']['file_count']);
         $this->assertSame(1, $manifest['media_categories']['leave_attachments']['file_count']);
         $this->assertSame(1, $manifest['media_categories']['branding']['file_count']);
         $this->assertGreaterThan(0, $manifest['media_total_size']);

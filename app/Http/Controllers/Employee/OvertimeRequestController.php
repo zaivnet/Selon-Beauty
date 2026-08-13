@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
+use App\Models\AppSetting;
 use App\Models\AttendanceRecord;
 use App\Models\EmployeeSchedule;
 use App\Models\OvertimeRequest;
@@ -27,13 +28,13 @@ class OvertimeRequestController extends Controller
         }
 
         $requests = OvertimeRequest::where('employee_id', $employee->id)
-            ->with(['reviewer'])
+            ->with(['reviewer', 'session'])
             ->orderBy('created_at', 'desc')
             ->get();
 
         // Load attendance context for each request
         $workDates = $requests->pluck('work_date')->map(fn ($d) => $d->format('Y-m-d'))->toArray();
-        
+
         $attendances = AttendanceRecord::where('employee_id', $employee->id)
             ->whereIn('work_date', $workDates)
             ->get()
@@ -66,6 +67,7 @@ class OvertimeRequestController extends Controller
             'schedules' => $schedules,
             'availableSchedules' => $availableSchedules,
             'availableAttendances' => $availableAttendances,
+            'requireSelfie' => (bool) AppSetting::get('attendance_require_selfie', true),
         ]);
     }
 

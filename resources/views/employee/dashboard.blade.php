@@ -218,6 +218,39 @@
     @endif
 
     <!-- Attendance Form Section (GPS & Selfie) -->
+    @if($todayOvertime)
+        <div class="bg-indigo-50 rounded-2xl p-5 border border-indigo-200 shadow-xs space-y-3">
+            <div class="flex items-center justify-between gap-3">
+                <div>
+                    <span class="text-[10px] font-black text-indigo-700 uppercase tracking-widest">Lembur Hari Ini</span>
+                    <p class="text-sm font-extrabold text-slate-900 mt-1">{{ !$todayOvertime->session ? 'Disetujui · Belum Dimulai' : ($todayOvertime->session->isActive() ? 'Sedang Lembur' : 'Selesai') }}</p>
+                </div>
+                <span class="rounded-full bg-white px-3 py-1 text-[11px] font-extrabold text-indigo-700 border border-indigo-200">
+                    {{ \App\Models\OvertimeSession::formatMinutes($todayOvertime->approved_minutes) }} approved
+                </span>
+            </div>
+            @if($todayOvertime->session)
+                <div class="text-xs text-slate-700">
+                    Mulai <strong>{{ $todayOvertime->session->check_in_at?->format('H:i') }}</strong>
+                    @if($todayOvertime->session->isCompleted())
+                        · Selesai <strong>{{ $todayOvertime->session->check_out_at?->format('H:i') }}</strong><br>
+                        Actual <strong>{{ \App\Models\OvertimeSession::formatMinutes($todayOvertime->session->actual_minutes) }}</strong>
+                        · Credited <strong>{{ \App\Models\OvertimeSession::formatMinutes($todayOvertime->session->credited_minutes) }}</strong>
+                    @else
+                        · Durasi berjalan {{ \App\Models\OvertimeSession::formatMinutes($todayOvertime->session->runningMinutes()) }}
+                    @endif
+                </div>
+            @endif
+            @if(($todayAttendance?->check_out_at && !$todayOvertime->session && $todayOvertime->approved_minutes > 0) || $todayOvertime->session?->isActive())
+                <a href="{{ route('employee.overtime-requests.index', ['highlight' => $todayOvertime->id]) }}#overtime-{{ $todayOvertime->id }}" class="flex min-h-[44px] w-full items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-extrabold text-white">
+                    {{ !$todayOvertime->session ? 'Mulai Lembur' : 'Selesai Lembur' }}
+                </a>
+            @elseif(!$todayOvertime->session)
+                <p class="text-[11px] font-semibold text-indigo-800">Selesaikan absensi kerja reguler terlebih dahulu.</p>
+            @endif
+        </div>
+    @endif
+
     @if($todaySchedule && $todaySchedule->schedule_type === 'work' && (!$todayAttendance || !$todayAttendance->check_out_at) && !$todayLeave)
         <!-- GPS Geofence Section -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-4">

@@ -112,6 +112,8 @@
                         <th class="p-2 border border-slate-300">Terlambat</th>
                         <th class="p-2 border border-slate-300">Worked</th>
                         <th class="p-2 border border-slate-300">Lembur Approved</th>
+                        <th class="p-2 border border-slate-300">Lembur Actual</th>
+                        <th class="p-2 border border-slate-300">Lembur Credited</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 font-medium">
@@ -140,6 +142,8 @@
                             <td class="p-2 border border-slate-300 font-mono">{{ $row['late_minutes'] > 0 ? $row['late_minutes'] . 'm' : '0m' }}</td>
                             <td class="p-2 border border-slate-300 font-mono">{{ $row['worked_minutes'] > 0 ? "{$rWHours}j {$rWMins}m" : '0m' }}</td>
                             <td class="p-2 border border-slate-300 font-mono font-bold">{{ $row['approved_overtime_minutes'] > 0 ? $row['approved_overtime_minutes'] . 'm' : '0m' }}</td>
+                            <td class="p-2 border border-slate-300 font-mono">{{ $row['actual_overtime_minutes'] ?? 0 }}m</td>
+                            <td class="p-2 border border-slate-300 font-mono font-bold">{{ $row['credited_overtime_minutes'] ?? 0 }}m</td>
                         </tr>
                     @endforeach
                 </tbody>

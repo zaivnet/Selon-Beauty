@@ -121,6 +121,7 @@
                             <th class="px-5 py-3.5">Candidate Lembur</th>
                             <th class="px-5 py-3.5">Requested</th>
                             <th class="px-5 py-3.5">Approved</th>
+                            <th class="px-5 py-3.5">Session</th>
                             <th class="px-5 py-3.5">Alasan</th>
                             <th class="px-5 py-3.5">Status</th>
                             <th class="px-5 py-3.5 text-right">Aksi</th>
@@ -190,6 +191,21 @@
                                         </span>
                                     @else
                                         <span class="text-slate-400 font-medium">-</span>
+                                    @endif
+                                </td>
+
+                                <!-- Alasan -->
+                                <td class="px-5 py-4 whitespace-nowrap text-[11px]">
+                                    @if(!$req->session)
+                                        <span class="font-bold text-slate-400">Belum Dimulai</span>
+                                    @elseif($req->session->isActive())
+                                        <span class="font-extrabold text-indigo-700">Active</span>
+                                        <div class="text-slate-500">{{ $req->session->check_in_at?->format('d/m H:i') }}</div>
+                                    @else
+                                        <span class="font-extrabold text-emerald-700">Completed</span>
+                                        <div class="text-slate-500">{{ $req->session->check_in_at?->format('H:i') }}–{{ $req->session->check_out_at?->format('H:i') }}</div>
+                                        <div>Actual {{ \App\Models\OvertimeSession::formatMinutes($req->session->actual_minutes) }}</div>
+                                        <div>Credited {{ \App\Models\OvertimeSession::formatMinutes($req->session->credited_minutes) }}</div>
                                     @endif
                                 </td>
 

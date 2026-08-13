@@ -221,6 +221,8 @@
                             <th class="px-4 py-3.5">Pulang Cepat</th>
                             <th class="px-4 py-3.5">Worked Time</th>
                             <th class="px-4 py-3.5">Approved Lembur</th>
+                            <th class="px-4 py-3.5">Actual Lembur</th>
+                            <th class="px-4 py-3.5">Credited Lembur</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -315,6 +317,8 @@
                                         <span class="text-slate-400">0m</span>
                                     @endif
                                 </td>
+                                <td class="px-4 py-3.5 whitespace-nowrap font-mono font-bold text-indigo-700">{{ $row['actual_overtime_minutes'] ?? 0 }}m</td>
+                                <td class="px-4 py-3.5 whitespace-nowrap font-mono font-bold text-violet-700">{{ $row['credited_overtime_minutes'] ?? 0 }}m</td>
                             </tr>
                         @endforeach
                     </tbody>

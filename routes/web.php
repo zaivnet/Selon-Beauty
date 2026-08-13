@@ -17,11 +17,13 @@ use App\Http\Controllers\Employee\AttendanceController as EmployeeAttendanceCont
 use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;
 use App\Http\Controllers\Employee\LeaveRequestController as EmployeeLeaveRequestController;
 use App\Http\Controllers\Employee\OvertimeRequestController as EmployeeOvertimeRequestController;
+use App\Http\Controllers\Employee\OvertimeSessionController as EmployeeOvertimeSessionController;
 use App\Http\Controllers\Employee\ProfileController as EmployeeProfileController;
 use App\Http\Controllers\Employee\ScheduleController as EmployeeScheduleController;
 use App\Http\Controllers\HealthCheckController;
 use App\Http\Controllers\LeaveAttachmentController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\OvertimeSelfieController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -90,7 +92,7 @@ Route::middleware(['auth', 'role:superadmin,owner,admin', 'prevent.private.cache
     // Employee Management (Sprint 02)
     Route::resource('employees', EmployeeController::class);
     Route::post('/employees/{employee}/toggle-status', [EmployeeController::class, 'toggleStatus'])->name('employees.toggle-status');
-    
+
     // Superadmin Administrative Reset Password (Sprint 18.6)
     Route::post('/employees/{employee}/reset-password', [\App\Http\Controllers\Admin\AdminPasswordResetController::class, 'reset'])
         ->middleware('role:superadmin')
@@ -181,6 +183,10 @@ Route::middleware(['auth', 'role:owner,employee', 'prevent.private.cache'])->pre
     Route::get('/overtime-requests', [EmployeeOvertimeRequestController::class, 'index'])->name('overtime-requests.index');
     Route::post('/overtime-requests', [EmployeeOvertimeRequestController::class, 'store'])->name('overtime-requests.store');
     Route::post('/overtime-requests/{overtimeRequest}/cancel', [EmployeeOvertimeRequestController::class, 'cancel'])->name('overtime-requests.cancel');
+    Route::middleware('throttle:10,1')->group(function () {
+        Route::post('/overtime-requests/{overtimeRequest}/start', [EmployeeOvertimeSessionController::class, 'start'])->name('overtime-requests.start');
+        Route::post('/overtime-sessions/{overtimeSession}/finish', [EmployeeOvertimeSessionController::class, 'finish'])->name('overtime-sessions.finish');
+    });
 
     // Profile & Account Settings (Sprint 14)
     Route::get('/profile', [EmployeeProfileController::class, 'index'])->name('profile.index');
@@ -191,6 +197,7 @@ Route::middleware(['auth', 'role:owner,employee', 'prevent.private.cache'])->pre
 Route::middleware(['auth'])->group(function () {
     Route::get('/attendance/selfie/{record}/{type}', [AttendanceSelfieController::class, 'show'])->name('attendance.selfie');
     Route::get('/leave-requests/attachment/{leaveRequest}', [LeaveAttachmentController::class, 'show'])->name('leave-requests.attachment');
+    Route::get('/overtime-sessions/{overtimeSession}/selfie/{type}', [OvertimeSelfieController::class, 'show'])->name('overtime-sessions.selfie');
 
     // In-App Notifications (Sprint 13)
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

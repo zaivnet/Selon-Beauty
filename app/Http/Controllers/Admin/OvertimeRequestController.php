@@ -24,7 +24,7 @@ class OvertimeRequestController extends Controller
         $startDateFilter = $request->input('start_date');
         $endDateFilter = $request->input('end_date');
 
-        $query = OvertimeRequest::with(['employee.jobTitle', 'reviewer'])
+        $query = OvertimeRequest::with(['employee.jobTitle', 'reviewer', 'session'])
             ->orderBy('created_at', 'desc');
 
         if ($statusFilter && $statusFilter !== 'all') {
@@ -57,13 +57,13 @@ class OvertimeRequestController extends Controller
         $attendances = AttendanceRecord::whereIn('employee_id', $employeeIds)
             ->whereIn('work_date', $workDates)
             ->get()
-            ->keyBy(fn ($a) => $a->employee_id . '_' . $a->work_date->format('Y-m-d'));
+            ->keyBy(fn ($a) => $a->employee_id.'_'.$a->work_date->format('Y-m-d'));
 
         $schedules = EmployeeSchedule::whereIn('employee_id', $employeeIds)
             ->whereIn('work_date', $workDates)
             ->with('shift')
             ->get()
-            ->keyBy(fn ($s) => $s->employee_id . '_' . $s->work_date->format('Y-m-d'));
+            ->keyBy(fn ($s) => $s->employee_id.'_'.$s->work_date->format('Y-m-d'));
 
         $employees = Employee::whereNull('deleted_at')
             ->where('status', 'active')

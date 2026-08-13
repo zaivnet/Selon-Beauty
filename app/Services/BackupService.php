@@ -26,6 +26,7 @@ class BackupService
         'attendance_records',
         'leave_requests',
         'overtime_requests',
+        'overtime_sessions',
         'attendance_corrections',
         'notifications',
         'audit_logs',
@@ -340,6 +341,7 @@ class BackupService
 
         return [
             'attendance_selfies' => $this->copyStorageDirectoryToArchive('local', 'attendance', $filesDir.'/attendance'),
+            'overtime_selfies' => $this->copyStorageDirectoryToArchive('local', 'overtime', $filesDir.'/overtime'),
             'leave_attachments' => $this->copyStorageDirectoryToArchive('local', 'leave-attachments', $filesDir.'/leave-attachments'),
             'branding' => $this->copyStorageDirectoryToArchive('public', 'branding', $filesDir.'/branding'),
         ];
@@ -409,6 +411,10 @@ class BackupService
 
         if (is_dir($filesDir.'/leave-attachments')) {
             $this->copyArchiveDirectoryToStorage($filesDir.'/leave-attachments', 'local', 'leave-attachments');
+        }
+
+        if (is_dir($filesDir.'/overtime')) {
+            $this->copyArchiveDirectoryToStorage($filesDir.'/overtime', 'local', 'overtime');
         }
 
         if (is_dir($filesDir.'/branding')) {

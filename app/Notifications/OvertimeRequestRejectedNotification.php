@@ -27,7 +27,7 @@ class OvertimeRequestRejectedNotification extends Notification
             'title' => 'Pengajuan Lembur Ditolak',
             'message' => "Pengajuan Lembur Anda pada {$wDate} ditolak.{$note}",
             'overtime_request_id' => $this->overtimeRequest->id,
-            'target_url' => route('employee.overtime-requests.index'),
+            'target_url' => route('employee.overtime-requests.index', ['highlight' => $this->overtimeRequest->id]).'#overtime-'.$this->overtimeRequest->id,
             'icon' => 'x-circle',
         ];
     }

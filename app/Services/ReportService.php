@@ -14,14 +14,11 @@ class ReportService
 {
     public function __construct(protected ?AttendanceStatusResolver $statusResolver = null)
     {
-        $this->statusResolver = $statusResolver ?? new AttendanceStatusResolver();
+        $this->statusResolver = $statusResolver ?? new AttendanceStatusResolver;
     }
 
     /**
      * Generate comprehensive attendance report data based on filters.
-     *
-     * @param array $filters
-     * @return array
      */
     public function generateAttendanceReport(array $filters): array
     {
@@ -59,21 +56,21 @@ class ReportService
             ->whereDate('work_date', '<=', $endDateStr)
             ->with('shift')
             ->get()
-            ->groupBy(fn ($s) => $s->employee_id . '_' . $s->work_date->format('Y-m-d'));
+            ->groupBy(fn ($s) => $s->employee_id.'_'.$s->work_date->format('Y-m-d'));
 
         $attendances = AttendanceRecord::whereIn('employee_id', $employeeIds)
             ->whereDate('work_date', '>=', $startDateStr)
             ->whereDate('work_date', '<=', $endDateStr)
             ->with('location')
             ->get()
-            ->groupBy(fn ($a) => $a->employee_id . '_' . $a->work_date->format('Y-m-d'));
+            ->groupBy(fn ($a) => $a->employee_id.'_'.$a->work_date->format('Y-m-d'));
 
         // Fetch Approved Leave Requests overlapping date range
         $leaveRequests = LeaveRequest::whereIn('employee_id', $employeeIds)
             ->where('status', 'approved')
             ->where(function ($q) use ($startDateStr, $endDateStr) {
                 $q->whereDate('start_date', '<=', $endDateStr)
-                  ->whereDate('end_date', '>=', $startDateStr);
+                    ->whereDate('end_date', '>=', $startDateStr);
             })
             ->get();
 
@@ -84,7 +81,7 @@ class ReportService
             $lEnd = Carbon::parse($lr->end_date)->min($endDate);
             $lPeriod = CarbonPeriod::create($lStart, $lEnd);
             foreach ($lPeriod as $pDate) {
-                $key = $lr->employee_id . '_' . $pDate->format('Y-m-d');
+                $key = $lr->employee_id.'_'.$pDate->format('Y-m-d');
                 $leaveMap[$key] = $lr;
             }
         }
@@ -94,8 +91,9 @@ class ReportService
             ->where('status', 'approved')
             ->whereDate('work_date', '>=', $startDateStr)
             ->whereDate('work_date', '<=', $endDateStr)
+            ->with('session')
             ->get()
-            ->keyBy(fn ($o) => $o->employee_id . '_' . $o->work_date->format('Y-m-d'));
+            ->keyBy(fn ($o) => $o->employee_id.'_'.$o->work_date->format('Y-m-d'));
 
         // 3. Build Daily Detail Matrix & Calculate Summaries
         $detailRows = [];
@@ -114,6 +112,8 @@ class ReportService
             'total_worked_minutes' => 0,
             'total_early_leave_minutes' => 0,
             'total_approved_overtime_minutes' => 0,
+            'total_actual_overtime_minutes' => 0,
+            'total_credited_overtime_minutes' => 0,
         ];
 
         $datePeriod = CarbonPeriod::create($startDate, $endDate);
@@ -132,11 +132,13 @@ class ReportService
                 'total_worked_minutes' => 0,
                 'total_early_leave_minutes' => 0,
                 'total_approved_overtime_minutes' => 0,
+                'total_actual_overtime_minutes' => 0,
+                'total_credited_overtime_minutes' => 0,
             ];
 
             foreach ($datePeriod as $currDate) {
                 $dStr = $currDate->format('Y-m-d');
-                $key = $emp->id . '_' . $dStr;
+                $key = $emp->id.'_'.$dStr;
 
                 $sch = $schedules->get($key)?->first();
                 $att = $attendances->get($key)?->first();
@@ -160,6 +162,8 @@ class ReportService
                 $workedMinutes = $att ? (int) $att->worked_minutes : 0;
                 $earlyLeaveMinutes = $att ? (int) $att->early_leave_minutes : 0;
                 $approvedOvertimeMinutes = $ovt ? (int) $ovt->approved_minutes : 0;
+                $actualOvertimeMinutes = $ovt?->session?->isCompleted() ? (int) $ovt->session->actual_minutes : 0;
+                $creditedOvertimeMinutes = $ovt?->session?->isCompleted() ? (int) $ovt->session->credited_minutes : 0;
 
                 if (! $isWorkDay) {
                     if ($scheduleType === 'off') {
@@ -209,6 +213,10 @@ class ReportService
 
                 $empSummary['total_approved_overtime_minutes'] += $approvedOvertimeMinutes;
                 $globalSummary['total_approved_overtime_minutes'] += $approvedOvertimeMinutes;
+                $empSummary['total_actual_overtime_minutes'] += $actualOvertimeMinutes;
+                $globalSummary['total_actual_overtime_minutes'] += $actualOvertimeMinutes;
+                $empSummary['total_credited_overtime_minutes'] += $creditedOvertimeMinutes;
+                $globalSummary['total_credited_overtime_minutes'] += $creditedOvertimeMinutes;
 
                 // Status Filter Matching
                 if ($statusFilter !== 'all') {
@@ -252,6 +260,9 @@ class ReportService
                     'worked_minutes' => $workedMinutes,
                     'early_leave_minutes' => $earlyLeaveMinutes,
                     'approved_overtime_minutes' => $approvedOvertimeMinutes,
+                    'actual_overtime_minutes' => $actualOvertimeMinutes,
+                    'credited_overtime_minutes' => $creditedOvertimeMinutes,
+                    'overtime_session' => $ovt?->session,
                 ];
             }
 
@@ -287,6 +298,8 @@ class ReportService
                 'total_worked_minutes' => 0,
                 'total_early_leave_minutes' => 0,
                 'total_approved_overtime_minutes' => 0,
+                'total_actual_overtime_minutes' => 0,
+                'total_credited_overtime_minutes' => 0,
             ],
             'filters' => $filters,
         ];
