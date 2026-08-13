@@ -36,13 +36,13 @@
             <!-- Start Date -->
             <div class="w-full min-w-0 max-w-full">
                 <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Dari Tanggal</label>
-                <input type="date" name="start_date" value="{{ $filters['start_date'] }}" class="w-full min-w-0 max-w-full box-border px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px]">
+                <x-date-input name="start_date" value="{{ $filters['start_date'] }}" />
             </div>
 
             <!-- End Date -->
             <div class="w-full min-w-0 max-w-full">
                 <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Sampai Tanggal</label>
-                <input type="date" name="end_date" value="{{ $filters['end_date'] }}" class="w-full min-w-0 max-w-full box-border px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px]">
+                <x-date-input name="end_date" value="{{ $filters['end_date'] }}" />
             </div>
 
             <!-- Employee -->

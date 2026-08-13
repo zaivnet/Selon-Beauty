@@ -71,7 +71,7 @@
 
             <div class="w-full min-w-0 max-w-full">
                 <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Tanggal Mulai</label>
-                <input type="date" name="start_date" value="{{ $filters['start_date'] }}" class="w-full min-w-0 max-w-full box-border px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px]">
+                <x-date-input name="start_date" value="{{ $filters['start_date'] }}" wrapperClass="bg-white" />
             </div>
 
             <div class="flex items-end gap-2">

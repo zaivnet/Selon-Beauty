@@ -26,41 +26,103 @@ body {
     -webkit-tap-highlight-color: transparent;
 }
 
-/* Global iOS WebKit date & time input intrinsic overflow & layout fixes */
-input[type="date"],
-input[type="time"],
-input[type="datetime-local"] {
+/* ==========================================================================
+   iOS WebKit Native Date Input Clipping Architecture (.ios-date-field)
+   ========================================================================== */
+
+.ios-date-field {
+    position: relative !important;
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
     box-sizing: border-box !important;
-    display: block;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: center !important;
+    border-width: 1px !important;
+    border-style: solid !important;
+    border-color: #cbd5e1 !important; /* border-slate-300 */
+    border-radius: 0.75rem !important; /* rounded-xl */
+    background-color: #f8fafc !important; /* bg-slate-50 */
+    min-height: 44px !important;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
 }
 
-/* Fix iOS WebKit internal text & date container sizing */
-input[type="date"]::-webkit-date-and-time-value,
-input[type="time"]::-webkit-date-and-time-value,
-input[type="datetime-local"]::-webkit-date-and-time-value {
-    text-align: left;
-    min-width: 0 !important;
+/* Darker/White variant if specified */
+.ios-date-field.bg-white {
+    background-color: #ffffff !important;
+}
+
+/* Focus ring on wrapper via :focus-within */
+.ios-date-field:focus-within {
+    background-color: #ffffff !important;
+    border-color: #f43f5e !important; /* focus:ring-rose-500 */
+    box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.25) !important;
+}
+
+/* Native Input inside wrapper */
+.ios-date-field > input[type="date"],
+.ios-date-field > input[type="time"],
+.ios-date-field > input[type="datetime-local"] {
+    display: block !important;
     width: 100% !important;
     max-width: 100% !important;
-    margin: 0;
-    padding: 0;
-}
-
-input[type="date"]::-webkit-datetime-edit,
-input[type="time"]::-webkit-datetime-edit,
-input[type="datetime-local"]::-webkit-datetime-edit {
     min-width: 0 !important;
-    padding: 0;
+    inline-size: 100% !important;
+    max-inline-size: 100% !important;
+    height: 100% !important;
+    min-height: 42px !important;
+    box-sizing: border-box !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    margin: 0 !important;
+    padding: 0.5rem 0.75rem !important;
+    outline: none !important;
+    box-shadow: none !important;
+    font-size: 0.75rem !important; /* text-xs */
+    font-weight: 700 !important;
+    color: #0f172a !important; /* text-slate-900 */
+    -webkit-appearance: none;
+    appearance: none;
 }
 
-input[type="date"]::-webkit-calendar-picker-indicator,
-input[type="time"]::-webkit-calendar-picker-indicator,
-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-    cursor: pointer;
-    opacity: 0.75;
-    margin-left: auto;
-    flex-shrink: 0;
+/* iOS WebKit Internal Shadow DOM Fixes */
+.ios-date-field input[type="date"]::-webkit-date-and-time-value,
+.ios-date-field input[type="time"]::-webkit-date-and-time-value,
+.ios-date-field input[type="datetime-local"]::-webkit-date-and-time-value {
+    min-width: 0 !important;
+    width: auto !important;
+    max-width: 100% !important;
+    text-align: left !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.ios-date-field input[type="date"]::-webkit-datetime-edit,
+.ios-date-field input[type="time"]::-webkit-datetime-edit,
+.ios-date-field input[type="datetime-local"]::-webkit-datetime-edit {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+}
+
+.ios-date-field input[type="date"]::-webkit-calendar-picker-indicator,
+.ios-date-field input[type="time"]::-webkit-calendar-picker-indicator,
+.ios-date-field input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    flex: 0 0 auto !important;
+    margin-left: auto !important;
+    cursor: pointer !important;
+    opacity: 0.75 !important;
+    padding: 0 4px !important;
+}
+
+@supports (-webkit-touch-callout: none) {
+    .ios-date-field > input[type="date"],
+    .ios-date-field > input[type="time"],
+    .ios-date-field > input[type="datetime-local"] {
+        width: -webkit-fill-available !important;
+        max-width: -webkit-fill-available !important;
+    }
 }

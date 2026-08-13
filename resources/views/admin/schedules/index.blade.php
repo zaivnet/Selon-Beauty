@@ -249,7 +249,7 @@
 
             <div class="w-full min-w-0 max-w-full">
                 <label for="modal_work_date" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tanggal *</label>
-                <input type="date" name="work_date" id="modal_work_date" required value="{{ date('Y-m-d') }}" class="w-full min-w-0 max-w-full box-border px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50/50 min-h-[44px]">
+                <x-date-input name="work_date" id="modal_work_date" value="{{ date('Y-m-d') }}" required />
             </div>
 
             <div>

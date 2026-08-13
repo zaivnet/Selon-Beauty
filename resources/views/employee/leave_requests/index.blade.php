@@ -66,12 +66,12 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full min-w-0 max-w-full">
                 <div class="w-full min-w-0 max-w-full">
                     <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Tanggal Mulai <span class="text-rose-600">*</span></label>
-                    <input type="date" name="start_date" id="start_date" value="{{ old('start_date', date('Y-m-d')) }}" required onchange="syncSingleDayDate()" class="w-full min-w-0 max-w-full box-border px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px]">
+                    <x-date-input name="start_date" id="start_date" value="{{ old('start_date', date('Y-m-d')) }}" required onchange="syncSingleDayDate()" />
                 </div>
 
                 <div class="w-full min-w-0 max-w-full">
                     <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Tanggal Selesai <span class="text-rose-600">*</span></label>
-                    <input type="date" name="end_date" id="end_date" value="{{ old('end_date', date('Y-m-d')) }}" required class="w-full min-w-0 max-w-full box-border px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px]">
+                    <x-date-input name="end_date" id="end_date" value="{{ old('end_date', date('Y-m-d')) }}" required />
                 </div>
             </div>
 

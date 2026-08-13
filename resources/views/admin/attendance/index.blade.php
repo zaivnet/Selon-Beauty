@@ -25,7 +25,7 @@
         <form method="GET" action="{{ route('admin.attendance.index') }}" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
             <div class="w-full min-w-0 max-w-full">
                 <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Tanggal</label>
-                <input type="date" name="date" value="{{ $filters['date'] }}" class="w-full min-w-0 max-w-full box-border px-3 py-2.5 bg-white border border-slate-300 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px]">
+                <x-date-input name="date" value="{{ $filters['date'] }}" wrapperClass="bg-white" />
             </div>
 
             <div class="w-full min-w-0 max-w-full">
