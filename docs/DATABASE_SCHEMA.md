@@ -44,6 +44,7 @@ Catatan: hindari ENUM DB bila membuat perubahan role menjadi sulit.
 - job_title_id FK NULL
 - join_date DATE
 - status VARCHAR(30) INDEX
+- attendance_enabled BOOLEAN DEFAULT TRUE INDEX
 - profile_photo_path VARCHAR(255) NULL
 - notes TEXT NULL
 - timestamps
@@ -54,6 +55,8 @@ Status:
 - inactive
 
 Relasi user dibuat nullable agar record employee dapat dibuat sebelum kredensial login bila diperlukan.
+
+`attendance_enabled` adalah partisipasi workforce saat ini, terpisah dari `employees.status`, status akses akun, jabatan, dan `users.role`. Nilai `false` tidak menghapus jadwal maupun data historis.
 
 ## 4. attendance_locations
 

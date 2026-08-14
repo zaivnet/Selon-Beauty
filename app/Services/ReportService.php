@@ -38,10 +38,12 @@ class ReportService
         $todayStr = now(config('app.timezone'))->format('Y-m-d');
 
         // 1. Fetch Employees
-        $employeesQuery = Employee::with('jobTitle')->whereNull('deleted_at');
+        $employeesQuery = Employee::with(['jobTitle', 'user'])->whereNull('deleted_at');
 
         if ($employeeIdFilter) {
             $employeesQuery->where('id', $employeeIdFilter);
+        } else {
+            $employeesQuery->currentAttendanceWorkforce();
         }
 
         if ($jobTitleIdFilter) {
@@ -49,6 +51,13 @@ class ReportService
         }
 
         $employees = $employeesQuery->orderBy('full_name', 'asc')->get();
+        if ($employeeIdFilter) {
+            $employees->each(function (Employee $employee): void {
+                if ($employee->user?->role !== 'superadmin') {
+                    $employee->setAttribute('attendance_enabled', true);
+                }
+            });
+        }
         $employeeIds = $employees->pluck('id')->toArray();
 
         if (empty($employeeIds)) {

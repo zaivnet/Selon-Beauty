@@ -118,6 +118,31 @@
             </div>
         </div>
 
+        <section class="w-full min-w-0 rounded-2xl border {{ $employee->user?->role === 'superadmin' ? 'border-slate-200 bg-slate-50' : ($employee->attendance_enabled ? 'border-emerald-200 bg-emerald-50/50' : 'border-amber-200 bg-amber-50/60') }} p-4 sm:p-5" aria-labelledby="attendance-participation-heading">
+            <div class="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div class="min-w-0">
+                    <h3 id="attendance-participation-heading" class="text-[11px] font-black uppercase tracking-wider text-slate-600">Sistem Kehadiran</h3>
+                    <p class="mt-1 text-xs leading-relaxed text-slate-600">Terpisah dari status karyawan dan role aplikasi.</p>
+                </div>
+                @if($employee->user?->role === 'superadmin')
+                    <span class="inline-flex w-fit items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-extrabold text-slate-700">
+                        <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        Di Luar Workforce
+                    </span>
+                @elseif($employee->attendance_enabled)
+                    <span class="inline-flex w-fit items-center gap-2 rounded-xl border border-emerald-200 bg-white px-3 py-2 text-xs font-extrabold text-emerald-800">
+                        <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        Ikut Absensi
+                    </span>
+                @else
+                    <span class="inline-flex w-fit items-center gap-2 rounded-xl border border-amber-200 bg-white px-3 py-2 text-xs font-extrabold text-amber-900">
+                        <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-12.728 12.728m0-12.728l12.728 12.728"/></svg>
+                        Tidak Ikut Absensi
+                    </span>
+                @endif
+            </div>
+        </section>
+
         @if($employee->notes)
             <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs">
                 <span class="font-bold text-slate-700 block mb-1">Catatan Internal:</span>

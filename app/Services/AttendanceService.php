@@ -32,6 +32,10 @@ class AttendanceService
      */
     public function resolveActiveSchedule(Employee $employee): ?EmployeeSchedule
     {
+        if (! $employee->participatesInAttendance()) {
+            return null;
+        }
+
         $openAttendance = AttendanceRecord::with('schedule.shift')
             ->where('employee_id', $employee->id)
             ->whereNotNull('check_in_at')
@@ -136,6 +140,9 @@ class AttendanceService
                 $employee = $actor->employee;
                 if (! $employee || $employee->status !== 'active' || ! $actor->is_active) {
                     throw new \InvalidArgumentException('Akun karyawan Anda tidak aktif atau tidak terhubung.');
+                }
+                if (! $employee->isCurrentAttendanceWorkforceMember()) {
+                    throw new \InvalidArgumentException('Akun Anda tidak terdaftar sebagai peserta sistem kehadiran.');
                 }
 
                 $schedule = $this->resolveActiveSchedule($employee);
@@ -257,6 +264,9 @@ class AttendanceService
                 $employee = $actor->employee;
                 if (! $employee || $employee->status !== 'active' || ! $actor->is_active) {
                     throw new \InvalidArgumentException('Akun karyawan Anda tidak aktif atau tidak terhubung.');
+                }
+                if (! $employee->isCurrentAttendanceWorkforceMember()) {
+                    throw new \InvalidArgumentException('Akun Anda tidak terdaftar sebagai peserta sistem kehadiran.');
                 }
 
                 $schedule = $this->resolveActiveSchedule($employee);

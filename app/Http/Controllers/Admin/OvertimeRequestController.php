@@ -72,6 +72,7 @@ class OvertimeRequestController extends Controller
 
         $employees = Employee::whereNull('deleted_at')
             ->where('status', 'active')
+            ->currentAttendanceWorkforce()
             ->orderBy('full_name', 'asc')
             ->get();
 

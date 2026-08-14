@@ -49,6 +49,8 @@ class UpdateEmployeeRequest extends FormRequest
             'job_title_id' => ['nullable', 'exists:job_titles,id'],
             'join_date' => ['nullable', 'date'],
             'status' => ['required', 'in:active,inactive'],
+            'attendance_enabled' => ['sometimes', 'boolean'],
+            'attendance_participation_reason' => ['nullable', 'string', 'min:5', 'max:1000'],
             'profile_photo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'role' => ['nullable', 'string', 'in:superadmin,owner,admin,employee'],

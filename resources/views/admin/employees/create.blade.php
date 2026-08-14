@@ -103,6 +103,32 @@
                 <textarea name="notes" id="notes" rows="2" placeholder="Catatan internal mengenai karyawan" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50/50">{{ old('notes') }}</textarea>
             </div>
 
+            <!-- Attendance participation is independent from employment and application access. -->
+            <section class="w-full min-w-0 rounded-2xl border border-rose-200 bg-rose-50/40 p-4 sm:p-5" aria-labelledby="attendance-system-heading">
+                <div class="border-b border-rose-200/80 pb-3">
+                    <h4 id="attendance-system-heading" class="text-xs font-black uppercase tracking-wider text-slate-900">Sistem Kehadiran</h4>
+                    <p class="mt-1 text-[11px] leading-relaxed text-slate-600">Atur kewajiban jadwal dan absensi secara terpisah dari status karyawan maupun hak akses aplikasi.</p>
+                </div>
+
+                <div class="mt-4 grid grid-cols-1 gap-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500 sm:grid-cols-3" aria-label="Konsep data yang saling terpisah">
+                    <span class="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-center">Status Karyawan</span>
+                    <span class="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-center">Role Aplikasi</span>
+                    <span class="rounded-lg border border-rose-200 bg-white px-2.5 py-2 text-center text-rose-700">Sistem Kehadiran</span>
+                </div>
+
+                <input type="hidden" name="attendance_enabled" value="0">
+                <label for="attendance_enabled" class="mt-4 flex min-h-[44px] w-full min-w-0 cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-white p-3.5 transition-colors hover:border-rose-300 focus-within:border-rose-400 focus-within:ring-2 focus-within:ring-rose-200">
+                    <input type="checkbox" name="attendance_enabled" id="attendance_enabled" value="1" {{ old('attendance_enabled', true) ? 'checked' : '' }} class="mt-0.5 h-5 w-5 shrink-0 rounded border-slate-300 text-rose-600 focus:ring-2 focus:ring-rose-500 focus:ring-offset-2">
+                    <span class="min-w-0">
+                        <span class="block text-xs font-extrabold leading-5 text-slate-900">Wajib dijadwalkan dan melakukan absensi</span>
+                        <span class="mt-1 block text-[11px] leading-relaxed text-slate-500">Nonaktifkan jika akun ini hanya digunakan untuk administrasi aplikasi dan tidak perlu mengikuti jadwal, absensi, izin, atau lembur.</span>
+                    </span>
+                </label>
+                @error('attendance_enabled')
+                    <p class="mt-2 text-xs font-semibold text-rose-600">{{ $message }}</p>
+                @enderror
+            </section>
+
             <!-- Section 12: AKUN & AKSES APLIKASI -->
             <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4">
                 <div class="border-b border-slate-200 pb-2">

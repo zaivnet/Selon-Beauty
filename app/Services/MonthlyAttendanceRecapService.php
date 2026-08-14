@@ -34,14 +34,23 @@ class MonthlyAttendanceRecapService
         $end = $start->copy()->endOfMonth();
         $dates = collect(CarbonPeriod::create($start, $end))->map(fn (Carbon $date) => $date->copy());
 
-        $employeesQuery = Employee::with('jobTitle')->whereNull('deleted_at');
+        $employeesQuery = Employee::with(['jobTitle', 'user'])->whereNull('deleted_at');
         if (! empty($filters['employee_id'])) {
             $employeesQuery->whereKey((int) $filters['employee_id']);
+        } else {
+            $employeesQuery->currentAttendanceWorkforce();
         }
         if (! empty($filters['job_title_id'])) {
             $employeesQuery->where('job_title_id', (int) $filters['job_title_id']);
         }
         $employees = $employeesQuery->orderBy('full_name')->get();
+        if (! empty($filters['employee_id'])) {
+            $employees->each(function (Employee $employee): void {
+                if ($employee->user?->role !== 'superadmin') {
+                    $employee->setAttribute('attendance_enabled', true);
+                }
+            });
+        }
         $employeeIds = $employees->pluck('id');
 
         $period = [

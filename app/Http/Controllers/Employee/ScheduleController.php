@@ -34,6 +34,19 @@ class ScheduleController extends Controller
         $startDateParam = $request->input('start_date');
         $startDate = $startDateParam ? Carbon::parse($startDateParam)->startOfWeek() : Carbon::now()->startOfWeek();
         $endDate = (clone $startDate)->endOfWeek();
+        $prevWeekDate = (clone $startDate)->subWeek()->format('Y-m-d');
+        $nextWeekDate = (clone $startDate)->addWeek()->format('Y-m-d');
+
+        if (! $employee->participatesInAttendance()) {
+            return view('employee.schedules.index', [
+                'schedules' => collect(),
+                'employee' => $employee,
+                'startDate' => $startDate,
+                'endDate' => $endDate,
+                'prevWeekDate' => $prevWeekDate,
+                'nextWeekDate' => $nextWeekDate,
+            ]);
+        }
 
         // Privacy Enforcement: Query ONLY schedules belonging to the authenticated employee
         $regular = EmployeeSchedule::with('shift')->where('employee_id', $employee->id)
@@ -51,9 +64,6 @@ class ScheduleController extends Controller
                 $employee, $date, $regular->get($date), $overrides->get($date), $calendarDays->get($date),
             );
         });
-
-        $prevWeekDate = (clone $startDate)->subWeek()->format('Y-m-d');
-        $nextWeekDate = (clone $startDate)->addWeek()->format('Y-m-d');
 
         return view('employee.schedules.index', compact(
             'schedules',

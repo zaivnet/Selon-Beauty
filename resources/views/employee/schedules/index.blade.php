@@ -8,6 +8,17 @@
         <a href="{{ route('employee.schedules.index') }}" aria-current="page" class="flex min-h-[44px] flex-1 items-center justify-center rounded-lg bg-slate-900 px-3 text-[11px] font-extrabold text-white">Jadwal</a>
         <a href="{{ route('employee.monthly-recap.show') }}" class="flex min-h-[44px] flex-1 items-center justify-center rounded-lg px-3 text-[11px] font-extrabold text-slate-500 transition hover:bg-slate-50">Rekap Saya</a>
     </nav>
+    @if(auth()->user()->role === 'superadmin' || !$employee->attendance_enabled)
+        <section class="w-full min-w-0 rounded-2xl border border-amber-200 bg-white shadow-xs" aria-labelledby="schedule-participation-disabled-heading">
+            <div class="border-b border-amber-200 bg-amber-50/80 px-5 py-3.5">
+                <span class="inline-flex rounded-lg border border-amber-200 bg-white px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-amber-900">Tidak Ikut Absensi</span>
+            </div>
+            <div class="p-5">
+                <h2 id="schedule-participation-disabled-heading" class="text-sm font-extrabold leading-snug text-slate-900">Akun ini tidak diwajibkan mengikuti jadwal kerja.</h2>
+                <p class="mt-2 text-[11px] leading-relaxed text-slate-600">Akun login dan akses aplikasi tetap aktif. Jadwal yang pernah tersimpan tidak dihapus, tetapi tidak menjadi kewajiban workforce selama sistem kehadiran dinonaktifkan.</p>
+            </div>
+        </section>
+    @else
     <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
         <div class="text-center">
             <h3 class="text-xs font-black leading-snug text-slate-900 sm:text-sm">{{ $startDate->locale('id')->isoFormat('D MMM') }} — {{ $endDate->locale('id')->isoFormat('D MMM YYYY') }}</h3>
@@ -84,5 +95,6 @@
             <div class="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-xs"><p class="text-xs font-black text-slate-800">Jadwal belum tersedia</p><p class="mt-1 text-[11px] text-slate-500">Coba muat ulang halaman atau hubungi admin.</p></div>
         @endforelse
     </section>
+    @endif
 </div>
 @endsection

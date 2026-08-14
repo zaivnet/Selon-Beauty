@@ -186,6 +186,14 @@ Regular Employee Schedule
 
 Attendance resolver, monitoring, weekly schedule, leave validation, overtime start, dan report mengonsumsi hasil yang sama. Company/public holiday serta OFF tidak masuk denominator kehadiran. Actual attendance yang sudah ada tetap dipertahankan ketika kalender historis berubah. Global holiday tidak melakukan mass notification; perubahan override employee mengirim notification database dengan deep link ke jadwal mingguan.
 
+### Attendance Participation / Current Workforce
+
+`employees.attendance_enabled` menentukan kewajiban workforce saat ini dan tidak menentukan permission aplikasi. Role `owner`, `admin`, dan `employee` masing-masing dapat berpartisipasi atau tidak; Superadmin tetap mengikuti arsitektur existing dan dikecualikan oleh scope `currentAttendanceWorkforce()`.
+
+`AttendanceParticipationService` mengubah flag dalam transaction, menolak disable bila masih ada attendance open atau overtime aktif, lalu membuat immutable audit dan database notification. `EffectiveScheduleService` menghasilkan state eksplisit `participates_in_attendance = false` tanpa menjadikan employee sebagai working day, holiday row, atau kewajiban check-in.
+
+Selector dan agregasi current workforce menggunakan scope eksplisit, bukan global scope. Schedule/override tersimpan dan seluruh data historis tidak dihapus. Report atau correction historis yang memilih employee secara eksplisit tetap dapat membaca record lama; periode partisipasi historis belum di-versioning.
+
 ## 9B. Monthly Attendance Recap
 
 `MonthlyAttendanceRecapService` menghitung rekap secara deterministic dan tidak menyimpan snapshot bulanan. Service melakukan batch query untuk employee, jadwal reguler, override, kalender, attendance current state, correction marker, approved leave, overtime request, dan overtime session; loop employee/tanggal tidak menjalankan query tambahan.

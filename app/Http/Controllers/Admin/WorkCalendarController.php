@@ -32,7 +32,7 @@ class WorkCalendarController extends Controller
             $query->whereDate('date', $request->string('date'));
         }
 
-        $employees = Employee::where('status', 'active')->orderBy('full_name')->get();
+        $employees = Employee::where('status', 'active')->currentAttendanceWorkforce()->orderBy('full_name')->get();
         $overrides = EmployeeScheduleOverride::with(['employee', 'shift', 'creator'])
             ->orderByDesc('date')->limit(50)->get();
 

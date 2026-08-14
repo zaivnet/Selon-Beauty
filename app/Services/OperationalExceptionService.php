@@ -52,7 +52,7 @@ class OperationalExceptionService
             : ($target->isBefore($actualNow) ? $target->copy()->endOfDay() : $actualNow);
         $lookbackStart = $target->copy()->subDays(max(1, (int) config('operations.review_lookback_days', 31)));
 
-        $employeesQuery = Employee::with('jobTitle')->whereNull('deleted_at')->where('status', 'active');
+        $employeesQuery = Employee::with('jobTitle')->whereNull('deleted_at')->where('status', 'active')->currentAttendanceWorkforce();
         if (! empty($filters['employee_id'])) {
             $employeesQuery->whereKey((int) $filters['employee_id']);
         }

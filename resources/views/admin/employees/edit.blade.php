@@ -114,6 +114,66 @@
                 <textarea name="notes" id="notes" rows="2" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50/50">{{ old('notes', $employee->notes) }}</textarea>
             </div>
 
+            <!-- Attendance participation is independent from employment and application access. -->
+            @if($employee->user?->role === 'superadmin')
+            <section class="w-full min-w-0 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5" aria-labelledby="attendance-system-heading">
+                <input type="hidden" name="attendance_enabled" value="{{ $employee->attendance_enabled ? 1 : 0 }}">
+                <h4 id="attendance-system-heading" class="text-xs font-black uppercase tracking-wider text-slate-900">Sistem Kehadiran</h4>
+                <div class="mt-3 flex min-w-0 items-start gap-3 rounded-xl border border-slate-200 bg-white p-3.5">
+                    <svg class="mt-0.5 h-5 w-5 shrink-0 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    <div class="min-w-0">
+                        <span class="block text-xs font-extrabold text-slate-800">Superadmin berada di luar workforce attendance</span>
+                        <span class="mt-1 block text-[11px] leading-relaxed text-slate-500">Perilaku Superadmin dipertahankan dan tidak dikelola melalui participation attendance Employee.</span>
+                    </div>
+                </div>
+            </section>
+            @else
+            <section class="w-full min-w-0 rounded-2xl border border-rose-200 bg-rose-50/40 p-4 sm:p-5" aria-labelledby="attendance-system-heading">
+                <div class="flex min-w-0 flex-col gap-2 border-b border-rose-200/80 pb-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div class="min-w-0">
+                        <h4 id="attendance-system-heading" class="text-xs font-black uppercase tracking-wider text-slate-900">Sistem Kehadiran</h4>
+                        <p class="mt-1 text-[11px] leading-relaxed text-slate-600">Status ini tidak mengubah jabatan, status karyawan, akun login, atau role aplikasi.</p>
+                    </div>
+                    @if($employee->attendance_enabled)
+                        <span class="inline-flex w-fit items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-extrabold text-emerald-800">
+                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true"></span> Ikut Absensi
+                        </span>
+                    @else
+                        <span class="inline-flex w-fit items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-extrabold text-amber-900">
+                            <span class="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true"></span> Tidak Ikut Absensi
+                        </span>
+                    @endif
+                </div>
+
+                <div class="mt-4 grid grid-cols-1 gap-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500 sm:grid-cols-3" aria-label="Konsep data yang saling terpisah">
+                    <span class="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-center">Status Karyawan</span>
+                    <span class="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-center">Role Aplikasi</span>
+                    <span class="rounded-lg border border-rose-200 bg-white px-2.5 py-2 text-center text-rose-700">Sistem Kehadiran</span>
+                </div>
+
+                <input type="hidden" name="attendance_enabled" value="0">
+                <label for="attendance_enabled" class="mt-4 flex min-h-[44px] w-full min-w-0 cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-white p-3.5 transition-colors hover:border-rose-300 focus-within:border-rose-400 focus-within:ring-2 focus-within:ring-rose-200">
+                    <input type="checkbox" name="attendance_enabled" id="attendance_enabled" value="1" {{ old('attendance_enabled', $employee->attendance_enabled) ? 'checked' : '' }} class="mt-0.5 h-5 w-5 shrink-0 rounded border-slate-300 text-rose-600 focus:ring-2 focus:ring-rose-500 focus:ring-offset-2">
+                    <span class="min-w-0">
+                        <span class="block text-xs font-extrabold leading-5 text-slate-900">Wajib dijadwalkan dan melakukan absensi</span>
+                        <span class="mt-1 block text-[11px] leading-relaxed text-slate-500">Nonaktifkan jika akun ini hanya digunakan untuk administrasi aplikasi dan tidak perlu mengikuti jadwal, absensi, izin, atau lembur.</span>
+                    </span>
+                </label>
+                @error('attendance_enabled')
+                    <p class="mt-2 text-xs font-semibold text-rose-600">{{ $message }}</p>
+                @enderror
+
+                <div class="mt-4">
+                    <label for="attendance_participation_reason" class="block text-xs font-bold uppercase tracking-wider text-slate-700">Alasan Perubahan</label>
+                    <textarea name="attendance_participation_reason" id="attendance_participation_reason" rows="3" placeholder="Contoh: Owner hanya menggunakan akun untuk administrasi." class="mt-1 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500">{{ old('attendance_participation_reason') }}</textarea>
+                    <p class="mt-1 text-[11px] leading-relaxed text-slate-500">Wajib saat menonaktifkan sistem kehadiran (minimal 5 karakter), dan disarankan saat mengaktifkan kembali untuk melengkapi riwayat audit.</p>
+                    @error('attendance_participation_reason')
+                        <p class="mt-1 text-xs font-semibold text-rose-600">{{ $message }}</p>
+                    @enderror
+                </div>
+            </section>
+            @endif
+
             <!-- Section 12: AKUN & AKSES APLIKASI -->
             <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4">
                 <div class="border-b border-slate-200 pb-2">

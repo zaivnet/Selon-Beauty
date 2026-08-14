@@ -345,6 +345,9 @@ class OvertimeSessionService
         if (! $actor->is_active || ! $employee || $employee->status !== 'active') {
             throw ValidationException::withMessages(['overtime' => 'Akun karyawan Anda tidak aktif atau tidak terhubung.']);
         }
+        if (! $employee->isCurrentAttendanceWorkforceMember()) {
+            throw ValidationException::withMessages(['overtime' => 'Akun Anda tidak terdaftar sebagai peserta sistem kehadiran.']);
+        }
 
         return $employee;
     }

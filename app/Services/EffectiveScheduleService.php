@@ -14,6 +14,14 @@ class EffectiveScheduleService
     public function resolve(Employee $employee, string|Carbon $workDate): array
     {
         $date = $this->dateString($workDate);
+
+        if (! $employee->participatesInAttendance()) {
+            return $this->result(
+                employee: $employee, date: $date, working: false, source: 'attendance_disabled',
+                regular: null, override: null, calendar: null, shift: null,
+                label: 'TIDAK IKUT SISTEM KEHADIRAN', reason: null,
+            );
+        }
         $regular = EmployeeSchedule::with('shift')
             ->where('employee_id', $employee->id)->whereDate('work_date', $date)->first();
         $override = EmployeeScheduleOverride::with('shift')
@@ -32,6 +40,14 @@ class EffectiveScheduleService
         ?Holiday $calendar,
     ): array {
         $date = $this->dateString($workDate);
+
+        if (! $employee->participatesInAttendance()) {
+            return $this->result(
+                employee: $employee, date: $date, working: false, source: 'attendance_disabled',
+                regular: $regular, override: $override, calendar: $calendar, shift: null,
+                label: 'TIDAK IKUT SISTEM KEHADIRAN', reason: null,
+            );
+        }
 
         if ($override) {
             $working = $override->override_type === 'work' && $override->shift !== null;
@@ -142,6 +158,7 @@ class EffectiveScheduleService
     ): array {
         return [
             'employee' => $employee, 'date' => $date, 'is_working_day' => $working,
+            'participates_in_attendance' => $employee->participatesInAttendance(),
             'source' => $source, 'regular_schedule' => $regular, 'override' => $override,
             'calendar_day' => $calendar, 'shift' => $shift, 'holiday_name' => $calendar?->name,
             'label' => $label, 'reason' => $reason,

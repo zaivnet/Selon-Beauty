@@ -36,7 +36,7 @@ class MonthlyRecapController extends Controller
         return view('admin.monthly_recaps.index', [
             'recapData' => $data,
             'recaps' => $paginator,
-            'employees' => Employee::whereNull('deleted_at')->orderBy('full_name')->get(),
+            'employees' => Employee::whereNull('deleted_at')->currentAttendanceWorkforce()->orderBy('full_name')->get(),
             'jobTitles' => JobTitle::where('is_active', true)->orderBy('name')->get(),
             'filters' => [...$filters, 'year' => $year, 'month' => $month],
         ]);

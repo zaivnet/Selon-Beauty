@@ -8,10 +8,13 @@ use App\Http\Requests\Admin\StoreEmployeeRequest;
 use App\Http\Requests\Admin\UpdateEmployeeRequest;
 use App\Models\Employee;
 use App\Models\JobTitle;
+use App\Services\AttendanceParticipationService;
 use App\Services\EmployeeService;
 use App\Services\UserRoleService;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -19,6 +22,7 @@ class EmployeeController extends Controller
 {
     public function __construct(
         protected EmployeeService $employeeService,
+        protected AttendanceParticipationService $attendanceParticipationService,
         protected UserRoleService $userRoleService
     ) {}
 
@@ -63,6 +67,9 @@ class EmployeeController extends Controller
         $createUserAccount = $request->boolean('create_user_account');
         $accountPassword = $request->input('account_password');
         $requestedRole = $request->input('role', UserRole::EMPLOYEE->value);
+        $validated['attendance_enabled'] = $request->has('attendance_enabled')
+            ? $request->boolean('attendance_enabled')
+            : true;
 
         // Security check for role assignment
         if ($createUserAccount && $requestedRole !== UserRole::EMPLOYEE->value) {
@@ -75,7 +82,7 @@ class EmployeeController extends Controller
 
         try {
             $employee = $this->employeeService->createEmployee($validated, $photoFile, $createUserAccount, $accountPassword, $requestedRole);
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             if (str_contains($e->getMessage(), 'unique') || $e->getCode() == 23000) {
                 throw ValidationException::withMessages(['email' => 'Email tersebut sudah digunakan oleh akun lain.']);
             }
@@ -107,15 +114,28 @@ class EmployeeController extends Controller
         $validated = $request->validated();
         $photoFile = $request->file('profile_photo');
         $requestedRole = $request->input('role');
+        $attendanceEnabled = array_key_exists('attendance_enabled', $validated)
+            ? $request->boolean('attendance_enabled')
+            : $employee->participatesInAttendance();
+        $attendanceReason = $validated['attendance_participation_reason'] ?? null;
 
-        unset($validated['profile_photo'], $validated['role']);
+        unset($validated['profile_photo'], $validated['role'], $validated['attendance_enabled'], $validated['attendance_participation_reason']);
 
         $actor = $request->user();
 
         // 1. Update basic employee data
         try {
-            $this->employeeService->updateEmployee($employee, $validated, $photoFile);
-        } catch (\Illuminate\Database\QueryException $e) {
+            DB::transaction(function () use ($employee, $validated, $photoFile, $attendanceEnabled, $attendanceReason, $actor): void {
+                $this->employeeService->updateEmployee($employee, $validated, $photoFile);
+                $this->attendanceParticipationService->update(
+                    $employee,
+                    $attendanceEnabled,
+                    $attendanceReason,
+                    $actor,
+                );
+            });
+            $employee->refresh()->load('user');
+        } catch (QueryException $e) {
             if (str_contains($e->getMessage(), 'unique') || $e->getCode() == 23000) {
                 throw ValidationException::withMessages(['email' => 'Email tersebut sudah digunakan oleh akun lain.']);
             }

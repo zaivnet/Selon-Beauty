@@ -36,6 +36,7 @@
                 <option value="overtime" @selected(($filters['module'] ?? '') === 'overtime')>Overtime</option>
                 <option value="work_calendar" @selected(($filters['module'] ?? '') === 'work_calendar')>Kalender Kerja</option>
                 <option value="schedule_override" @selected(($filters['module'] ?? '') === 'schedule_override')>Jadwal Khusus</option>
+                <option value="employee" @selected(($filters['module'] ?? '') === 'employee')>Partisipasi Karyawan</option>
             </select>
             <select name="employee_id" class="min-w-0 min-h-[44px] rounded-xl border border-slate-300 bg-slate-50 px-3 text-xs">
                 <option value="">Semua karyawan</option>

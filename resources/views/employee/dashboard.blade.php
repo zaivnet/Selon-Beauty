@@ -29,7 +29,8 @@
         </div>
     @endif
 
-    <!-- PWA Install Prompt Banner (Shown only when installable & not standalone) -->
+    <!-- PWA Install Prompt Banner (Shown only for attendance participants when installable) -->
+    @if(!$employee || ($user->role !== 'superadmin' && $employee->attendance_enabled !== false))
     <div id="pwa-install-banner" class="hidden bg-gradient-to-r from-rose-700 via-rose-600 to-pink-600 text-white rounded-2xl p-4 shadow-md flex items-center justify-between gap-3">
         <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center font-black text-xs shrink-0">
@@ -44,6 +45,7 @@
             Pasang
         </button>
     </div>
+    @endif
 
     <!-- Greeting & Header Card -->
     <div class="bg-gradient-to-br from-rose-600 to-rose-700 text-white rounded-2xl p-5 shadow-lg shadow-rose-900/10">
@@ -59,6 +61,32 @@
         </div>
     </div>
 
+    @if($user->role === 'superadmin' || ($employee && $employee->attendance_enabled === false))
+        <section class="w-full min-w-0 overflow-hidden rounded-2xl border border-amber-200 bg-white shadow-xs" aria-labelledby="attendance-disabled-heading">
+            <div class="border-b border-amber-200 bg-amber-50/80 px-4 py-3.5 sm:px-5">
+                <span class="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-white px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-amber-900">
+                    <span class="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true"></span>
+                    Tidak Ikut Absensi
+                </span>
+            </div>
+            <div class="p-5 sm:p-6">
+                <div class="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start">
+                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-600">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    </div>
+                    <div class="min-w-0">
+                        <h3 id="attendance-disabled-heading" class="text-base font-extrabold leading-snug text-slate-900">Akun ini tidak diwajibkan mengikuti sistem kehadiran.</h3>
+                        <p class="mt-2 text-xs leading-relaxed text-slate-600">Akun login dan akses aplikasi Anda tetap aktif sesuai role. Status ini hanya menonaktifkan kewajiban jadwal, absensi, izin, dan lembur.</p>
+                        <div class="mt-4 grid grid-cols-1 gap-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500 sm:grid-cols-3" aria-label="Konsep akun yang saling terpisah">
+                            <span class="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-center">Status Karyawan</span>
+                            <span class="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-center">Role Aplikasi</span>
+                            <span class="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2 text-center text-amber-900">Sistem Kehadiran</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    @else
     <!-- Quick Menu Shortcuts -->
     <div class="grid grid-cols-2 gap-3">
         <a href="{{ route('employee.leave-requests.index') }}" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs hover:border-rose-300 transition-all flex items-center gap-3">
@@ -418,9 +446,12 @@
         </div>
     @endif
 
+    @endif
+
 </div>
 
 <!-- Client-side Browser Geolocation & Camera Script -->
+@if(!$employee || ($user->role !== 'superadmin' && $employee->attendance_enabled !== false))
 <script>
 let isGpsValid = false;
 const isSelfieRequired = @json($requireSelfie);
@@ -852,4 +883,5 @@ window.addEventListener('beforeunload', function() {
     stopCameraStream();
 });
 </script>
+@endif
 @endsection

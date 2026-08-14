@@ -245,3 +245,12 @@ Minimal satu akun Superadmin yang aktif (`is_active = true`) WAJIB selalu tersed
 5. Dashboard dan Pusat Perhatian hanya boleh memberi deep link ke workflow existing. Approve, reject, correction, force finish, cancel, atau delete tidak boleh dilakukan langsung dari exception card.
 6. Backup health dan link backup hanya boleh dikirim kepada Owner/Superadmin. Employee tidak boleh mengakses dashboard operasional.
 7. Membuka dashboard tidak membuat notification atau audit log baru.
+
+## RULE 039 — Attendance Participation
+1. Role aplikasi, status employment/account, dan partisipasi attendance adalah tiga konsep terpisah. Owner, Admin, dan Employee masing-masing valid dengan `attendance_enabled` ON maupun OFF.
+2. Current workforce hanya mencakup Employee aktif dengan `attendance_enabled = true`; Superadmin mempertahankan behavior existing dan tetap di luar workforce attendance.
+3. Participation OFF mencegah attendance, leave, overtime, schedule, dan override baru secara server-side, tetapi tidak menonaktifkan login, mengubah role/jabatan, atau menghapus data.
+4. Jadwal dan override tersimpan tidak dihapus saat participation OFF dan kembali dapat efektif setelah ON. Attendance, leave, overtime, correction, dan recovery historis tetap dapat diakses sesuai otorisasi.
+5. Participation tidak dapat dimatikan saat attendance belum checkout atau overtime session masih aktif. Sistem tidak boleh auto-checkout atau auto-cancel.
+6. Disable membutuhkan alasan minimal 5 karakter. Perubahan material membuat audit before/after dan notification; no-op tidak membuat audit maupun notification.
+7. `attendance_enabled` adalah current-state flag dan belum menyimpan periode partisipasi historis. Report historis eksplisit membaca record yang telah tersimpan, sedangkan selector default hanya menampilkan current workforce.

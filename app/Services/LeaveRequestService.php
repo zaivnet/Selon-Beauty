@@ -32,6 +32,12 @@ class LeaveRequestService
      */
     public function submitRequest(Employee $employee, array $data, ?UploadedFile $attachment = null): LeaveRequest
     {
+        if (! $employee->isCurrentAttendanceWorkforceMember()) {
+            throw ValidationException::withMessages([
+                'attendance' => 'Akun Anda tidak terdaftar sebagai peserta sistem kehadiran.',
+            ]);
+        }
+
         $startDate = $data['start_date'];
         $endDate = $data['end_date'];
         $type = strtolower($data['type']);

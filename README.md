@@ -12,6 +12,7 @@ Aplikasi Sistem Presensi, Penjadwalan Kerja, dan Manajemen Karyawan Berbasis Web
 - **Manajemen Shift & Jadwal Kerja**: Jadwal mingguan, kalender hari libur/hari kerja khusus, override per karyawan dan tanggal, serta permohonan lembur dan izin/cuti.
 - **Rekap Kehadiran Bulanan**: Ringkasan dan detail payroll-ready berbasis menit, status kelengkapan data, CSV, dan print—tanpa menghitung nominal gaji.
 - **Pusat Perhatian Operasional**: Dashboard exception read-only untuk attendance, approval, overtime aktif, override, koreksi terbaru, dan kesehatan backup sesuai hak akses.
+- **Partisipasi Workforce Eksplisit**: Role aplikasi terpisah dari kewajiban jadwal/absensi melalui `attendance_enabled`, tanpa menghapus histori atau akses administratif.
 - **Sistem Role & Hak Akses (RBAC)**: Mendukung role **Superadmin**, **Owner**, **Admin Operasional**, dan **Employee**.
 - **First-Run Portable Setup**: Wizard inisialisasi awal otomatis saat pertama kali dibuka di browser tanpa perlu SQL seed manual.
 - **Keamanan & Email Reset**: Pemulihan password via email (Mailpit support di local, SMTP di production), rate limiting, pembatalan session lama saat reset, dan audit log lengkap.

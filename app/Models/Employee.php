@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,6 +14,10 @@ class Employee extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $attributes = [
+        'attendance_enabled' => true,
+    ];
+
     protected $fillable = [
         'employee_code',
         'full_name',
@@ -21,6 +26,7 @@ class Employee extends Model
         'job_title_id',
         'join_date',
         'status',
+        'attendance_enabled',
         'profile_photo_path',
         'notes',
     ];
@@ -29,7 +35,29 @@ class Employee extends Model
     {
         return [
             'join_date' => 'date',
+            'attendance_enabled' => 'boolean',
         ];
+    }
+
+    public function participatesInAttendance(): bool
+    {
+        return (bool) $this->attendance_enabled;
+    }
+
+    public function isCurrentAttendanceWorkforceMember(): bool
+    {
+        return $this->participatesInAttendance() && $this->user?->role !== 'superadmin';
+    }
+
+    public function scopeAttendanceEnabled(Builder $query): Builder
+    {
+        return $query->where('attendance_enabled', true);
+    }
+
+    public function scopeCurrentAttendanceWorkforce(Builder $query): Builder
+    {
+        return $query->attendanceEnabled()
+            ->whereDoesntHave('user', fn (Builder $userQuery) => $userQuery->where('role', 'superadmin'));
     }
 
     public function jobTitle(): BelongsTo

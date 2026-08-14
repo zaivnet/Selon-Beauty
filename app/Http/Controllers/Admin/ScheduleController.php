@@ -49,6 +49,7 @@ class ScheduleController extends Controller
         }
 
         $employees = Employee::where('status', 'active')
+            ->currentAttendanceWorkforce()
             ->orderBy('full_name')
             ->get();
 

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AuditLog;
+use App\Models\Employee;
 use App\Models\EmployeeScheduleOverride;
 use App\Models\Holiday;
 use App\Models\Shift;
@@ -78,6 +79,11 @@ class WorkCalendarService
         $this->ensureReason($data['reason']);
 
         return DB::transaction(function () use ($data, $actor, $override) {
+            $employee = Employee::findOrFail($data['employee_id']);
+            if (! $employee->isCurrentAttendanceWorkforceMember()) {
+                throw new \InvalidArgumentException('Karyawan tidak terdaftar sebagai peserta sistem kehadiran.');
+            }
+
             if ($override) {
                 $override = EmployeeScheduleOverride::with(['employee.user', 'shift'])->lockForUpdate()->findOrFail($override->id);
                 $conflict = EmployeeScheduleOverride::where('employee_id', $data['employee_id'])

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AuditLog;
+use App\Models\Employee;
 use App\Models\EmployeeSchedule;
 use App\Models\Shift;
 use App\Models\User;
@@ -17,6 +18,7 @@ class EmployeeScheduleService
     public function assignSchedule(array $data, User $actor): EmployeeSchedule
     {
         return DB::transaction(function () use ($data, $actor) {
+            $this->ensureAttendanceParticipant((int) $data['employee_id']);
             $scheduleType = $data['schedule_type'] ?? 'work';
 
             if ($scheduleType === 'work') {
@@ -68,6 +70,7 @@ class EmployeeScheduleService
     public function updateSchedule(EmployeeSchedule $schedule, array $data, User $actor): EmployeeSchedule
     {
         return DB::transaction(function () use ($schedule, $data, $actor) {
+            $this->ensureAttendanceParticipant((int) ($data['employee_id'] ?? $schedule->employee_id));
             $beforeData = $schedule->toArray();
             $scheduleType = $data['schedule_type'] ?? $schedule->schedule_type;
 
@@ -206,6 +209,7 @@ class EmployeeScheduleService
         $prevEnd = (clone $prevStart)->endOfWeek();
 
         $prevSchedules = EmployeeSchedule::with(['employee', 'shift'])
+            ->whereHas('employee', fn ($query) => $query->currentAttendanceWorkforce())
             ->whereBetween('work_date', [$prevStart->format('Y-m-d'), $prevEnd->format('Y-m-d')])
             ->get();
 
@@ -290,5 +294,13 @@ class EmployeeScheduleService
             'copied_count' => $copied,
             'skipped_count' => $skipped,
         ];
+    }
+
+    protected function ensureAttendanceParticipant(int $employeeId): void
+    {
+        $employee = Employee::findOrFail($employeeId);
+        if (! $employee->isCurrentAttendanceWorkforceMember()) {
+            throw new \InvalidArgumentException('Karyawan tidak terdaftar sebagai peserta sistem kehadiran.');
+        }
     }
 }

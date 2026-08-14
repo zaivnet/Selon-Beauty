@@ -16,6 +16,14 @@ class AttendanceStatusResolver
         ?LeaveRequest $approvedLeave = null,
         ?Carbon $nowServerTime = null,
     ): array {
+        if (($effective['participates_in_attendance'] ?? true) === false) {
+            return [
+                'key' => 'attendance_disabled',
+                'label' => 'TIDAK IKUT SISTEM KEHADIRAN',
+                'badge_class' => 'bg-slate-100 text-slate-700 border-slate-200',
+            ];
+        }
+
         if (! $effective['is_working_day']) {
             if ($effective['source'] === 'none') {
                 return $this->resolve(null, $record, $approvedLeave, $nowServerTime);

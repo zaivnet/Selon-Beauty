@@ -25,6 +25,12 @@ class OvertimeRequestService
      */
     public function submitRequest(Employee $employee, array $data): OvertimeRequest
     {
+        if (! $employee->isCurrentAttendanceWorkforceMember()) {
+            throw ValidationException::withMessages([
+                'attendance' => 'Akun Anda tidak terdaftar sebagai peserta sistem kehadiran.',
+            ]);
+        }
+
         $workDate = $data['work_date'];
         $requestedMinutes = (int) $data['requested_minutes'];
         $reason = trim($data['reason']);

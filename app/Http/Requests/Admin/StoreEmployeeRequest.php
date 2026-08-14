@@ -30,6 +30,7 @@ class StoreEmployeeRequest extends FormRequest
             'job_title_id' => ['nullable', 'exists:job_titles,id'],
             'join_date' => ['nullable', 'date'],
             'status' => ['required', 'in:active,inactive'],
+            'attendance_enabled' => ['nullable', 'boolean'],
             'profile_photo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'create_user_account' => ['nullable', 'boolean'],

@@ -32,6 +32,7 @@ class AttendanceMonitoringService
 
         $totalEmployees = Employee::whereNull('deleted_at')
             ->where('status', 'active')
+            ->currentAttendanceWorkforce()
             ->count();
 
         $presentToday = $collection->filter(fn ($i) => in_array($i['status_key'], ['present', 'late'], true))->count();
@@ -63,7 +64,8 @@ class AttendanceMonitoringService
         // Fetch active employees with their job titles
         $employeesQuery = Employee::with(['jobTitle'])
             ->whereNull('deleted_at')
-            ->where('status', 'active');
+            ->where('status', 'active')
+            ->currentAttendanceWorkforce();
 
         if ($filterEmployeeId) {
             $employeesQuery->where('id', $filterEmployeeId);

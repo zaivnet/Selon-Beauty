@@ -118,6 +118,7 @@
     </main>
 
     <!-- Bottom Navigation Bar (5 Items Max, Safe-Area Compatible) -->
+    @php($attendanceParticipationEnabled = Auth::user()?->role !== 'superadmin' && Auth::user()?->employee?->attendance_enabled !== false)
     <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/95 backdrop-blur-md border-t border-slate-200/80 py-2 px-2 flex justify-around items-center z-30 shadow-lg" style="padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));">
         <!-- 1. Home -->
         <a href="{{ route('employee.dashboard') }}" class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all {{ request()->routeIs('employee.dashboard') ? 'text-rose-600 font-extrabold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
@@ -126,24 +127,47 @@
         </a>
 
         <!-- 2. Jadwal -->
+        @if($attendanceParticipationEnabled)
         <a href="{{ route('employee.schedules.index') }}" class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all {{ request()->routeIs('employee.schedules.*', 'employee.monthly-recap.*') ? 'text-rose-600 font-extrabold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
             <span class="text-[10px]">Jadwal</span>
         </a>
+        @else
+        <span aria-disabled="true" title="Sistem kehadiran dinonaktifkan" class="flex min-h-[44px] min-w-[44px] flex-col items-center justify-center gap-0.5 px-3 py-1 text-slate-300">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <span class="text-[10px]">Jadwal</span>
+        </span>
+        @endif
 
         <!-- 3. Absen (Center CTA Button) -->
+        @if($attendanceParticipationEnabled)
         <a href="{{ route('employee.dashboard') }}#absen-card" class="flex flex-col items-center gap-0.5 group -mt-4">
             <div class="w-11 h-11 rounded-full bg-gradient-to-tr from-rose-600 to-pink-500 text-white flex items-center justify-center shadow-lg shadow-rose-500/40 group-hover:scale-105 transition-transform border-2 border-white">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
             </div>
             <span class="text-[10px] font-extrabold text-rose-600">Absen</span>
         </a>
+        @else
+        <span aria-disabled="true" title="Sistem kehadiran dinonaktifkan" class="-mt-4 flex min-h-[52px] min-w-[52px] flex-col items-center justify-center gap-0.5">
+            <span class="flex h-11 w-11 items-center justify-center rounded-full border-2 border-white bg-slate-200 text-slate-400 shadow-sm">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18.364 5.636l-12.728 12.728m0-12.728l12.728 12.728"/></svg>
+            </span>
+            <span class="text-[10px] font-bold text-slate-400">Absen</span>
+        </span>
+        @endif
 
         <!-- 4. Pengajuan (Izin & Lembur) -->
+        @if($attendanceParticipationEnabled)
         <a href="{{ route('employee.leave-requests.index') }}" class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all {{ (request()->routeIs('employee.leave-requests.*') || request()->routeIs('employee.overtime-requests.*')) ? 'text-rose-600 font-extrabold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             <span class="text-[10px]">Pengajuan</span>
         </a>
+        @else
+        <span aria-disabled="true" title="Sistem kehadiran dinonaktifkan" class="flex min-h-[44px] min-w-[44px] flex-col items-center justify-center gap-0.5 px-3 py-1 text-slate-300">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span class="text-[10px]">Pengajuan</span>
+        </span>
+        @endif
 
         <!-- 5. Profil -->
         <a href="{{ route('employee.profile.index') }}" class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all {{ request()->routeIs('employee.profile.*') ? 'text-rose-600 font-extrabold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">

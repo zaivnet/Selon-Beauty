@@ -53,7 +53,7 @@ class OperationalExceptionController extends Controller
             'items' => $items,
             'filters' => ['date' => $date, ...$filters],
             'categories' => $this->exceptionService->categories(),
-            'employees' => Employee::whereNull('deleted_at')->where('status', 'active')->orderBy('full_name')->get(),
+            'employees' => Employee::whereNull('deleted_at')->where('status', 'active')->currentAttendanceWorkforce()->orderBy('full_name')->get(),
             'jobTitles' => JobTitle::where('is_active', true)->orderBy('name')->get(),
         ]);
     }

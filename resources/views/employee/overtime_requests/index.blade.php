@@ -44,10 +44,11 @@
     <!-- Header Card -->
     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-1">
         <h2 class="text-lg font-black text-slate-900 tracking-tight">Pengajuan Lembur</h2>
-        <p class="text-xs text-slate-500 font-medium">Buat pengajuan kerja lembur dan pantau durasi persetujuan dari Owner/Admin.</p>
+        <p class="text-xs text-slate-500 font-medium">{{ auth()->user()->role !== 'superadmin' && $employee->attendance_enabled ? 'Buat pengajuan kerja lembur dan pantau durasi persetujuan dari Owner/Admin.' : 'Lihat kembali riwayat lembur yang sudah tersimpan.' }}</p>
     </div>
 
     <!-- Form Buat Pengajuan Lembur Card -->
+    @if(auth()->user()->role !== 'superadmin' && $employee->attendance_enabled)
     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
         <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
             <div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-sm">
@@ -123,6 +124,20 @@
             </button>
         </form>
     </div>
+    @else
+        <section class="w-full min-w-0 rounded-2xl border border-amber-200 bg-amber-50/70 p-5 shadow-xs" aria-labelledby="overtime-participation-disabled-heading">
+            <div class="flex min-w-0 items-start gap-3">
+                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-amber-200 bg-white text-amber-800">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-12.728 12.728m0-12.728l12.728 12.728"/></svg>
+                </div>
+                <div class="min-w-0">
+                    <span class="inline-flex rounded-lg border border-amber-200 bg-white px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-amber-900">Tidak Ikut Absensi</span>
+                    <h3 id="overtime-participation-disabled-heading" class="mt-2 text-sm font-extrabold leading-snug text-slate-900">Pengajuan lembur baru tidak tersedia.</h3>
+                    <p class="mt-1 text-[11px] leading-relaxed text-slate-600">Akun Anda tidak terdaftar sebagai peserta sistem kehadiran. Riwayat pengajuan dan sesi lama tetap tersedia di bawah.</p>
+                </div>
+            </div>
+        </section>
+    @endif
 
     <!-- History Pengajuan Lembur Saya Card -->
     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
@@ -203,7 +218,9 @@
                                     </p>
                                 @endif
 
-                                @if($canStartSession || $req->session?->isActive())
+                                @if(auth()->user()->role === 'superadmin' || !$employee->attendance_enabled)
+                                    <p class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold leading-relaxed text-amber-900">Aksi mulai atau selesai lembur tidak tersedia karena akun ini tidak mengikuti sistem kehadiran.</p>
+                                @elseif($canStartSession || $req->session?->isActive())
                                     <form action="{{ !$req->session ? route('employee.overtime-requests.start', $req) : route('employee.overtime-sessions.finish', $req->session) }}" method="POST" enctype="multipart/form-data" class="overtime-session-form space-y-2">
                                         @csrf
                                         <input type="hidden" name="latitude" class="overtime-latitude">
@@ -266,6 +283,7 @@
     </div>
 </div>
 
+@if(auth()->user()->role !== 'superadmin' && $employee->attendance_enabled)
 <script>
     const availableAttendancesData = @json($availableAttendances);
     const availableSchedulesData = @json($availableSchedules->keyBy(fn ($s) => $s->work_date->format('Y-m-d')));
@@ -347,4 +365,5 @@
         updateAttendanceContext();
     });
 </script>
+@endif
 @endsection

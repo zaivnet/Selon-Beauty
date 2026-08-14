@@ -4,6 +4,7 @@ namespace Tests\Feature\Backup;
 
 use App\Models\AppSetting;
 use App\Models\BackupRecord;
+use App\Models\Employee;
 use App\Models\User;
 use App\Services\BackupService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -136,5 +137,21 @@ class RestoreTest extends TestCase
         $this->get(route('branding.media', ['type' => 'logo']))
             ->assertOk()
             ->assertHeader('X-Content-Type-Options', 'nosniff');
+    }
+
+    public function test_full_restore_preserves_disabled_attendance_participation(): void
+    {
+        $employee = Employee::create([
+            'employee_code' => 'BACKUP-PARTICIPATION',
+            'full_name' => 'Administratif Saja',
+            'status' => 'active',
+            'attendance_enabled' => false,
+        ]);
+        $backup = $this->backupService->createBackup('full', $this->superadminUser);
+
+        $employee->update(['attendance_enabled' => true]);
+        $this->backupService->restoreBackup($backup, 'password123', $this->superadminUser);
+
+        $this->assertFalse(Employee::findOrFail($employee->id)->attendance_enabled);
     }
 }

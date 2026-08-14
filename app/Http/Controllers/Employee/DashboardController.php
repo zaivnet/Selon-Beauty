@@ -34,7 +34,7 @@ class DashboardController extends Controller
         $todaySchedule = null;
         $todayAttendance = null;
         $todayLeave = null;
-        $activeLocation = AttendanceLocation::where('is_active', true)->first();
+        $activeLocation = null;
         $todayOvertime = null;
         $correctedAttendance = null;
         $todayEffective = null;
@@ -45,32 +45,35 @@ class DashboardController extends Controller
                     ->whereKey($request->integer('attendance'))
                     ->first();
             }
-            $todayLeave = LeaveRequest::where('employee_id', $employee->id)
-                ->whereDate('start_date', '<=', $todayStr)
-                ->whereDate('end_date', '>=', $todayStr)
-                ->where('status', 'approved')
-                ->first();
-
             $todayEffective = $this->effectiveScheduleService->resolve($employee, $todayStr);
-            $todaySchedule = $this->attendanceService->resolveActiveSchedule($employee);
 
-            if ($todaySchedule) {
-                $attendanceWorkDate = $todaySchedule->work_date instanceof \DateTimeInterface
-                    ? $todaySchedule->work_date->format('Y-m-d')
-                    : substr((string) $todaySchedule->work_date, 0, 10);
-                $todayAttendance = AttendanceRecord::where('employee_id', $employee->id)
-                    ->whereDate('work_date', $attendanceWorkDate)
+            if ($employee->participatesInAttendance()) {
+                $activeLocation = AttendanceLocation::where('is_active', true)->first();
+                $todayLeave = LeaveRequest::where('employee_id', $employee->id)
+                    ->whereDate('start_date', '<=', $todayStr)
+                    ->whereDate('end_date', '>=', $todayStr)
+                    ->where('status', 'approved')
+                    ->first();
+                $todaySchedule = $this->attendanceService->resolveActiveSchedule($employee);
+
+                if ($todaySchedule) {
+                    $attendanceWorkDate = $todaySchedule->work_date instanceof \DateTimeInterface
+                        ? $todaySchedule->work_date->format('Y-m-d')
+                        : substr((string) $todaySchedule->work_date, 0, 10);
+                    $todayAttendance = AttendanceRecord::where('employee_id', $employee->id)
+                        ->whereDate('work_date', $attendanceWorkDate)
+                        ->first();
+                }
+
+                $todayOvertime = OvertimeRequest::with('session')
+                    ->where('employee_id', $employee->id)
+                    ->where('status', 'approved')
+                    ->where(function ($query) use ($todayStr) {
+                        $query->whereDate('work_date', $todayStr)
+                            ->orWhereHas('session', fn ($session) => $session->where('status', 'active'));
+                    })
                     ->first();
             }
-
-            $todayOvertime = OvertimeRequest::with('session')
-                ->where('employee_id', $employee->id)
-                ->where('status', 'approved')
-                ->where(function ($query) use ($todayStr) {
-                    $query->whereDate('work_date', $todayStr)
-                        ->orWhereHas('session', fn ($session) => $session->where('status', 'active'));
-                })
-                ->first();
         }
 
         return view('employee.dashboard', [
