@@ -3,29 +3,25 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Services\AttendanceMonitoringService;
+use App\Services\OperationalExceptionService;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function __construct(protected AttendanceMonitoringService $monitoringService) {}
+    public function __construct(protected OperationalExceptionService $exceptionService) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $todayStr = Carbon::now('Asia/Jakarta')->toDateString();
-
-        $metrics = $this->monitoringService->getSummaryMetrics($todayStr);
-        $attendanceItems = $this->monitoringService->getAttendanceMonitoringList([
-            'date' => $todayStr,
-        ]);
-        $trendData = $this->monitoringService->getPastWeekTrendData();
+        $now = Carbon::now(config('app.timezone'));
+        $includeBackupHealth = in_array($request->user()->role, ['owner', 'superadmin'], true);
 
         return view('admin.dashboard', [
-            'metrics' => $metrics,
-            'attendanceItems' => $attendanceItems,
-            'trendData' => $trendData,
-            'todayFormatted' => Carbon::now('Asia/Jakarta')->locale('id')->isoFormat('dddd, D MMMM YYYY'),
+            'exceptions' => $this->exceptionService->generate($now->toDateString(), [
+                'include_backup_health' => $includeBackupHealth,
+            ], $now),
+            'todayFormatted' => $now->locale('id')->isoFormat('dddd, D MMMM YYYY'),
         ]);
     }
 }

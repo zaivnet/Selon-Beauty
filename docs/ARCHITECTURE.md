@@ -205,6 +205,14 @@ Attendance rate adalah `(HADIR + TERLAMBAT) / effective_work_days × 100`. Izin,
 
 Readiness `NEEDS_REVIEW` hanya diberikan untuk data yang dapat ditindaklanjuti: attendance sudah check-in tetapi belum checkout, overtime session masih aktif, jadwal/shift historis belum lengkap, atau state attendance historis belum terselesaikan. Tanggal OFF/libur eksplisit tetap dianggap lengkap. Tidak ada freeze/closing pada sprint ini.
 
+## 9C. Operational Exception Dashboard
+
+`OperationalExceptionService` adalah source of truth read-only untuk dashboard admin dan halaman Pusat Perhatian. Service menerima tanggal berbasis `config('app.timezone')`, melakukan batch query, memakai `EffectiveScheduleService` serta `AttendanceStatusResolver`, dan memanggil rule review harian milik `MonthlyAttendanceRecapService`. Controller dan Blade tidak menghitung ulang status atau severity.
+
+Kategori mencakup belum check-in, terlambat, belum check-out, tidak hadir, attendance perlu review, overtime aktif, overtime approved belum dimulai, approval leave/overtime pending, override hari ini, koreksi attendance terbaru, dan masalah backup/scheduler. Severity konsisten: `critical`, `warning`, atau `info`. Threshold missing checkout dan backup overdue berada di `config/operations.php` dan dapat dioverride melalui environment.
+
+Exception tidak disimpan sebagai lifecycle baru: item hilang otomatis setelah source record diperbaiki. Dashboard tidak menyediakan approve/reject, correction, force finish, cancel, dismiss, atau mutation lain; setiap CTA hanya deep link menuju workflow existing yang sudah mempunyai authorization, audit, transaction, dan locking. Detail backup hanya dihitung dan ditampilkan untuk Owner/Superadmin sesuai permission matrix existing.
+
 ## 10. File Storage
 
 Selfie:

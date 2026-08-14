@@ -236,3 +236,12 @@ Minimal satu akun Superadmin yang aktif (`is_active = true`) WAJIB selalu tersed
 5. Attendance dan overtime lintas tengah malam masuk satu kali pada `work_date` asal.
 6. READY bukan approval payroll. NEEDS REVIEW menandai missing checkout, overtime aktif, jadwal/shift historis belum lengkap, atau state historis unresolved. OFF/libur eksplisit bukan data bermasalah.
 7. Employee hanya boleh membaca/export rekap miliknya; akses seluruh employee dilindungi role admin/owner/superadmin server-side.
+
+## RULE 038 — Operational Exception Center
+1. Exception operasional selalu derived dari current source of truth dan tidak mempunyai tabel, status resolved, atau mutation tersendiri.
+2. Status attendance wajib berasal dari `EffectiveScheduleService` dan `AttendanceStatusResolver`; holiday, regular OFF, override OFF, dan approved leave tidak boleh muncul sebagai belum check-in/tidak hadir.
+3. Shift lintas tengah malam tetap memakai `work_date` asal. Attendance open dari shift hari sebelumnya tetap dapat muncul sebagai belum checkout pada hari berjalan.
+4. Severity hanya `critical`, `warning`, dan `info`; controller/Blade dilarang menghitung ulang severity atau threshold.
+5. Dashboard dan Pusat Perhatian hanya boleh memberi deep link ke workflow existing. Approve, reject, correction, force finish, cancel, atau delete tidak boleh dilakukan langsung dari exception card.
+6. Backup health dan link backup hanya boleh dikirim kepada Owner/Superadmin. Employee tidak boleh mengakses dashboard operasional.
+7. Membuka dashboard tidak membuat notification atau audit log baru.

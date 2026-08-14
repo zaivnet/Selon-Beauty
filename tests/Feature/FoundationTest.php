@@ -37,8 +37,8 @@ class FoundationTest extends TestCase
 
         $response->assertStatus(200)
             ->assertSee('SELON BEAUTY')
-            ->assertSee('Karyawan Aktif')
-            ->assertSee('Belum Ada Karyawan Terdaftar');
+            ->assertSee('Status Operasional Hari Ini')
+            ->assertSee('Operasional hari ini aman');
     }
 
     public function test_employee_dashboard_loads_without_error(): void
@@ -60,7 +60,7 @@ class FoundationTest extends TestCase
 
     public function test_geofence_haversine_calculation(): void
     {
-        $geofence = new GeofenceService();
+        $geofence = new GeofenceService;
         // Point 1: Monas Jakarta (-6.175392, 106.827153)
         // Point 2: ~100m away (-6.176292, 106.827153)
         $distance = $geofence->calculateDistanceMeters(-6.175392, 106.827153, -6.176292, 106.827153);

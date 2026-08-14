@@ -45,7 +45,7 @@
            }"
            class="fixed md:static inset-y-0 left-0 z-50 bg-slate-900 text-slate-100 flex-shrink-0 flex flex-col justify-between border-r border-slate-800 transition-all duration-300 shadow-2xl md:shadow-none">
         
-        <div>
+        <div class="min-h-0 flex-1 overflow-y-auto">
             <!-- Sidebar Header / Brand -->
             <div class="h-16 flex items-center border-b border-slate-800 transition-all"
                  :class="collapsed ? 'justify-center px-2' : 'justify-between px-4'">
@@ -83,6 +83,16 @@
                    class="flex items-center gap-3 py-2.5 rounded-xl transition-all relative group {{ request()->routeIs('admin.dashboard') ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white font-extrabold shadow-md shadow-rose-900/30' : 'text-slate-400 hover:text-white hover:bg-slate-800/80' }}">
                     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                     <span x-show="!collapsed" class="truncate">Dashboard</span>
+                </a>
+
+                <!-- Operational Exception Center -->
+                <a href="{{ route('admin.operational-exceptions.index') }}"
+                   :title="collapsed ? 'Pusat Perhatian' : ''"
+                   :class="collapsed ? 'justify-center px-0' : 'px-3'"
+                   @if(request()->routeIs('admin.operational-exceptions.*')) aria-current="page" @endif
+                   class="flex items-center gap-3 py-2.5 rounded-xl transition-all relative group {{ request()->routeIs('admin.operational-exceptions.*') ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white font-extrabold shadow-md shadow-rose-900/30' : 'text-slate-400 hover:text-white hover:bg-slate-800/80' }}">
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                    <span x-show="!collapsed" class="truncate">Pusat Perhatian</span>
                 </a>
 
                 <!-- Karyawan -->

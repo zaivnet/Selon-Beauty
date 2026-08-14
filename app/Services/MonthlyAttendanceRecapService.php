@@ -154,7 +154,7 @@ class MonthlyAttendanceRecapService
             $resolved = $this->statusResolver->resolveEffective($effective, $attendance, $leave);
             $isWorkDay = (bool) $effective['is_working_day'];
             $isCorrected = (bool) ($attendance?->is_manually_adjusted || $attendance?->corrected_at || ($attendance && $corrections->has($attendance->id)));
-            $reviewIssues = $this->reviewIssues($date, $today, $effective, $regular, $override, $attendance, $resolved, $requests);
+            $reviewIssues = $this->reviewIssuesForDay($date, $today, $effective, $regular, $override, $attendance, $resolved, $requests);
 
             if ($isWorkDay) {
                 $summary['effective_work_days']++;
@@ -242,7 +242,7 @@ class MonthlyAttendanceRecapService
     }
 
     /** @return array<int, array{code: string, label: string}> */
-    protected function reviewIssues(
+    public function reviewIssuesForDay(
         Carbon $date,
         Carbon $today,
         array $effective,

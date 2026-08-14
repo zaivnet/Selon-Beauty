@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\JobTitleController;
 use App\Http\Controllers\Admin\LeaveRequestController as AdminLeaveRequestController;
 use App\Http\Controllers\Admin\MonthlyRecapController as AdminMonthlyRecapController;
+use App\Http\Controllers\Admin\OperationalExceptionController;
 use App\Http\Controllers\Admin\OvertimeRequestController as AdminOvertimeRequestController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\ScheduleController as AdminScheduleController;
@@ -87,6 +88,7 @@ Route::middleware(['throttle:6,1'])->group(function () {
 // Admin, Owner & Superadmin Protected Routes (/admin/*)
 Route::middleware(['auth', 'role:superadmin,owner,admin', 'prevent.private.cache'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/operational-exceptions', [OperationalExceptionController::class, 'index'])->name('operational-exceptions.index');
 
     // Job Title Management (Sprint 02)
     Route::resource('job-titles', JobTitleController::class)->except(['create', 'show', 'edit']);
