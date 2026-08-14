@@ -6,6 +6,11 @@
 @section('content')
 <div class="space-y-6">
 
+    <nav class="flex gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xs" aria-label="Jenis laporan">
+        <a href="{{ route('admin.reports.attendance') }}" aria-current="page" class="flex min-h-[44px] shrink-0 items-center rounded-lg bg-slate-900 px-4 text-xs font-extrabold text-white shadow-sm">Laporan Kehadiran</a>
+        <a href="{{ route('admin.monthly-recaps.index') }}" class="flex min-h-[44px] shrink-0 items-center rounded-lg px-4 text-xs font-extrabold text-slate-500 transition hover:bg-slate-50 hover:text-slate-800">Rekap Bulanan</a>
+    </nav>
+
     <!-- Header Card with Export Actions -->
     <div class="bg-white p-5 md:p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>

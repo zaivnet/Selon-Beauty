@@ -227,3 +227,12 @@ Minimal satu akun Superadmin yang aktif (`is_active = true`) WAJIB selalu tersed
 4. Resolusi lintas tengah malam selalu memakai `work_date` awal shift sebagai anchor.
 5. Perubahan kalender dan override wajib mempunyai alasan minimal 5 karakter serta audit before/after. Override material juga mengirim notification employee; kalender global tidak melakukan fan-out notification massal.
 6. Attendance historis dan seluruh evidence tidak dihapus atau ditulis ulang saat kalender/override berubah.
+
+## RULE 037 — Payroll-Ready Monthly Attendance Recap
+1. Rekap bulanan bersifat deterministic dari source of truth current state dan tidak menyimpan nominal gaji, potongan, tunjangan, pajak, BPJS, THR, atau status closing payroll.
+2. `effective_work_days` hanya mencakup effective schedule yang wajib bekerja; holiday, override OFF, dan regular OFF dikecualikan.
+3. `present_days` mencakup HADIR dan TERLAMBAT; `late_days` adalah subset. Attendance rate adalah `present_days / effective_work_days × 100`, dan bernilai 0 jika denominator 0.
+4. Menit regular worked tidak boleh dicampur dengan overtime. Requested/approved berasal dari request; actual/credited hanya berasal dari completed session. Approved tanpa session tetap actual/credited 0.
+5. Attendance dan overtime lintas tengah malam masuk satu kali pada `work_date` asal.
+6. READY bukan approval payroll. NEEDS REVIEW menandai missing checkout, overtime aktif, jadwal/shift historis belum lengkap, atau state historis unresolved. OFF/libur eksplisit bukan data bermasalah.
+7. Employee hanya boleh membaca/export rekap miliknya; akses seluruh employee dilindungi role admin/owner/superadmin server-side.

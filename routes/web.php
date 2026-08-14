@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\JobTitleController;
 use App\Http\Controllers\Admin\LeaveRequestController as AdminLeaveRequestController;
+use App\Http\Controllers\Admin\MonthlyRecapController as AdminMonthlyRecapController;
 use App\Http\Controllers\Admin\OvertimeRequestController as AdminOvertimeRequestController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\ScheduleController as AdminScheduleController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Employee\AttendanceController as EmployeeAttendanceController;
 use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;
 use App\Http\Controllers\Employee\LeaveRequestController as EmployeeLeaveRequestController;
+use App\Http\Controllers\Employee\MonthlyRecapController as EmployeeMonthlyRecapController;
 use App\Http\Controllers\Employee\OvertimeRequestController as EmployeeOvertimeRequestController;
 use App\Http\Controllers\Employee\OvertimeSessionController as EmployeeOvertimeSessionController;
 use App\Http\Controllers\Employee\ProfileController as EmployeeProfileController;
@@ -173,6 +175,11 @@ Route::middleware(['auth', 'role:superadmin,owner,admin', 'prevent.private.cache
     Route::get('/reports/attendance', [AdminReportController::class, 'attendance'])->name('reports.attendance');
     Route::get('/reports/attendance/print', [AdminReportController::class, 'printView'])->name('reports.attendance.print');
     Route::get('/reports/attendance/export-csv', [AdminReportController::class, 'exportCsv'])->name('reports.attendance.export-csv');
+    Route::get('/monthly-recaps', [AdminMonthlyRecapController::class, 'index'])->name('monthly-recaps.index');
+    Route::get('/monthly-recaps/export-summary', [AdminMonthlyRecapController::class, 'summaryCsv'])->name('monthly-recaps.export-summary');
+    Route::get('/monthly-recaps/export-detail', [AdminMonthlyRecapController::class, 'detailCsv'])->name('monthly-recaps.export-detail');
+    Route::get('/monthly-recaps/{employee}', [AdminMonthlyRecapController::class, 'show'])->name('monthly-recaps.show');
+    Route::get('/monthly-recaps/{employee}/print', [AdminMonthlyRecapController::class, 'print'])->name('monthly-recaps.print');
 });
 
 // Employee & Owner Protected Routes (/app/*)
@@ -181,6 +188,9 @@ Route::middleware(['auth', 'role:owner,employee', 'prevent.private.cache'])->pre
 
     // Employee Personal Schedule View (Sprint 05)
     Route::get('/schedules', [EmployeeScheduleController::class, 'index'])->name('schedules.index');
+    Route::get('/monthly-recap', [EmployeeMonthlyRecapController::class, 'show'])->name('monthly-recap.show');
+    Route::get('/monthly-recap/export-csv', [EmployeeMonthlyRecapController::class, 'exportCsv'])->name('monthly-recap.export-csv');
+    Route::get('/monthly-recap/print', [EmployeeMonthlyRecapController::class, 'print'])->name('monthly-recap.print');
 
     // Employee Core Attendance Engine (Sprint 06 & Sprint 08)
     Route::post('/attendance/check-in', [EmployeeAttendanceController::class, 'checkIn'])->name('attendance.check-in');

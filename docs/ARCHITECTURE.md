@@ -186,6 +186,25 @@ Regular Employee Schedule
 
 Attendance resolver, monitoring, weekly schedule, leave validation, overtime start, dan report mengonsumsi hasil yang sama. Company/public holiday serta OFF tidak masuk denominator kehadiran. Actual attendance yang sudah ada tetap dipertahankan ketika kalender historis berubah. Global holiday tidak melakukan mass notification; perubahan override employee mengirim notification database dengan deep link ke jadwal mingguan.
 
+## 9B. Monthly Attendance Recap
+
+`MonthlyAttendanceRecapService` menghitung rekap secara deterministic dan tidak menyimpan snapshot bulanan. Service melakukan batch query untuk employee, jadwal reguler, override, kalender, attendance current state, correction marker, approved leave, overtime request, dan overtime session; loop employee/tanggal tidak menjalankan query tambahan.
+
+Source of truth:
+
+```text
+EffectiveScheduleService → kewajiban kerja, holiday/OFF, shift efektif
+AttendanceStatusResolver → status harian
+AttendanceRecord current state → waktu dan menit reguler yang sudah dikoreksi
+LeaveRequest approved → izin/sakit/cuti
+OvertimeRequest → requested/approved
+OvertimeSession completed → actual/credited
+```
+
+Attendance rate adalah `(HADIR + TERLAMBAT) / effective_work_days × 100`. Izin, sakit, dan cuti tidak dianggap hadir. Nilai nol digunakan ketika tidak ada effective work day. Recap selalu mengikuti `work_date` anchor dan merupakan data kehadiran, bukan slip atau kalkulasi nominal payroll.
+
+Readiness `NEEDS_REVIEW` hanya diberikan untuk data yang dapat ditindaklanjuti: attendance sudah check-in tetapi belum checkout, overtime session masih aktif, jadwal/shift historis belum lengkap, atau state attendance historis belum terselesaikan. Tanggal OFF/libur eksplisit tetap dianggap lengkap. Tidak ada freeze/closing pada sprint ini.
+
 ## 10. File Storage
 
 Selfie:

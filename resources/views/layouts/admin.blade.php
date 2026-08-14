@@ -152,7 +152,7 @@
                 <a href="{{ route('admin.reports.attendance') }}" 
                    :title="collapsed ? 'Laporan & Export' : ''"
                    :class="collapsed ? 'justify-center px-0' : 'px-3'"
-                   class="flex items-center gap-3 py-2.5 rounded-xl transition-all relative group {{ request()->routeIs('admin.reports.*') ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white font-extrabold shadow-md shadow-rose-900/30' : 'text-slate-400 hover:text-white hover:bg-slate-800/80' }}">
+                   class="flex items-center gap-3 py-2.5 rounded-xl transition-all relative group {{ request()->routeIs('admin.reports.*', 'admin.monthly-recaps.*') ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white font-extrabold shadow-md shadow-rose-900/30' : 'text-slate-400 hover:text-white hover:bg-slate-800/80' }}">
                     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z"/></svg>
                     <span x-show="!collapsed" class="truncate">Laporan</span>
                 </a>

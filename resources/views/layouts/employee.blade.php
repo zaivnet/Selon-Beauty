@@ -126,7 +126,7 @@
         </a>
 
         <!-- 2. Jadwal -->
-        <a href="{{ route('employee.schedules.index') }}" class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all {{ request()->routeIs('employee.schedules.*') ? 'text-rose-600 font-extrabold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
+        <a href="{{ route('employee.schedules.index') }}" class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all {{ request()->routeIs('employee.schedules.*', 'employee.monthly-recap.*') ? 'text-rose-600 font-extrabold' : 'text-slate-400 hover:text-slate-600 font-medium' }}">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
             <span class="text-[10px]">Jadwal</span>
         </a>

@@ -4,6 +4,10 @@
 
 @section('content')
 <div class="space-y-4">
+    <nav class="flex gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-xs" aria-label="Jadwal dan rekap">
+        <a href="{{ route('employee.schedules.index') }}" aria-current="page" class="flex min-h-[44px] flex-1 items-center justify-center rounded-lg bg-slate-900 px-3 text-[11px] font-extrabold text-white">Jadwal</a>
+        <a href="{{ route('employee.monthly-recap.show') }}" class="flex min-h-[44px] flex-1 items-center justify-center rounded-lg px-3 text-[11px] font-extrabold text-slate-500 transition hover:bg-slate-50">Rekap Saya</a>
+    </nav>
     <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
         <div class="text-center">
             <h3 class="text-xs font-black leading-snug text-slate-900 sm:text-sm">{{ $startDate->locale('id')->isoFormat('D MMM') }} — {{ $endDate->locale('id')->isoFormat('D MMM YYYY') }}</h3>
