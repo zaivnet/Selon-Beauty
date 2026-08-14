@@ -12,7 +12,7 @@ class AttendanceMonitoringService
 {
     public function __construct(protected ?AttendanceStatusResolver $statusResolver = null)
     {
-        $this->statusResolver = $statusResolver ?? new AttendanceStatusResolver();
+        $this->statusResolver = $statusResolver ?? new AttendanceStatusResolver;
     }
 
     /**
@@ -20,7 +20,7 @@ class AttendanceMonitoringService
      */
     public function getSummaryMetrics(?string $dateStr = null): array
     {
-        $targetDate = $dateStr ?: Carbon::now('Asia/Jakarta')->toDateString();
+        $targetDate = $dateStr ?: Carbon::now(config('app.timezone'))->toDateString();
 
         $items = $this->getAttendanceMonitoringList(['date' => $targetDate]);
         $collection = collect($items);
@@ -51,7 +51,7 @@ class AttendanceMonitoringService
      */
     public function getAttendanceMonitoringList(array $filters = [], ?Carbon $nowServerTime = null): array
     {
-        $targetDate = $filters['date'] ?? Carbon::now('Asia/Jakarta')->toDateString();
+        $targetDate = $filters['date'] ?? Carbon::now(config('app.timezone'))->toDateString();
         $filterEmployeeId = ! empty($filters['employee_id']) ? (int) $filters['employee_id'] : null;
         $filterStatus = ! empty($filters['status']) ? strtolower($filters['status']) : null;
 
@@ -143,7 +143,7 @@ class AttendanceMonitoringService
      */
     public function getPastWeekTrendData(): array
     {
-        $today = Carbon::now('Asia/Jakarta');
+        $today = Carbon::now(config('app.timezone'));
         $dates = [];
         $hasData = false;
 

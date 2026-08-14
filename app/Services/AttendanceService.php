@@ -11,6 +11,7 @@ use App\Models\Employee;
 use App\Models\EmployeeSchedule;
 use App\Models\LeaveRequest;
 use App\Models\User;
+use App\Notifications\AdminCorrectionNotification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -19,7 +20,8 @@ class AttendanceService
 {
     public function __construct(
         protected GeofenceService $geofenceService,
-        protected SelfieService $selfieService
+        protected SelfieService $selfieService,
+        protected AttendanceStatusResolver $statusResolver,
     ) {}
 
     /**
@@ -330,8 +332,8 @@ class AttendanceService
                 $selfieInput = $evidence['selfie'] ?? $evidence['check_out_selfie'] ?? $evidence['selfie_base64'] ?? request()->file('selfie') ?? request()->file('check_out_selfie');
                 $newSelfiePath = $this->storeSelfieIfRequired($selfieInput, $employee->id, 'check_out');
 
-                // Align checkInAt wall clock time to Asia/Jakarta
-                $checkInTime = Carbon::createFromFormat('Y-m-d H:i:s', $record->check_in_at->format('Y-m-d H:i:s'), 'Asia/Jakarta');
+                // Align checkInAt wall clock time to the configured business timezone.
+                $checkInTime = Carbon::createFromFormat('Y-m-d H:i:s', $record->check_in_at->format('Y-m-d H:i:s'), $this->timezone());
 
                 // Gross worked minutes
                 $grossMinutes = (int) floor($checkInTime->diffInMinutes($serverNow, false));
@@ -433,100 +435,78 @@ class AttendanceService
         AttendanceRecord $record,
         ?string $checkInStr,
         ?string $checkOutStr,
-        ?string $status,
         string $reason,
-        User $actor
+        User $actor,
+        ?string $internalNote = null,
     ): AttendanceRecord {
+        if (! in_array($actor->role, ['admin', 'owner', 'superadmin'], true)) {
+            throw new \InvalidArgumentException('Anda tidak berwenang melakukan koreksi absensi.');
+        }
         if (empty(trim($reason)) || strlen(trim($reason)) < 5) {
             throw new \InvalidArgumentException('Alasan koreksi absensi wajib diisi (minimal 5 karakter).');
         }
 
-        return DB::transaction(function () use ($record, $checkInStr, $checkOutStr, $status, $reason, $actor) {
-            $record->load(['schedule.shift']);
-            $beforeData = $record->toArray();
-
+        return DB::transaction(function () use ($record, $checkInStr, $checkOutStr, $reason, $actor, $internalNote) {
+            $record = AttendanceRecord::with(['schedule.shift', 'employee.user'])
+                ->lockForUpdate()
+                ->findOrFail($record->id);
+            $beforeData = $record->getAttributes();
             $workDateStr = is_string($record->work_date) ? substr($record->work_date, 0, 10) : $record->work_date->format('Y-m-d');
+            $timezone = $this->timezone();
+            $checkInAt = $this->parseCorrectionTimestamp($checkInStr, $workDateStr, $timezone);
+            $checkOutAt = $this->parseCorrectionTimestamp($checkOutStr, $workDateStr, $timezone);
 
-            // Parse Check-in
-            $checkInAt = null;
-            if (! empty($checkInStr)) {
-                $checkInAt = strlen($checkInStr) === 5
-                    ? Carbon::parse($workDateStr.' '.$checkInStr.':00', 'Asia/Jakarta')
-                    : Carbon::parse($checkInStr, 'Asia/Jakarta');
+            if ($checkInAt && $checkInAt->toDateString() !== $workDateStr) {
+                throw new \InvalidArgumentException('Jam masuk harus tetap berada pada tanggal kerja record.');
             }
-
-            // Parse Check-out
-            $checkOutAt = null;
-            if (! empty($checkOutStr)) {
-                $checkOutAt = strlen($checkOutStr) === 5
-                    ? Carbon::parse($workDateStr.' '.$checkOutStr.':00', 'Asia/Jakarta')
-                    : Carbon::parse($checkOutStr, 'Asia/Jakarta');
-            }
-
-            // Calculations based on Shift
-            $lateMinutes = 0;
-            $workedMinutes = 0;
-            $earlyLeaveMinutes = 0;
-            $overtimeMinutes = 0;
-
-            $shift = $record->schedule?->shift;
-            if ($shift && $checkInAt) {
-                $shiftStart = Carbon::parse($workDateStr.' '.$shift->start_time, 'Asia/Jakarta');
-                $shiftEnd = Carbon::parse($workDateStr.' '.$shift->end_time, 'Asia/Jakarta');
-                if ($shift->crosses_midnight || $shiftEnd->lessThanOrEqualTo($shiftStart)) {
-                    $shiftEnd->addDay();
-                }
-
-                $graceTime = (clone $shiftStart)->addMinutes($shift->grace_period_minutes);
-
-                if ($checkInAt->greaterThan($graceTime)) {
-                    $lateMinutes = (int) floor($graceTime->diffInMinutes($checkInAt, false));
-                    $lateMinutes = max(0, $lateMinutes);
-                }
-
-                if ($checkOutAt) {
-                    $grossWorked = (int) floor($checkInAt->diffInMinutes($checkOutAt, false));
-                    $breakMins = (int) $shift->break_minutes;
-                    $workedMinutes = max(0, $grossWorked - $breakMins);
-
-                    if ($checkOutAt->lessThan($shiftEnd)) {
-                        $earlyLeaveMinutes = (int) floor($checkOutAt->diffInMinutes($shiftEnd, false));
-                        $earlyLeaveMinutes = max(0, $earlyLeaveMinutes);
-                    } elseif ($checkOutAt->greaterThan($shiftEnd)) {
-                        $overtimeMinutes = (int) floor($shiftEnd->diffInMinutes($checkOutAt, false));
-                        $overtimeMinutes = max(0, $overtimeMinutes);
-                    }
-                }
-            }
-
-            // Determine Status
-            $newStatus = $status;
-            if (empty($newStatus)) {
-                if (! $checkInAt) {
-                    $newStatus = 'absent';
-                } elseif ($lateMinutes > 0) {
-                    $newStatus = 'late';
+            if ($checkInAt && $checkOutAt && $checkOutAt->lessThan($checkInAt)) {
+                if ($record->schedule?->shift?->crosses_midnight && strlen((string) $checkOutStr) <= 8) {
+                    $checkOutAt->addDay();
                 } else {
-                    $newStatus = 'present';
+                    throw new \InvalidArgumentException('Jam pulang tidak boleh lebih awal dari jam masuk.');
                 }
             }
+            if ($checkOutAt && ! in_array($checkOutAt->toDateString(), [$workDateStr, Carbon::parse($workDateStr, $timezone)->addDay()->toDateString()], true)) {
+                throw new \InvalidArgumentException('Jam pulang harus tetap terkait dengan tanggal kerja record.');
+            }
+            if ($checkOutAt && $checkOutAt->toDateString() !== $workDateStr && ! $record->schedule?->shift?->crosses_midnight) {
+                throw new \InvalidArgumentException('Jam pulang lintas hari hanya valid untuk shift cross-midnight.');
+            }
 
-            $noteText = 'Koreksi Manual Admin oleh '.$actor->name.': '.trim($reason);
-            $newNotes = $record->notes ? $record->notes."\n".$noteText : $noteText;
+            $metrics = $this->calculateAttendanceMetrics($record, $checkInAt, $checkOutAt);
+            $materialBefore = $this->attendanceSnapshot($record);
+            $candidate = clone $record;
+            $candidate->check_in_at = $checkInAt;
+            $candidate->check_out_at = $checkOutAt;
+            $candidate->late_minutes = $metrics['late_minutes'];
+            $candidate->status = $checkInAt ? ($metrics['late_minutes'] > 0 ? 'late' : 'present') : 'absent';
+            $resolvedStatus = $this->statusResolver->resolve($record->schedule, $candidate)['key'];
+            if (! in_array($resolvedStatus, ['present', 'late', 'absent'], true)) {
+                $resolvedStatus = $candidate->status;
+            }
 
+            $materialAfter = [
+                'check_in_at' => $checkInAt?->format('Y-m-d H:i:s'),
+                'check_out_at' => $checkOutAt?->format('Y-m-d H:i:s'),
+                'status' => $resolvedStatus,
+                ...$metrics,
+            ];
+            if ($materialBefore === $materialAfter) {
+                return $record;
+            }
+
+            $wasMissingCheckout = $record->check_out_at === null && $checkOutAt !== null;
             $record->update([
                 'check_in_at' => $checkInAt,
                 'check_out_at' => $checkOutAt,
-                'status' => $newStatus,
-                'late_minutes' => $lateMinutes,
-                'worked_minutes' => $workedMinutes,
-                'early_leave_minutes' => $earlyLeaveMinutes,
-                'overtime_minutes' => $overtimeMinutes,
+                'status' => $resolvedStatus,
+                ...$metrics,
                 'is_manually_adjusted' => true,
-                'notes' => $newNotes,
+                'corrected_at' => now($timezone),
+                'corrected_by' => $actor->id,
             ]);
 
-            $afterData = $record->fresh()->toArray();
+            $afterData = $record->fresh()->getAttributes();
 
             // Record in attendance_corrections table
             AttendanceCorrection::create([
@@ -542,14 +522,83 @@ class AttendanceService
 
             // Audit Log
             AuditLog::log(
-                action: 'attendance.manually_corrected',
+                action: $wasMissingCheckout ? 'attendance.checkout_recovered' : 'attendance.corrected',
                 model: $record,
                 before: $beforeData,
                 after: $afterData,
-                user: $actor
+                user: $actor,
+                reason: $reason,
+                metadata: [
+                    'employee_id' => $record->employee_id,
+                    'internal_note' => $internalNote,
+                    'source' => 'admin',
+                    'changed_fields' => array_keys(array_diff_assoc($materialAfter, $materialBefore)),
+                ],
             );
 
-            return $record;
+            $record->employee?->user?->notify(new AdminCorrectionNotification(
+                type: $wasMissingCheckout ? 'attendance_checkout_recovered' : 'attendance_corrected',
+                title: 'Absensi Anda dikoreksi',
+                message: $wasMissingCheckout
+                    ? 'Jam pulang Anda dilengkapi oleh admin.'
+                    : 'Data absensi Anda diperbarui oleh admin.',
+                targetUrl: route('employee.dashboard', ['attendance' => $record->id]),
+            ));
+
+            return $record->fresh();
         });
+    }
+
+    protected function parseCorrectionTimestamp(?string $value, string $workDate, string $timezone): ?Carbon
+    {
+        if ($value === null || trim($value) === '') {
+            return null;
+        }
+
+        $value = trim($value);
+
+        return preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $value)
+            ? Carbon::parse($workDate.' '.$value, $timezone)
+            : Carbon::parse($value, $timezone);
+    }
+
+    /** @return array{late_minutes:int,worked_minutes:int,early_leave_minutes:int,overtime_minutes:int} */
+    protected function calculateAttendanceMetrics(AttendanceRecord $record, ?Carbon $checkInAt, ?Carbon $checkOutAt): array
+    {
+        $metrics = ['late_minutes' => 0, 'worked_minutes' => 0, 'early_leave_minutes' => 0, 'overtime_minutes' => 0];
+        $shift = $record->schedule?->shift;
+        if (! $shift || ! $checkInAt) {
+            return $metrics;
+        }
+
+        $window = $this->statusResolver->calculateCheckInWindow($record->work_date->format('Y-m-d'), $shift);
+        $graceTime = $window['start_time']->copy()->addMinutes((int) $shift->grace_period_minutes);
+        $metrics['late_minutes'] = $checkInAt->greaterThan($graceTime)
+            ? max(0, (int) floor($graceTime->diffInMinutes($checkInAt, false))) : 0;
+
+        if ($checkOutAt) {
+            $metrics['worked_minutes'] = max(0, (int) floor($checkInAt->diffInMinutes($checkOutAt, false)) - (int) $shift->break_minutes);
+            if ($checkOutAt->lessThan($window['end_time'])) {
+                $metrics['early_leave_minutes'] = max(0, (int) floor($checkOutAt->diffInMinutes($window['end_time'], false)));
+            } elseif ($checkOutAt->greaterThan($window['end_time'])) {
+                $metrics['overtime_minutes'] = max(0, (int) floor($window['end_time']->diffInMinutes($checkOutAt, false)));
+            }
+        }
+
+        return $metrics;
+    }
+
+    /** @return array<string, mixed> */
+    protected function attendanceSnapshot(AttendanceRecord $record): array
+    {
+        return [
+            'check_in_at' => $record->check_in_at?->format('Y-m-d H:i:s'),
+            'check_out_at' => $record->check_out_at?->format('Y-m-d H:i:s'),
+            'status' => $record->status,
+            'late_minutes' => (int) $record->late_minutes,
+            'worked_minutes' => (int) $record->worked_minutes,
+            'early_leave_minutes' => (int) $record->early_leave_minutes,
+            'overtime_minutes' => (int) $record->overtime_minutes,
+        ];
     }
 }

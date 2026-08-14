@@ -209,3 +209,13 @@ Minimal satu akun Superadmin yang aktif (`is_active = true`) WAJIB selalu tersed
 4. Timestamp, GPS, geofence, dan perhitungan menit lembur bersifat server-authoritative.
 5. `approved_minutes` adalah batas maksimum otorisasi, `actual_minutes` adalah durasi nyata, dan `credited_minutes` adalah nilai minimum dari keduanya.
 6. Overtime cross-midnight tetap terikat pada `work_date` request asal.
+
+## RULE 035 — Correction, Recovery, and Immutable Audit
+1. `AttendanceRecord` dan `OvertimeSession` menyimpan current state; koreksi tidak membuat attendance kedua atau mengubah employee, work date, schedule relation, approved overtime, GPS, maupun evidence.
+2. Koreksi admin wajib memakai transaction, row lock, alasan minimal 5 karakter, actor, before/after snapshot, action code, timestamp, dan referensi record pada `audit_logs`.
+3. Status attendance tidak boleh diinput manual. Derived minutes dan status dihitung ulang melalui service/resolver menggunakan `config('app.timezone')`.
+4. Missing checkout memakai action `attendance.checkout_recovered`; koreksi lain memakai `attendance.corrected`.
+5. Cancel overtime tidak menghapus session dan menetapkan `actual_minutes = 0` serta `credited_minutes = 0` karena sesi dinyatakan tidak valid.
+6. Force finish dan completed correction menghitung actual kembali; credited selalu `min(actual_minutes, approved_minutes)`.
+7. Recovery admin tidak membuat selfie/GPS palsu dan tidak mengganti evidence asli.
+8. `audit_logs` immutable pada aplikasi dan tidak memiliki route update/delete normal.

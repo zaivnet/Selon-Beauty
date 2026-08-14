@@ -22,15 +22,15 @@ class ReportService
      */
     public function generateAttendanceReport(array $filters): array
     {
-        $startDateStr = $filters['start_date'] ?? now('Asia/Jakarta')->startOfMonth()->format('Y-m-d');
-        $endDateStr = $filters['end_date'] ?? now('Asia/Jakarta')->endOfMonth()->format('Y-m-d');
+        $startDateStr = $filters['start_date'] ?? now(config('app.timezone'))->startOfMonth()->format('Y-m-d');
+        $endDateStr = $filters['end_date'] ?? now(config('app.timezone'))->endOfMonth()->format('Y-m-d');
         $employeeIdFilter = $filters['employee_id'] ?? null;
         $statusFilter = $filters['status'] ?? 'all';
         $jobTitleIdFilter = $filters['job_title_id'] ?? null;
 
-        $startDate = Carbon::parse($startDateStr, 'Asia/Jakarta')->startOfDay();
-        $endDate = Carbon::parse($endDateStr, 'Asia/Jakarta')->endOfDay();
-        $todayStr = now('Asia/Jakarta')->format('Y-m-d');
+        $startDate = Carbon::parse($startDateStr, config('app.timezone'))->startOfDay();
+        $endDate = Carbon::parse($endDateStr, config('app.timezone'))->endOfDay();
+        $todayStr = now(config('app.timezone'))->format('Y-m-d');
 
         // 1. Fetch Employees
         $employeesQuery = Employee::with('jobTitle')->whereNull('deleted_at');

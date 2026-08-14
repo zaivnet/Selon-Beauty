@@ -321,7 +321,7 @@ class SecurityHardeningTest extends TestCase
 
         // Audit Log created
         $this->assertDatabaseHas('audit_logs', [
-            'action' => 'attendance.manually_corrected',
+            'action' => 'attendance.corrected',
             'auditable_type' => AttendanceRecord::class,
             'auditable_id' => $attendance->id,
             'user_id' => $this->ownerUser->id,

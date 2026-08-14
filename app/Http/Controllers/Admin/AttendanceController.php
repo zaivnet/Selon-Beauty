@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AttendanceRecord;
 use App\Models\Employee;
 use App\Services\AttendanceMonitoringService;
+use App\Services\AttendanceService;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -17,7 +18,7 @@ class AttendanceController extends Controller
 
     public function index(Request $request): View
     {
-        $todayDefault = Carbon::now('Asia/Jakarta')->toDateString();
+        $todayDefault = Carbon::now(config('app.timezone'))->toDateString();
         $selectedDate = $request->input('date', $todayDefault);
         $selectedEmployeeId = $request->input('employee_id');
         $selectedStatus = $request->input('status');
@@ -41,7 +42,7 @@ class AttendanceController extends Controller
             'attendanceItems' => $attendanceItems,
             'employees' => $employees,
             'filters' => $filters,
-            'selectedDateFormatted' => Carbon::parse($selectedDate, 'Asia/Jakarta')->locale('id')->isoFormat('dddd, D MMMM YYYY'),
+            'selectedDateFormatted' => Carbon::parse($selectedDate, config('app.timezone'))->locale('id')->isoFormat('dddd, D MMMM YYYY'),
         ]);
     }
 
@@ -59,6 +60,9 @@ class AttendanceController extends Controller
                 'data' => $attendance,
                 'check_in_selfie_url' => $attendance->check_in_selfie_path ? route('attendance.selfie', ['record' => $attendance->id, 'type' => 'check_in']) : null,
                 'check_out_selfie_url' => $attendance->check_out_selfie_path ? route('attendance.selfie', ['record' => $attendance->id, 'type' => 'check_out']) : null,
+                'correction_url' => route('admin.attendance.correct', $attendance),
+                'check_in_local' => $attendance->check_in_at?->timezone(config('app.timezone'))->format('Y-m-d\TH:i'),
+                'check_out_local' => $attendance->check_out_at?->timezone(config('app.timezone'))->format('Y-m-d\TH:i'),
             ]);
         }
 
@@ -67,13 +71,13 @@ class AttendanceController extends Controller
         ]);
     }
 
-    public function correct(Request $request, AttendanceRecord $attendance, \App\Services\AttendanceService $attendanceService)
+    public function correct(Request $request, AttendanceRecord $attendance, AttendanceService $attendanceService)
     {
         $request->validate([
             'reason' => 'required|string|min:5',
             'check_in_at' => 'nullable|string',
             'check_out_at' => 'nullable|string',
-            'status' => 'nullable|string|in:present,late,absent,permission,sick,leave',
+            'internal_note' => 'nullable|string|max:2000',
         ], [
             'reason.required' => 'Alasan koreksi wajib diisi.',
             'reason.min' => 'Alasan koreksi minimal 5 karakter.',
@@ -82,11 +86,15 @@ class AttendanceController extends Controller
         try {
             $attendanceService->correctAttendanceRecord(
                 record: $attendance,
-                checkInStr: $request->input('check_in_at'),
-                checkOutStr: $request->input('check_out_at'),
-                status: $request->input('status'),
+                checkInStr: $request->exists('check_in_at')
+                    ? $request->input('check_in_at')
+                    : $attendance->check_in_at?->timezone(config('app.timezone'))->format('Y-m-d\TH:i'),
+                checkOutStr: $request->exists('check_out_at')
+                    ? $request->input('check_out_at')
+                    : $attendance->check_out_at?->timezone(config('app.timezone'))->format('Y-m-d\TH:i'),
                 reason: $request->input('reason'),
-                actor: $request->user()
+                actor: $request->user(),
+                internalNote: $request->input('internal_note'),
             );
 
             return redirect()->back()->with('success', 'Presensi berhasil dikoreksi secara manual oleh Admin/Owner.');

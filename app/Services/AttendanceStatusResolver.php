@@ -11,12 +11,6 @@ class AttendanceStatusResolver
 {
     /**
      * Resolve the operational status for an employee schedule / attendance record context.
-     *
-     * @param EmployeeSchedule|null $schedule
-     * @param AttendanceRecord|null $record
-     * @param LeaveRequest|null $approvedLeave
-     * @param Carbon|null $nowServerTime
-     * @return array
      */
     public function resolve(
         ?EmployeeSchedule $schedule,
@@ -24,7 +18,8 @@ class AttendanceStatusResolver
         ?LeaveRequest $approvedLeave = null,
         ?Carbon $nowServerTime = null
     ): array {
-        $now = $nowServerTime ? $nowServerTime->copy()->timezone('Asia/Jakarta') : Carbon::now('Asia/Jakarta');
+        $timezone = config('app.timezone');
+        $now = $nowServerTime ? $nowServerTime->copy()->timezone($timezone) : Carbon::now($timezone);
 
         // Priority 1: Schedule type OFF
         if ($schedule && $schedule->schedule_type === 'off') {
@@ -53,6 +48,7 @@ class AttendanceStatusResolver
                 'leave' => 'CUTI',
                 default => strtoupper($type),
             };
+
             return [
                 'key' => $type,
                 'label' => $label,
@@ -70,6 +66,7 @@ class AttendanceStatusResolver
                         'badge_class' => 'bg-amber-50 text-amber-700 border-amber-200',
                     ];
                 }
+
                 return [
                     'key' => 'present',
                     'label' => 'HADIR',
@@ -85,6 +82,7 @@ class AttendanceStatusResolver
                     'leave' => 'CUTI',
                     default => strtoupper($type),
                 };
+
                 return [
                     'key' => $type,
                     'label' => $label,
@@ -155,8 +153,7 @@ class AttendanceStatusResolver
     /**
      * Calculate check-in window open and close timestamps dynamically in Asia/Jakarta.
      *
-     * @param string $workDateStr (Y-m-d)
-     * @param mixed $shift
+     * @param  string  $workDateStr  (Y-m-d)
      * @return array ['open_time' => Carbon, 'close_time' => Carbon, 'start_time' => Carbon, 'end_time' => Carbon]
      */
     public function calculateCheckInWindow(string $workDateStr, mixed $shift): array
@@ -170,13 +167,14 @@ class AttendanceStatusResolver
         $startFormatted = substr((string) $startTimeStr, 0, 5);
         $endFormatted = substr((string) $endTimeStr, 0, 5);
 
-        $shiftStart = Carbon::parse("{$workDateStr} {$startFormatted}:00", 'Asia/Jakarta');
+        $timezone = config('app.timezone');
+        $shiftStart = Carbon::parse("{$workDateStr} {$startFormatted}:00", $timezone);
 
         // Handle cross-midnight for shiftEnd
         if ($endFormatted <= $startFormatted) {
-            $shiftEnd = Carbon::parse("{$workDateStr} {$endFormatted}:00", 'Asia/Jakarta')->addDay();
+            $shiftEnd = Carbon::parse("{$workDateStr} {$endFormatted}:00", $timezone)->addDay();
         } else {
-            $shiftEnd = Carbon::parse("{$workDateStr} {$endFormatted}:00", 'Asia/Jakarta');
+            $shiftEnd = Carbon::parse("{$workDateStr} {$endFormatted}:00", $timezone);
         }
 
         $openTime = (clone $shiftStart)->subMinutes($openBeforeMins);

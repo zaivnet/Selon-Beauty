@@ -39,6 +39,8 @@ class AttendanceRecord extends Model
         'worked_minutes',
         'overtime_minutes',
         'is_manually_adjusted',
+        'corrected_at',
+        'corrected_by',
         'notes',
     ];
 
@@ -61,6 +63,7 @@ class AttendanceRecord extends Model
             'worked_minutes' => 'integer',
             'overtime_minutes' => 'integer',
             'is_manually_adjusted' => 'boolean',
+            'corrected_at' => 'datetime',
         ];
     }
 
@@ -77,5 +80,10 @@ class AttendanceRecord extends Model
     public function location(): BelongsTo
     {
         return $this->belongsTo(AttendanceLocation::class, 'attendance_location_id');
+    }
+
+    public function correctedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'corrected_by');
     }
 }

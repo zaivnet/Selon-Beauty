@@ -1,99 +1,91 @@
 @extends('layouts.admin')
 
-@section('title', 'Audit Logs System')
-@section('page-title', 'Audit Logs & Rekam Keamanan')
+@section('title', 'Audit Trail')
+@section('page-title', 'Audit Trail / Riwayat Perubahan')
 
 @section('content')
-<div class="space-y-6">
-
-    <!-- Header & Filter Bar -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-            <h3 class="text-base font-extrabold text-slate-900">Rekam Aktivitas System (Audit Log)</h3>
-            <p class="text-xs text-slate-500">Mencatat aktivitas krusial, perubahan data, dan koreksi absensi secara append-only.</p>
+@php
+    $labels = [
+        'check_in_at' => 'Jam Masuk', 'check_out_at' => 'Jam Pulang', 'status' => 'Status',
+        'late_minutes' => 'Terlambat', 'worked_minutes' => 'Menit Kerja',
+        'early_leave_minutes' => 'Pulang Awal', 'overtime_minutes' => 'Kandidat Lembur',
+        'actual_minutes' => 'Menit Aktual', 'credited_minutes' => 'Menit Dikreditkan',
+        'completion_source' => 'Sumber Penyelesaian',
+    ];
+@endphp
+<div class="space-y-5">
+    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
+        <div class="mb-4">
+            <h2 class="text-base font-extrabold text-slate-900">Riwayat perubahan sensitif</h2>
+            <p class="text-xs text-slate-500">Append-only; record tidak dapat diedit atau dihapus dari aplikasi.</p>
         </div>
-
-        <form action="{{ route('admin.audit-logs.index') }}" method="GET" class="flex items-center gap-2">
-            <input type="text" name="action" value="{{ $actionFilter }}" placeholder="Cari action (misal: attendance)..." class="px-3.5 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-rose-500 bg-slate-50">
-            <button type="submit" class="px-4 py-2 bg-slate-900 text-white font-bold text-xs rounded-xl hover:bg-slate-800 transition-colors cursor-pointer">
-                Cari
-            </button>
-            @if($actionFilter)
-                <a href="{{ route('admin.audit-logs.index') }}" class="text-xs font-bold text-rose-600 underline">Reset</a>
-            @endif
+        <form method="GET" action="{{ route('admin.audit-logs.index') }}" class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-6">
+            <input type="date" name="date_from" value="{{ $filters['date_from'] ?? '' }}" aria-label="Tanggal mulai" class="min-w-0 min-h-[44px] rounded-xl border border-slate-300 bg-slate-50 px-3 text-xs">
+            <input type="date" name="date_to" value="{{ $filters['date_to'] ?? '' }}" aria-label="Tanggal akhir" class="min-w-0 min-h-[44px] rounded-xl border border-slate-300 bg-slate-50 px-3 text-xs">
+            <select name="user_id" class="min-w-0 min-h-[44px] rounded-xl border border-slate-300 bg-slate-50 px-3 text-xs">
+                <option value="">Semua actor</option>
+                @foreach($actors as $actor)<option value="{{ $actor->id }}" @selected(($filters['user_id'] ?? '') == $actor->id)>{{ $actor->name }}</option>@endforeach
+            </select>
+            <select name="module" class="min-w-0 min-h-[44px] rounded-xl border border-slate-300 bg-slate-50 px-3 text-xs">
+                <option value="">Semua modul</option>
+                <option value="attendance" @selected(($filters['module'] ?? '') === 'attendance')>Attendance</option>
+                <option value="overtime" @selected(($filters['module'] ?? '') === 'overtime')>Overtime</option>
+            </select>
+            <select name="employee_id" class="min-w-0 min-h-[44px] rounded-xl border border-slate-300 bg-slate-50 px-3 text-xs">
+                <option value="">Semua karyawan</option>
+                @foreach($employees as $employee)<option value="{{ $employee->id }}" @selected(($filters['employee_id'] ?? '') == $employee->id)>{{ $employee->full_name }}</option>@endforeach
+            </select>
+            <div class="flex gap-2">
+                <input type="text" name="action" value="{{ $filters['action'] ?? '' }}" placeholder="Action" class="min-w-0 flex-1 min-h-[44px] rounded-xl border border-slate-300 bg-slate-50 px-3 text-xs">
+                <button class="min-h-[44px] rounded-xl bg-slate-900 px-4 text-xs font-bold text-white">Filter</button>
+            </div>
         </form>
-    </div>
-
-    <!-- Audit Logs Table -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 space-y-4">
-        @if($logs->isEmpty())
-            <div class="p-8 text-center text-xs text-slate-500 font-medium">
-                Belum ada catatan Audit Log.
-            </div>
-        @else
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-xs">
-                    <thead>
-                        <tr class="border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-400 bg-slate-50">
-                            <th class="py-3 px-4">Waktu</th>
-                            <th class="py-3 px-4">Pelaku (Actor)</th>
-                            <th class="py-3 px-4">Action</th>
-                            <th class="py-3 px-4">Entity</th>
-                            <th class="py-3 px-4">IP & Browser</th>
-                            <th class="py-3 px-4 text-right">Detail Data</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 font-mono">
-                        @foreach($logs as $log)
-                            <tr class="hover:bg-slate-50/80 transition-colors">
-                                <td class="py-3 px-4 text-slate-700 font-bold whitespace-nowrap">
-                                    {{ $log->created_at ? $log->created_at->format('Y-m-d H:i:s') : '-' }}
-                                </td>
-                                <td class="py-3 px-4 font-sans font-extrabold text-slate-900">
-                                    {{ $log->user?->name ?? 'System / Guest' }}
-                                </td>
-                                <td class="py-3 px-4">
-                                    <span class="px-2.5 py-1 bg-rose-50 text-rose-800 border border-rose-200 font-extrabold text-[10px] rounded-lg inline-block">
-                                        {{ $log->action }}
-                                    </span>
-                                </td>
-                                <td class="py-3 px-4 text-slate-600">
-                                    {{ class_basename($log->auditable_type) }} #{{ $log->auditable_id }}
-                                </td>
-                                <td class="py-3 px-4 text-slate-500 text-[11px]">
-                                    {{ $log->ip_address ?? '-' }}
-                                </td>
-                                <td class="py-3 px-4 text-right font-sans">
-                                    <details class="cursor-pointer text-left">
-                                        <summary class="text-[11px] font-bold text-rose-600 hover:underline">Lihat Snapshot</summary>
-                                        <div class="mt-2 p-3 bg-slate-900 text-slate-100 rounded-xl text-[10px] space-y-2 overflow-x-auto max-w-md">
-                                            @if($log->before_data)
-                                                <div>
-                                                    <span class="text-rose-400 font-bold block mb-1">BEFORE:</span>
-                                                    <pre class="font-mono">{{ json_encode($log->before_data, JSON_PRETTY_PRINT) }}</pre>
-                                                </div>
-                                            @endif
-                                            @if($log->after_data)
-                                                <div>
-                                                    <span class="text-emerald-400 font-bold block mb-1">AFTER:</span>
-                                                    <pre class="font-mono">{{ json_encode($log->after_data, JSON_PRETTY_PRINT) }}</pre>
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </details>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Pagination -->
-            <div class="pt-2">
-                {{ $logs->links() }}
-            </div>
+        @if(array_filter($filters))
+            <a href="{{ route('admin.audit-logs.index') }}" class="mt-3 inline-block text-xs font-bold text-rose-600">Reset filter</a>
         @endif
     </div>
 
+    <div class="space-y-3">
+        @forelse($logs as $log)
+            @php
+                $employee = isset($log->metadata['employee_id']) ? $employees->get($log->metadata['employee_id']) : null;
+                $before = $log->before_data ?? [];
+                $after = $log->after_data ?? [];
+                $changed = collect(array_unique(array_merge(array_keys($before), array_keys($after))))
+                    ->filter(fn ($key) => array_key_exists($key, $labels) && ($before[$key] ?? null) != ($after[$key] ?? null));
+            @endphp
+            <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div class="min-w-0">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="rounded-lg border border-rose-200 bg-rose-50 px-2 py-1 text-[10px] font-extrabold text-rose-800">{{ $log->action }}</span>
+                            <span class="text-xs font-bold text-slate-900">{{ $employee?->full_name ?? class_basename($log->auditable_type).' #'.$log->auditable_id }}</span>
+                        </div>
+                        <p class="mt-2 text-xs text-slate-600"><strong>{{ $log->user?->name ?? 'System' }}</strong> · {{ $log->created_at?->timezone(config('app.timezone'))->format('d M Y H:i:s') }}</p>
+                        @if($log->reason)<p class="mt-1 text-xs text-slate-700"><strong>Alasan:</strong> {{ $log->reason }}</p>@endif
+                    </div>
+                    <details class="shrink-0">
+                        <summary class="flex min-h-[44px] cursor-pointer items-center rounded-xl bg-slate-900 px-4 text-xs font-bold text-white">Lihat perubahan</summary>
+                        <div class="mt-3 grid gap-2 sm:min-w-[520px] sm:grid-cols-2">
+                            @forelse($changed as $field)
+                                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:col-span-2">
+                                    <p class="text-[10px] font-extrabold uppercase text-slate-500">{{ $labels[$field] }}</p>
+                                    <div class="mt-1 grid grid-cols-2 gap-3 text-xs">
+                                        <div><span class="text-[10px] text-rose-600">Sebelum</span><p class="break-words font-semibold">{{ is_scalar($before[$field] ?? null) ? ($before[$field] ?? '—') : '—' }}</p></div>
+                                        <div><span class="text-[10px] text-emerald-600">Sesudah</span><p class="break-words font-semibold">{{ is_scalar($after[$field] ?? null) ? ($after[$field] ?? '—') : '—' }}</p></div>
+                                    </div>
+                                </div>
+                            @empty
+                                <p class="text-xs text-slate-500 sm:col-span-2">Tidak ada field operasional yang berubah pada snapshot ini.</p>
+                            @endforelse
+                        </div>
+                    </details>
+                </div>
+            </article>
+        @empty
+            <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-xs text-slate-500">Belum ada audit log untuk filter ini.</div>
+        @endforelse
+    </div>
+    {{ $logs->links() }}
 </div>
 @endsection

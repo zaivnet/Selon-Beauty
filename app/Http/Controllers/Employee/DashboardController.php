@@ -11,13 +11,14 @@ use App\Models\OvertimeRequest;
 use App\Services\AttendanceService;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
     public function __construct(protected AttendanceService $attendanceService) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
         $user = Auth::user();
         $employee = $user->employee;
@@ -31,8 +32,14 @@ class DashboardController extends Controller
         $todayLeave = null;
         $activeLocation = AttendanceLocation::where('is_active', true)->first();
         $todayOvertime = null;
+        $correctedAttendance = null;
 
         if ($employee) {
+            if ($request->filled('attendance')) {
+                $correctedAttendance = AttendanceRecord::where('employee_id', $employee->id)
+                    ->whereKey($request->integer('attendance'))
+                    ->first();
+            }
             $todayLeave = LeaveRequest::where('employee_id', $employee->id)
                 ->whereDate('start_date', '<=', $todayStr)
                 ->whereDate('end_date', '>=', $todayStr)
@@ -67,6 +74,7 @@ class DashboardController extends Controller
             'activeLocation' => $activeLocation,
             'requireSelfie' => (bool) AppSetting::get('attendance_require_selfie', true),
             'todayOvertime' => $todayOvertime,
+            'correctedAttendance' => $correctedAttendance,
         ]);
     }
 }

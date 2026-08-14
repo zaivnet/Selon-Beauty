@@ -19,6 +19,16 @@
         </div>
     @endif
 
+    @if($correctedAttendance)
+        <div id="attendance-{{ $correctedAttendance->id }}" class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900 shadow-xs">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <p class="font-extrabold">Absensi {{ $correctedAttendance->work_date->format('d M Y') }} · Dikoreksi Admin</p>
+                @if($correctedAttendance->corrected_at)<span class="text-[10px] font-bold">{{ $correctedAttendance->corrected_at->format('d M Y H:i') }}</span>@endif
+            </div>
+            <p class="mt-2">Masuk <strong>{{ $correctedAttendance->check_in_at?->format('H:i') ?? '—' }}</strong> · Pulang <strong>{{ $correctedAttendance->check_out_at?->format('H:i') ?? '—' }}</strong> · Worked <strong>{{ $correctedAttendance->worked_minutes }} menit</strong></p>
+        </div>
+    @endif
+
     <!-- PWA Install Prompt Banner (Shown only when installable & not standalone) -->
     <div id="pwa-install-banner" class="hidden bg-gradient-to-r from-rose-700 via-rose-600 to-pink-600 text-white rounded-2xl p-4 shadow-md flex items-center justify-between gap-3">
         <div class="flex items-center gap-3">
@@ -148,6 +158,11 @@
             <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Status Presensi Hari Ini</span>
             
             <div class="space-y-3">
+                @if($todayAttendance->is_manually_adjusted)
+                    <div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[11px] font-bold text-amber-800">
+                        Dikoreksi Admin @if($todayAttendance->corrected_at) · Terakhir {{ $todayAttendance->corrected_at->format('d M Y H:i') }} @endif
+                    </div>
+                @endif
                 <!-- Check-in Status Box -->
                 <div class="p-3.5 bg-emerald-50/80 border border-emerald-200 rounded-xl flex items-center gap-3">
                     @if($todayAttendance->check_in_selfie_path)
@@ -223,16 +238,21 @@
             <div class="flex items-center justify-between gap-3">
                 <div>
                     <span class="text-[10px] font-black text-indigo-700 uppercase tracking-widest">Lembur Hari Ini</span>
-                    <p class="text-sm font-extrabold text-slate-900 mt-1">{{ !$todayOvertime->session ? 'Disetujui · Belum Dimulai' : ($todayOvertime->session->isActive() ? 'Sedang Lembur' : 'Selesai') }}</p>
+                    <p class="text-sm font-extrabold text-slate-900 mt-1">{{ !$todayOvertime->session ? 'Disetujui · Belum Dimulai' : ($todayOvertime->session->isActive() ? 'Sedang Lembur' : ($todayOvertime->session->isCancelled() ? 'Dibatalkan Admin' : 'Selesai')) }}</p>
                 </div>
                 <span class="rounded-full bg-white px-3 py-1 text-[11px] font-extrabold text-indigo-700 border border-indigo-200">
                     {{ \App\Models\OvertimeSession::formatMinutes($todayOvertime->approved_minutes) }} approved
                 </span>
             </div>
             @if($todayOvertime->session)
+                @if($todayOvertime->session->corrected_at)
+                    <p class="rounded-lg bg-amber-100 px-2 py-1 text-[10px] font-bold text-amber-800">Dikoreksi Admin · {{ $todayOvertime->session->corrected_at->format('d M Y H:i') }}</p>
+                @endif
                 <div class="text-xs text-slate-700">
                     Mulai <strong>{{ $todayOvertime->session->check_in_at?->format('H:i') }}</strong>
-                    @if($todayOvertime->session->isCompleted())
+                    @if($todayOvertime->session->isCancelled())
+                        · Credited <strong>0m</strong>
+                    @elseif($todayOvertime->session->isCompleted())
                         · Selesai <strong>{{ $todayOvertime->session->check_out_at?->format('H:i') }}</strong><br>
                         Actual <strong>{{ \App\Models\OvertimeSession::formatMinutes($todayOvertime->session->actual_minutes) }}</strong>
                         · Credited <strong>{{ \App\Models\OvertimeSession::formatMinutes($todayOvertime->session->credited_minutes) }}</strong>

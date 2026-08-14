@@ -7,7 +7,9 @@ use App\Models\AttendanceRecord;
 use App\Models\Employee;
 use App\Models\EmployeeSchedule;
 use App\Models\OvertimeRequest;
+use App\Models\OvertimeSession;
 use App\Services\OvertimeRequestService;
+use App\Services\OvertimeSessionService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,7 +17,10 @@ use Illuminate\Support\Facades\Auth;
 
 class OvertimeRequestController extends Controller
 {
-    public function __construct(protected OvertimeRequestService $overtimeService) {}
+    public function __construct(
+        protected OvertimeRequestService $overtimeService,
+        protected OvertimeSessionService $sessionService,
+    ) {}
 
     public function index(Request $request): View
     {
@@ -121,5 +126,44 @@ class OvertimeRequestController extends Controller
 
         return redirect()->back()
             ->with('success', 'Pengajuan lembur telah ditolak.');
+    }
+
+    public function forceFinish(Request $request, OvertimeSession $overtimeSession): RedirectResponse
+    {
+        $validated = $request->validate([
+            'finish_at' => ['required', 'date'],
+            'reason' => ['required', 'string', 'min:5', 'max:2000'],
+        ]);
+        $this->sessionService->forceFinish($request->user(), $overtimeSession, $validated['finish_at'], $validated['reason']);
+
+        return back()->with('success', 'Sesi lembur berhasil diselesaikan oleh admin.');
+    }
+
+    public function cancelSession(Request $request, OvertimeSession $overtimeSession): RedirectResponse
+    {
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'min:5', 'max:2000'],
+        ]);
+        $this->sessionService->cancel($request->user(), $overtimeSession, $validated['reason']);
+
+        return back()->with('success', 'Sesi lembur dibatalkan tanpa menghapus histori.');
+    }
+
+    public function correctSession(Request $request, OvertimeSession $overtimeSession): RedirectResponse
+    {
+        $validated = $request->validate([
+            'check_in_at' => ['required', 'date'],
+            'check_out_at' => ['required', 'date'],
+            'reason' => ['required', 'string', 'min:5', 'max:2000'],
+        ]);
+        $this->sessionService->correctCompleted(
+            $request->user(),
+            $overtimeSession,
+            $validated['check_in_at'],
+            $validated['check_out_at'],
+            $validated['reason'],
+        );
+
+        return back()->with('success', 'Sesi lembur berhasil dikoreksi.');
     }
 }

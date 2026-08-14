@@ -247,6 +247,13 @@ Untuk koreksi langsung oleh owner, tetap simpan record audit dengan status appro
 
 Audit log idealnya append-only dari sisi aplikasi.
 
+Tambahan correction/recovery yang bersifat additive:
+- `audit_logs.reason` TEXT NULL dan `audit_logs.metadata` JSON NULL;
+- `attendance_records.corrected_at` TIMESTAMP NULL dan `corrected_by` FK users NULL;
+- `overtime_sessions.corrected_at`, `corrected_by`, `completed_by_user_id`, dan `completion_source` untuk provenance current state.
+
+Audit history tidak disalin ke kolom current-state dan evidence path tidak diganti oleh workflow correction.
+
 ## 14. app_settings
 
 - id

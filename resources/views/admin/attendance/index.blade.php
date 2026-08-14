@@ -174,6 +174,9 @@
                                 </td>
                                 <td class="py-3.5 px-4 text-right">
                                     @if($rec)
+                                        @if($rec->is_manually_adjusted)
+                                            <span class="mr-1 inline-flex rounded-lg bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-700">Dikoreksi Admin</span>
+                                        @endif
                                         <button type="button" onclick="showAttendanceDetail({{ $rec->id }})" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[11px] rounded-lg transition-colors cursor-pointer shadow-2xs">
                                             Lihat Detail
                                         </button>
@@ -223,6 +226,9 @@
                         </div>
 
                         @if($rec)
+                            @if($rec->is_manually_adjusted)
+                                <div class="rounded-lg bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-700">Dikoreksi Admin · {{ $rec->corrected_at?->format('d/m/Y H:i') }}</div>
+                            @endif
                             <div class="flex items-center justify-between pt-1">
                                 <div class="text-[10px] text-slate-500 font-medium">
                                     @if($rec->check_in_distance_meters !== null)
@@ -369,6 +375,21 @@ async function showAttendanceDetail(recordId) {
                     <span class="font-extrabold text-slate-900">${data.overtime_minutes || 0}m</span>
                 </div>
             </div>
+
+            <details class="rounded-xl border border-amber-200 bg-amber-50/60 p-3">
+                <summary class="flex min-h-[44px] cursor-pointer items-center font-extrabold text-amber-900">Koreksi Absensi</summary>
+                <form method="POST" action="${json.correction_url}" class="mt-3 space-y-3">
+                    <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <label class="block min-w-0"><span class="mb-1 block text-[10px] font-bold uppercase text-slate-600">Jam Masuk</span><input type="datetime-local" name="check_in_at" value="${json.check_in_local || ''}" class="min-h-[44px] w-full min-w-0 max-w-full rounded-xl border border-slate-300 bg-white px-3 text-xs"></label>
+                        <label class="block min-w-0"><span class="mb-1 block text-[10px] font-bold uppercase text-slate-600">Jam Pulang</span><input type="datetime-local" name="check_out_at" value="${json.check_out_local || ''}" class="min-h-[44px] w-full min-w-0 max-w-full rounded-xl border border-slate-300 bg-white px-3 text-xs"></label>
+                    </div>
+                    <label class="block"><span class="mb-1 block text-[10px] font-bold uppercase text-slate-600">Alasan Koreksi *</span><textarea name="reason" minlength="5" maxlength="2000" required rows="2" class="w-full rounded-xl border border-slate-300 bg-white p-3 text-xs" placeholder="Contoh: Lupa absen pulang"></textarea></label>
+                    <label class="block"><span class="mb-1 block text-[10px] font-bold uppercase text-slate-600">Catatan Internal (opsional)</span><textarea name="internal_note" maxlength="2000" rows="2" class="w-full rounded-xl border border-slate-300 bg-white p-3 text-xs"></textarea></label>
+                    <p class="text-[10px] text-slate-500">Status, keterlambatan, dan menit kerja dihitung ulang otomatis. Bukti GPS/selfie asli tidak diubah.</p>
+                    <button type="submit" class="min-h-[44px] w-full rounded-xl bg-amber-600 px-4 py-2.5 text-xs font-extrabold text-white">Simpan Koreksi</button>
+                </form>
+            </details>
         `;
 
         modalBody.innerHTML = html;

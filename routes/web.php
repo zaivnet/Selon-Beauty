@@ -156,6 +156,9 @@ Route::middleware(['auth', 'role:superadmin,owner,admin', 'prevent.private.cache
     Route::get('/overtime-requests', [AdminOvertimeRequestController::class, 'index'])->name('overtime-requests.index');
     Route::post('/overtime-requests/{overtimeRequest}/approve', [AdminOvertimeRequestController::class, 'approve'])->name('overtime-requests.approve');
     Route::post('/overtime-requests/{overtimeRequest}/reject', [AdminOvertimeRequestController::class, 'reject'])->name('overtime-requests.reject');
+    Route::post('/overtime-sessions/{overtimeSession}/force-finish', [AdminOvertimeRequestController::class, 'forceFinish'])->name('overtime-sessions.force-finish');
+    Route::post('/overtime-sessions/{overtimeSession}/cancel', [AdminOvertimeRequestController::class, 'cancelSession'])->name('overtime-sessions.cancel');
+    Route::post('/overtime-sessions/{overtimeSession}/correct', [AdminOvertimeRequestController::class, 'correctSession'])->name('overtime-sessions.correct');
 
     // Reports & Export Management (Sprint 12)
     Route::get('/reports/attendance', [AdminReportController::class, 'attendance'])->name('reports.attendance');

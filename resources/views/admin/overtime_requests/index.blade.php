@@ -201,11 +201,17 @@
                                     @elseif($req->session->isActive())
                                         <span class="font-extrabold text-indigo-700">Active</span>
                                         <div class="text-slate-500">{{ $req->session->check_in_at?->format('d/m H:i') }}</div>
+                                    @elseif($req->session->isCancelled())
+                                        <span class="font-extrabold text-rose-700">Cancelled</span>
+                                        <div>Credited 0m</div>
                                     @else
                                         <span class="font-extrabold text-emerald-700">Completed</span>
                                         <div class="text-slate-500">{{ $req->session->check_in_at?->format('H:i') }}–{{ $req->session->check_out_at?->format('H:i') }}</div>
                                         <div>Actual {{ \App\Models\OvertimeSession::formatMinutes($req->session->actual_minutes) }}</div>
                                         <div>Credited {{ \App\Models\OvertimeSession::formatMinutes($req->session->credited_minutes) }}</div>
+                                    @endif
+                                    @if($req->session?->corrected_at)
+                                        <div class="mt-1 text-[10px] font-bold text-amber-700">Dikoreksi Admin · {{ $req->session->corrected_at->format('d/m H:i') }}</div>
                                     @endif
                                 </td>
 
@@ -240,6 +246,13 @@
                                                 Tolak
                                             </button>
                                         </div>
+                                    @elseif($req->session?->isActive())
+                                        <div class="flex flex-col items-end gap-1.5">
+                                            <button type="button" data-mode="force" data-url="{{ route('admin.overtime-sessions.force-finish', $req->session) }}" data-start="{{ $req->session->check_in_at?->timezone(config('app.timezone'))->format('Y-m-d\TH:i') }}" onclick="openSessionModal(this)" class="min-h-[36px] rounded-lg bg-indigo-600 px-3 text-[11px] font-extrabold text-white">Force Finish</button>
+                                            <button type="button" data-mode="cancel" data-url="{{ route('admin.overtime-sessions.cancel', $req->session) }}" onclick="openSessionModal(this)" class="min-h-[36px] rounded-lg border border-rose-200 bg-rose-50 px-3 text-[11px] font-extrabold text-rose-700">Cancel Session</button>
+                                        </div>
+                                    @elseif($req->session?->isCompleted())
+                                        <button type="button" data-mode="correct" data-url="{{ route('admin.overtime-sessions.correct', $req->session) }}" data-start="{{ $req->session->check_in_at?->timezone(config('app.timezone'))->format('Y-m-d\TH:i') }}" data-finish="{{ $req->session->check_out_at?->timezone(config('app.timezone'))->format('Y-m-d\TH:i') }}" onclick="openSessionModal(this)" class="min-h-[36px] rounded-lg bg-amber-600 px-3 text-[11px] font-extrabold text-white">Koreksi</button>
                                     @else
                                         <div class="text-[10px] text-slate-400 font-medium">
                                             @if($req->reviewer)
@@ -262,6 +275,35 @@
                 {{ $requests->links() }}
             </div>
         @endif
+    </div>
+</div>
+
+<div id="sessionRecoveryModal" class="fixed inset-0 z-50 hidden items-center justify-center overflow-y-auto bg-slate-900/60 p-3 backdrop-blur-xs">
+    <div class="my-auto w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div><h3 id="sessionModalTitle" class="text-base font-extrabold text-slate-900">Recovery Sesi Lembur</h3><p class="text-[11px] text-slate-500">Evidence asli tidak akan diubah.</p></div>
+            <button type="button" onclick="closeSessionModal()" class="min-h-[44px] min-w-[44px] text-xl text-slate-500">&times;</button>
+        </div>
+        <form id="sessionRecoveryForm" method="POST" class="mt-4 space-y-4 text-xs">
+            @csrf
+            <div id="sessionStartField" class="hidden min-w-0">
+                <label class="mb-1 block text-[10px] font-bold uppercase text-slate-600">Waktu Mulai</label>
+                <input id="sessionStartInput" type="datetime-local" name="check_in_at" class="min-h-[44px] w-full min-w-0 max-w-full rounded-xl border border-slate-300 bg-slate-50 px-3">
+            </div>
+            <div id="sessionFinishField" class="hidden min-w-0">
+                <label class="mb-1 block text-[10px] font-bold uppercase text-slate-600">Waktu Selesai Aktual</label>
+                <input id="sessionFinishInput" type="datetime-local" class="min-h-[44px] w-full min-w-0 max-w-full rounded-xl border border-slate-300 bg-slate-50 px-3">
+            </div>
+            <div>
+                <label class="mb-1 block text-[10px] font-bold uppercase text-slate-600">Alasan *</label>
+                <textarea name="reason" minlength="5" maxlength="2000" rows="3" required class="w-full rounded-xl border border-slate-300 bg-slate-50 p-3" placeholder="Jelaskan dasar tindakan admin"></textarea>
+            </div>
+            <p id="sessionRuleText" class="rounded-xl bg-slate-50 p-3 text-[10px] text-slate-600"></p>
+            <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <button type="button" onclick="closeSessionModal()" class="min-h-[44px] rounded-xl bg-slate-100 px-4 font-bold text-slate-700">Batal</button>
+                <button id="sessionSubmitButton" type="submit" class="min-h-[44px] rounded-xl bg-slate-900 px-5 font-extrabold text-white">Simpan</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -351,6 +393,37 @@
 
     function closeRejectModal() {
         document.getElementById('rejectModal').classList.add('hidden');
+    }
+
+    function openSessionModal(button) {
+        const mode = button.dataset.mode;
+        const modal = document.getElementById('sessionRecoveryModal');
+        const form = document.getElementById('sessionRecoveryForm');
+        const startField = document.getElementById('sessionStartField');
+        const finishField = document.getElementById('sessionFinishField');
+        const finishInput = document.getElementById('sessionFinishInput');
+        const startInput = document.getElementById('sessionStartInput');
+        form.action = button.dataset.url;
+        form.reset();
+        startField.classList.toggle('hidden', mode !== 'correct');
+        finishField.classList.toggle('hidden', mode === 'cancel');
+        startInput.required = mode === 'correct';
+        finishInput.required = mode !== 'cancel';
+        finishInput.name = mode === 'force' ? 'finish_at' : (mode === 'correct' ? 'check_out_at' : '');
+        startInput.value = button.dataset.start || '';
+        finishInput.value = button.dataset.finish || '';
+        document.getElementById('sessionModalTitle').textContent = mode === 'force' ? 'Force Finish Lembur' : (mode === 'cancel' ? 'Cancel Session Lembur' : 'Koreksi Sesi Completed');
+        document.getElementById('sessionRuleText').textContent = mode === 'cancel'
+            ? 'Sesi tidak dihapus. Actual dan credited ditetapkan 0 menit.'
+            : 'Actual dihitung ulang dan credited dibatasi approved minutes.';
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeSessionModal() {
+        const modal = document.getElementById('sessionRecoveryModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
     }
 </script>
 @endsection

@@ -19,6 +19,8 @@ class AuditLog extends Model
         'auditable_id',
         'before_data',
         'after_data',
+        'reason',
+        'metadata',
         'ip_address',
         'user_agent',
         'created_at',
@@ -29,6 +31,7 @@ class AuditLog extends Model
         return [
             'before_data' => 'array',
             'after_data' => 'array',
+            'metadata' => 'array',
             'created_at' => 'datetime',
         ];
     }
@@ -57,8 +60,15 @@ class AuditLog extends Model
         return $data;
     }
 
-    public static function log(string $action, ?Model $model = null, ?array $before = null, ?array $after = null, ?User $user = null): self
-    {
+    public static function log(
+        string $action,
+        ?Model $model = null,
+        ?array $before = null,
+        ?array $after = null,
+        ?User $user = null,
+        ?string $reason = null,
+        ?array $metadata = null,
+    ): self {
         return self::create([
             'user_id' => $user?->id ?? request()->user()?->id,
             'action' => $action,
@@ -66,9 +76,17 @@ class AuditLog extends Model
             'auditable_id' => $model?->getKey(),
             'before_data' => self::sanitizeData($before),
             'after_data' => self::sanitizeData($after),
+            'reason' => $reason ? trim($reason) : null,
+            'metadata' => self::sanitizeData($metadata),
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
             'created_at' => now(),
         ]);
+    }
+
+    protected static function booted(): void
+    {
+        static::updating(fn () => throw new \LogicException('Audit log bersifat immutable.'));
+        static::deleting(fn () => throw new \LogicException('Audit log bersifat immutable.'));
     }
 }

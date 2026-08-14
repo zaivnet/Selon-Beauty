@@ -172,11 +172,11 @@
                             </div>
                             <div>
                                 <span class="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Actual</span>
-                                <span class="font-extrabold text-indigo-700">{{ $req->session?->isCompleted() ? \App\Models\OvertimeSession::formatMinutes($req->session->actual_minutes) : '-' }}</span>
+                                <span class="font-extrabold text-indigo-700">{{ ($req->session?->isCompleted() || $req->session?->isCancelled()) ? \App\Models\OvertimeSession::formatMinutes($req->session->actual_minutes) : '-' }}</span>
                             </div>
                             <div>
                                 <span class="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Credited</span>
-                                <span class="font-extrabold text-violet-700">{{ $req->session?->isCompleted() ? \App\Models\OvertimeSession::formatMinutes($req->session->credited_minutes) : '-' }}</span>
+                                <span class="font-extrabold text-violet-700">{{ ($req->session?->isCompleted() || $req->session?->isCancelled()) ? \App\Models\OvertimeSession::formatMinutes($req->session->credited_minutes) : '-' }}</span>
                             </div>
                         </div>
 
@@ -185,11 +185,14 @@
                                 <div class="flex items-center justify-between gap-2">
                                     <span class="text-[10px] font-black uppercase tracking-wider text-indigo-800">Sesi Lembur</span>
                                     <span class="text-[10px] font-bold text-indigo-700">
-                                        {{ !$req->session ? 'Belum Dimulai' : ($req->session->isActive() ? 'Sedang Lembur' : 'Selesai') }}
+                                        {{ !$req->session ? 'Belum Dimulai' : ($req->session->isActive() ? 'Sedang Lembur' : ($req->session->isCancelled() ? 'Dibatalkan Admin' : 'Selesai')) }}
                                     </span>
                                 </div>
 
                                 @if($req->session)
+                                    @if($req->session->corrected_at)
+                                        <p class="rounded-lg bg-amber-100 px-2 py-1 text-[10px] font-bold text-amber-800">Dikoreksi Admin · {{ $req->session->corrected_at->format('d M Y H:i') }}</p>
+                                    @endif
                                     <p class="text-[11px] text-slate-700">
                                         Mulai: <strong>{{ $req->session->check_in_at?->format('d/m H:i') }}</strong>
                                         @if($req->session->check_out_at) · Selesai: <strong>{{ $req->session->check_out_at->format('d/m H:i') }}</strong> @endif

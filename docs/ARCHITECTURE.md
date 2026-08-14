@@ -229,6 +229,10 @@ Audit entity minimum:
 - leave approval/rejection;
 - critical settings.
 
+Attendance correction dan overtime recovery memakai `audit_logs` yang sama sebagai immutable history. `reason` menyimpan alasan wajib dan `metadata` menyimpan konteks aman (`employee_id`, source, request reference, internal note). Snapshot disanitasi oleh `AuditLog::sanitizeData`; credential/token tidak ditampilkan.
+
+Current-state marker (`corrected_at`, `corrected_by`, `completion_source`, `completed_by_user_id`) hanya mendukung provenance dan indikator UI. Resolver/report membaca current state dari attendance/overtime, bukan menghitung dari audit log. Employee tidak menerima IP, user-agent, atau catatan internal.
+
 ## 14. Failure Handling
 
 Geolocation failure harus memberi pesan spesifik:

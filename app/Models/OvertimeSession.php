@@ -18,6 +18,7 @@ class OvertimeSession extends Model
         'check_out_longitude', 'check_out_accuracy_meters', 'check_out_distance_meters',
         'check_in_selfie_path', 'check_out_selfie_path', 'actual_minutes', 'credited_minutes',
         'started_at', 'completed_at',
+        'corrected_at', 'corrected_by', 'completed_by_user_id', 'completion_source',
     ];
 
     protected function casts(): array
@@ -25,6 +26,7 @@ class OvertimeSession extends Model
         return [
             'work_date' => 'date', 'check_in_at' => 'datetime', 'check_out_at' => 'datetime',
             'started_at' => 'datetime', 'completed_at' => 'datetime',
+            'corrected_at' => 'datetime',
             'check_in_latitude' => 'decimal:7', 'check_in_longitude' => 'decimal:7',
             'check_in_accuracy_meters' => 'decimal:2', 'check_in_distance_meters' => 'decimal:2',
             'check_out_latitude' => 'decimal:7', 'check_out_longitude' => 'decimal:7',
@@ -56,6 +58,21 @@ class OvertimeSession extends Model
     public function isCompleted(): bool
     {
         return $this->status === 'completed';
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this->status === 'cancelled';
+    }
+
+    public function correctedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'corrected_by');
+    }
+
+    public function completedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'completed_by_user_id');
     }
 
     public function getRemainingApprovedMinutesAttribute(): int
