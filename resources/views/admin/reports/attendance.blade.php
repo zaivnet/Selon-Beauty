@@ -70,6 +70,7 @@
                     <option value="leave" {{ $filters['status'] === 'leave' ? 'selected' : '' }}>Cuti</option>
                     <option value="absent" {{ $filters['status'] === 'absent' ? 'selected' : '' }}>Tidak Hadir (Alpa)</option>
                     <option value="off" {{ $filters['status'] === 'off' ? 'selected' : '' }}>OFF Pekanan</option>
+                    <option value="holiday" {{ $filters['status'] === 'holiday' ? 'selected' : '' }}>Libur</option>
                 </select>
             </div>
 
@@ -95,11 +96,23 @@
         $oHours = (int) floor($gSum['total_approved_overtime_minutes'] / 60);
         $oMins = $gSum['total_approved_overtime_minutes'] % 60;
     @endphp
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div class="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-3">
         <!-- Scheduled Work Days -->
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-1">
             <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">Hari Kerja</span>
             <div class="text-xl font-black text-slate-900">{{ $gSum['scheduled_work_days'] }} <span class="text-xs font-semibold text-slate-500">Hari</span></div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-amber-200 shadow-xs space-y-1">
+            <span class="text-[10px] font-extrabold text-amber-700 uppercase tracking-wider block">Libur</span>
+            <div class="text-xl font-black text-amber-900">{{ $gSum['holiday_count'] ?? 0 }} <span class="text-xs font-semibold text-amber-700">Hari</span></div>
+            <p class="text-[10px] text-slate-400">Di luar denominator</p>
+        </div>
+
+        <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-xs space-y-1 text-white">
+            <span class="text-[10px] font-extrabold text-slate-300 uppercase tracking-wider block">Tingkat Hadir</span>
+            <div class="text-xl font-black">{{ number_format((float) ($gSum['attendance_rate'] ?? 0), 1) }}%</div>
+            <p class="text-[10px] text-slate-400">Hanya hari kerja wajib</p>
         </div>
 
         <!-- Present -->
@@ -151,6 +164,8 @@
                         <tr>
                             <th class="px-4 py-3">Karyawan</th>
                             <th class="px-4 py-3">Hari Kerja</th>
+                            <th class="px-4 py-3">Libur</th>
+                            <th class="px-4 py-3">Rate</th>
                             <th class="px-4 py-3">Hadir</th>
                             <th class="px-4 py-3">Terlambat</th>
                             <th class="px-4 py-3">Tidak Hadir</th>
@@ -174,6 +189,8 @@
                                     <span class="text-[10px] text-slate-500 block font-normal">{{ $es['employee']->employee_code }} • {{ $es['employee']->jobTitle?->name ?? 'Karyawan' }}</span>
                                 </td>
                                 <td class="px-4 py-3 font-semibold text-slate-800">{{ $es['scheduled_work_days'] }} hari</td>
+                                <td class="px-4 py-3 font-semibold text-amber-800">{{ $es['holiday_count'] ?? 0 }} hari</td>
+                                <td class="px-4 py-3 font-black text-slate-900">{{ number_format((float) ($es['attendance_rate'] ?? 0), 1) }}%</td>
                                 <td class="px-4 py-3 font-extrabold text-emerald-700">{{ $es['present_count'] }} hari</td>
                                 <td class="px-4 py-3 font-bold text-rose-700">{{ $es['late_count'] }} hari</td>
                                 <td class="px-4 py-3 font-extrabold text-rose-900">{{ $es['absent_count'] }} hari</td>
@@ -259,7 +276,11 @@
                                         <div class="font-bold text-slate-800">{{ $row['shift']->name }}</div>
                                         <div class="text-[10px] text-slate-500 font-medium">{{ substr($row['shift']->start_time, 0, 5) }} - {{ substr($row['shift']->end_time, 0, 5) }}</div>
                                     @else
-                                        <span class="text-slate-500 font-medium">{{ $row['schedule']?->schedule_type ? strtoupper($row['schedule']->schedule_type) : '-' }}</span>
+                                        @if(in_array($row['effective_schedule']['source'] ?? null, ['public_holiday', 'company_holiday'], true))
+                                            <span class="font-black text-amber-800">LIBUR</span><span class="mt-0.5 block max-w-36 truncate text-[10px] text-amber-700">{{ $row['effective_schedule']['holiday_name'] ?? '' }}</span>
+                                        @else
+                                            <span class="text-slate-500 font-medium">{{ $row['effective_schedule']['label'] ?? ($row['schedule']?->schedule_type ? strtoupper($row['schedule']->schedule_type) : '-') }}</span>
+                                        @endif
                                     @endif
                                 </td>
 

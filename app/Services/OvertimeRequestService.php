@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\AuditLog;
 use App\Models\Employee;
-use App\Models\EmployeeSchedule;
 use App\Models\OvertimeRequest;
 use App\Models\User;
 use App\Notifications\OvertimeRequestApprovedNotification;
@@ -16,6 +15,11 @@ use Illuminate\Validation\ValidationException;
 
 class OvertimeRequestService
 {
+    public function __construct(protected ?EffectiveScheduleService $effectiveScheduleService = null)
+    {
+        $this->effectiveScheduleService = $effectiveScheduleService ?? new EffectiveScheduleService;
+    }
+
     /**
      * Submit a new overtime request for an employee.
      */
@@ -33,14 +37,10 @@ class OvertimeRequestService
         }
 
         // 2. Work Schedule Validation (Requirement 3)
-        $schedule = EmployeeSchedule::where('employee_id', $employee->id)
-            ->whereDate('work_date', $workDate)
-            ->first();
-
-        if (! $schedule || $schedule->schedule_type !== 'work') {
-            $typeLabel = $schedule ? ($schedule->schedule_type === 'off' ? 'OFF Pekanan' : 'Libur Toko') : 'Tanpa Jadwal Kerja';
+        $effective = $this->effectiveScheduleService->resolve($employee, $workDate);
+        if ($effective['source'] === 'none') {
             throw ValidationException::withMessages([
-                'work_date' => "Tanggal {$workDate} adalah {$typeLabel}. Pengajuan lembur hanya diperbolehkan pada hari kerja (WORK).",
+                'work_date' => "Tanggal {$workDate} belum memiliki konteks jadwal atau kalender kerja.",
             ]);
         }
 
@@ -131,7 +131,7 @@ class OvertimeRequestService
 
         if ($approvedMinutes > $request->requested_minutes) {
             throw ValidationException::withMessages([
-                'approved_minutes' => 'Durasi lembur disetujui tidak boleh melebihi durasi yang diajukan (' . $request->requested_minutes . ' menit).',
+                'approved_minutes' => 'Durasi lembur disetujui tidak boleh melebihi durasi yang diajukan ('.$request->requested_minutes.' menit).',
             ]);
         }
 

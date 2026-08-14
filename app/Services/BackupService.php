@@ -32,6 +32,7 @@ class BackupService
         'audit_logs',
         'app_settings',
         'holidays',
+        'employee_schedule_overrides',
         'backup_records',
     ];
 

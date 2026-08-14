@@ -9,7 +9,7 @@ Aplikasi Sistem Presensi, Penjadwalan Kerja, dan Manajemen Karyawan Berbasis Web
 - **PWA (Progressive Web App)**: Mobile-first interface yang dapat di-install di perangkat Android/iOS seperti aplikasi native (offline fallback & shortcut).
 - **Presensi Berbasis GPS & Geofencing**: Validasi lokasi GPS waktu nyata saat karyawan melakukan Check-In / Check-Out.
 - **Validasi Selfie**: Mengambil foto selfie saat presensi menggunakan kamera bawaan perangkat.
-- **Manajemen Shift & Jadwal Kerja**: Fleksibilitas pengaturan shift kerja, penugasan jadwal harian/mingguan, serta permohonan lembur dan izin/cuti.
+- **Manajemen Shift & Jadwal Kerja**: Jadwal mingguan, kalender hari libur/hari kerja khusus, override per karyawan dan tanggal, serta permohonan lembur dan izin/cuti.
 - **Sistem Role & Hak Akses (RBAC)**: Mendukung role **Superadmin**, **Owner**, **Admin Operasional**, dan **Employee**.
 - **First-Run Portable Setup**: Wizard inisialisasi awal otomatis saat pertama kali dibuka di browser tanpa perlu SQL seed manual.
 - **Keamanan & Email Reset**: Pemulihan password via email (Mailpit support di local, SMTP di production), rate limiting, pembatalan session lama saat reset, dan audit log lengkap.

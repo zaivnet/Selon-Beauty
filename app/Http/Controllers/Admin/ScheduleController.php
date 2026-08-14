@@ -7,7 +7,10 @@ use App\Http\Requests\Admin\StoreScheduleRequest;
 use App\Http\Requests\Admin\UpdateScheduleRequest;
 use App\Models\Employee;
 use App\Models\EmployeeSchedule;
+use App\Models\EmployeeScheduleOverride;
+use App\Models\Holiday;
 use App\Models\Shift;
+use App\Services\EffectiveScheduleService;
 use App\Services\EmployeeScheduleService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -16,7 +19,10 @@ use Illuminate\View\View;
 
 class ScheduleController extends Controller
 {
-    public function __construct(protected EmployeeScheduleService $scheduleService) {}
+    public function __construct(
+        protected EmployeeScheduleService $scheduleService,
+        protected EffectiveScheduleService $effectiveScheduleService,
+    ) {}
 
     public function index(Request $request): View
     {
@@ -61,6 +67,23 @@ class ScheduleController extends Controller
             $scheduleMatrix[$key] = $sch;
         }
 
+        $overrides = EmployeeScheduleOverride::with('shift')
+            ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->get()->keyBy(fn ($item) => $item->employee_id.'_'.$item->date->format('Y-m-d'));
+        $calendarDays = Holiday::whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->get()->keyBy(fn ($item) => $item->date->format('Y-m-d'));
+
+        $effectiveScheduleMatrix = [];
+        foreach ($employees as $employee) {
+            foreach ($weekDays as $day) {
+                $key = $employee->id.'_'.$day['date'];
+                $effectiveScheduleMatrix[$key] = $this->effectiveScheduleService->resolveFromModels(
+                    $employee, $day['date'], $scheduleMatrix[$key] ?? null,
+                    $overrides->get($key), $calendarDays->get($day['date']),
+                );
+            }
+        }
+
         $prevWeekDate = (clone $startDate)->subWeek()->format('Y-m-d');
         $nextWeekDate = (clone $startDate)->addWeek()->format('Y-m-d');
 
@@ -78,6 +101,7 @@ class ScheduleController extends Controller
             'shifts',
             'activeShifts',
             'scheduleMatrix',
+            'effectiveScheduleMatrix',
             'prevWeekDate',
             'nextWeekDate',
             'copyPreview'

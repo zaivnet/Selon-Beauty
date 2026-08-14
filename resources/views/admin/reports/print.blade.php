@@ -69,7 +69,7 @@
             $oHours = (int) floor($gSum['total_approved_overtime_minutes'] / 60);
             $oMins = $gSum['total_approved_overtime_minutes'] % 60;
         @endphp
-        <div class="grid grid-cols-6 gap-2 text-center text-xs">
+        <div class="grid grid-cols-8 gap-2 text-center text-xs">
             <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl">
                 <span class="text-[10px] font-bold text-slate-500 block uppercase">Hari Kerja</span>
                 <span class="text-base font-black text-slate-900">{{ $gSum['scheduled_work_days'] }}</span>
@@ -77,6 +77,14 @@
             <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
                 <span class="text-[10px] font-bold text-emerald-700 block uppercase">Hadir</span>
                 <span class="text-base font-black text-emerald-900">{{ $gSum['present_count'] }}</span>
+            </div>
+            <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                <span class="text-[10px] font-bold text-amber-700 block uppercase">Libur</span>
+                <span class="text-base font-black text-amber-900">{{ $gSum['holiday_count'] ?? 0 }}</span>
+            </div>
+            <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl text-white">
+                <span class="text-[10px] font-bold text-slate-300 block uppercase">Rate</span>
+                <span class="text-base font-black">{{ number_format((float) ($gSum['attendance_rate'] ?? 0), 1) }}%</span>
             </div>
             <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl">
                 <span class="text-[10px] font-bold text-rose-700 block uppercase">Tidak Hadir</span>
@@ -135,7 +143,7 @@
                             <td class="p-2 border border-slate-300 font-bold whitespace-nowrap">{{ $rowDate ? $rowDate->format('d/m/Y') : '-' }}</td>
                             <td class="p-2 border border-slate-300 font-bold">{{ $row['employee']->full_name }} <span class="font-normal text-[10px] block">({{ $row['employee']->employee_code }})</span></td>
                             <td class="p-2 border border-slate-300">{{ $row['employee']->jobTitle?->name ?? '-' }}</td>
-                            <td class="p-2 border border-slate-300 whitespace-nowrap">{{ $row['shift']?->name ?? strtoupper($row['schedule']?->schedule_type ?? '-') }}</td>
+                            <td class="p-2 border border-slate-300 whitespace-nowrap">{{ $row['shift']?->name ?? ($row['effective_schedule']['label'] ?? strtoupper($row['schedule']?->schedule_type ?? '-')) }}</td>
                             <td class="p-2 border border-slate-300 font-mono">{{ $checkInAt ? $checkInAt->format('H:i') : '-' }}</td>
                             <td class="p-2 border border-slate-300 font-mono">{{ $checkOutAt ? $checkOutAt->format('H:i') : '-' }}</td>
                             <td class="p-2 border border-slate-300 font-extrabold">{{ $row['status_label'] }}</td>

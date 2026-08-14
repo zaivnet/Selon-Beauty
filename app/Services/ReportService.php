@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\AttendanceRecord;
 use App\Models\Employee;
 use App\Models\EmployeeSchedule;
+use App\Models\EmployeeScheduleOverride;
+use App\Models\Holiday;
 use App\Models\LeaveRequest;
 use App\Models\OvertimeRequest;
 use Carbon\Carbon;
@@ -12,9 +14,12 @@ use Carbon\CarbonPeriod;
 
 class ReportService
 {
-    public function __construct(protected ?AttendanceStatusResolver $statusResolver = null)
-    {
+    public function __construct(
+        protected ?AttendanceStatusResolver $statusResolver = null,
+        protected ?EffectiveScheduleService $effectiveScheduleService = null,
+    ) {
         $this->statusResolver = $statusResolver ?? new AttendanceStatusResolver;
+        $this->effectiveScheduleService = $effectiveScheduleService ?? new EffectiveScheduleService;
     }
 
     /**
@@ -65,6 +70,12 @@ class ReportService
             ->get()
             ->groupBy(fn ($a) => $a->employee_id.'_'.$a->work_date->format('Y-m-d'));
 
+        $overrides = EmployeeScheduleOverride::whereIn('employee_id', $employeeIds)
+            ->whereDate('date', '>=', $startDateStr)->whereDate('date', '<=', $endDateStr)
+            ->with('shift')->get()->keyBy(fn ($item) => $item->employee_id.'_'.$item->date->format('Y-m-d'));
+        $calendarDays = Holiday::whereDate('date', '>=', $startDateStr)
+            ->whereDate('date', '<=', $endDateStr)->get()->keyBy(fn ($item) => $item->date->format('Y-m-d'));
+
         // Fetch Approved Leave Requests overlapping date range
         $leaveRequests = LeaveRequest::whereIn('employee_id', $employeeIds)
             ->where('status', 'approved')
@@ -108,6 +119,7 @@ class ReportService
             'permission_count' => 0,
             'sick_count' => 0,
             'leave_count' => 0,
+            'holiday_count' => 0,
             'total_late_minutes' => 0,
             'total_worked_minutes' => 0,
             'total_early_leave_minutes' => 0,
@@ -128,6 +140,7 @@ class ReportService
                 'permission_count' => 0,
                 'sick_count' => 0,
                 'leave_count' => 0,
+                'holiday_count' => 0,
                 'total_late_minutes' => 0,
                 'total_worked_minutes' => 0,
                 'total_early_leave_minutes' => 0,
@@ -144,21 +157,23 @@ class ReportService
                 $att = $attendances->get($key)?->first();
                 $leave = $leaveMap[$key] ?? null;
                 $ovt = $approvedOvertimes->get($key);
+                $effective = $this->effectiveScheduleService->resolveFromModels(
+                    $emp, $dStr, $sch, $overrides->get($key), $calendarDays->get($dStr),
+                );
 
                 // Skip unscheduled days with no attendance, leave, or overtime
-                if (! $sch && ! $att && ! $leave && ! $ovt) {
+                if ($effective['source'] === 'none' && ! $att && ! $leave && ! $ovt) {
                     continue;
                 }
 
-                $scheduleType = $sch?->schedule_type ?? 'none'; // work, off, holiday, none
-                $isWorkDay = ($scheduleType === 'work');
+                $isWorkDay = $effective['is_working_day'];
 
-                $resolved = $this->statusResolver->resolve($sch, $att, $leave);
+                $resolved = $this->statusResolver->resolveEffective($effective, $att, $leave);
                 $statusKey = $resolved['key'];
                 $statusLabel = $resolved['label'];
                 $statusBadgeClass = $resolved['badge_class'];
 
-                $lateMinutes = $att ? (int) $att->late_minutes : 0;
+                $lateMinutes = $isWorkDay && $att ? (int) $att->late_minutes : 0;
                 $workedMinutes = $att ? (int) $att->worked_minutes : 0;
                 $earlyLeaveMinutes = $att ? (int) $att->early_leave_minutes : 0;
                 $approvedOvertimeMinutes = $ovt ? (int) $ovt->approved_minutes : 0;
@@ -166,12 +181,9 @@ class ReportService
                 $creditedOvertimeMinutes = $ovt?->session?->isCompleted() ? (int) $ovt->session->credited_minutes : 0;
 
                 if (! $isWorkDay) {
-                    if ($scheduleType === 'off') {
-                        $statusLabel = 'OFF Pekanan';
-                    } elseif ($scheduleType === 'holiday') {
-                        $statusLabel = 'Libur Toko';
-                    } else {
-                        $statusLabel = 'Tanpa Jadwal';
+                    if ($effective['source'] !== 'none') {
+                        $empSummary['holiday_count']++;
+                        $globalSummary['holiday_count']++;
                     }
                 } else {
                     // Scheduled WORK day
@@ -246,7 +258,8 @@ class ReportService
                     'date_str' => $dStr,
                     'day_name' => $currDate->locale('id')->isoFormat('dddd'),
                     'schedule' => $sch,
-                    'shift' => $sch?->shift,
+                    'shift' => $effective['shift'],
+                    'effective_schedule' => $effective,
                     'attendance' => $att,
                     'leave_request' => $leave,
                     'overtime_request' => $ovt,
@@ -266,8 +279,16 @@ class ReportService
                 ];
             }
 
+            $empSummary['attendance_rate'] = $empSummary['scheduled_work_days'] > 0
+                ? round(($empSummary['present_count'] / $empSummary['scheduled_work_days']) * 100, 2)
+                : 0.0;
+
             $employeeSummaries[$emp->id] = $empSummary;
         }
+
+        $globalSummary['attendance_rate'] = $globalSummary['scheduled_work_days'] > 0
+            ? round(($globalSummary['present_count'] / $globalSummary['scheduled_work_days']) * 100, 2)
+            : 0.0;
 
         return [
             'start_date' => $startDateStr,
@@ -294,6 +315,8 @@ class ReportService
                 'permission_count' => 0,
                 'sick_count' => 0,
                 'leave_count' => 0,
+                'holiday_count' => 0,
+                'attendance_rate' => 0.0,
                 'total_late_minutes' => 0,
                 'total_worked_minutes' => 0,
                 'total_early_leave_minutes' => 0,

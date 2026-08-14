@@ -205,7 +205,7 @@ Minimal satu akun Superadmin yang aktif (`is_active = true`) WAJIB selalu tersed
 ## RULE 034 — Separate Overtime Session
 1. Attendance reguler tetap satu record per employee/work date dan tidak boleh dipakai untuk check-in lembur kedua.
 2. Overtime aktual wajib disimpan di `overtime_sessions`, satu session maksimal untuk satu approved request.
-3. Employee wajib menyelesaikan checkout reguler sebelum memulai lembur.
+3. Pada effective working day, employee wajib menyelesaikan checkout reguler sebelum memulai lembur. Pada holiday/OFF, approved overtime dapat dimulai tanpa attendance reguler.
 4. Timestamp, GPS, geofence, dan perhitungan menit lembur bersifat server-authoritative.
 5. `approved_minutes` adalah batas maksimum otorisasi, `actual_minutes` adalah durasi nyata, dan `credited_minutes` adalah nilai minimum dari keduanya.
 6. Overtime cross-midnight tetap terikat pada `work_date` request asal.
@@ -219,3 +219,11 @@ Minimal satu akun Superadmin yang aktif (`is_active = true`) WAJIB selalu tersed
 6. Force finish dan completed correction menghitung actual kembali; credited selalu `min(actual_minutes, approved_minutes)`.
 7. Recovery admin tidak membuat selfie/GPS palsu dan tidak mengganti evidence asli.
 8. `audit_logs` immutable pada aplikasi dan tidak memiliki route update/delete normal.
+
+## RULE 036 — Effective Work Calendar
+1. Jadwal efektif untuk `employee + work_date` hanya dihitung oleh `EffectiveScheduleService` dengan prioritas: employee override, kalender global, lalu jadwal reguler.
+2. Company/public holiday dan override OFF tidak menghasilkan BELUM CHECK-IN atau TIDAK HADIR serta tidak masuk denominator attendance rate.
+3. Override WORK wajib memakai shift existing. Special working day hanya memakai shift dari jadwal reguler WORK; jika tidak ada, admin wajib membuat override WORK dan sistem tidak boleh menebak shift.
+4. Resolusi lintas tengah malam selalu memakai `work_date` awal shift sebagai anchor.
+5. Perubahan kalender dan override wajib mempunyai alasan minimal 5 karakter serta audit before/after. Override material juga mengirim notification employee; kalender global tidak melakukan fan-out notification massal.
+6. Attendance historis dan seluruh evidence tidak dihapus atau ditulis ulang saat kalender/override berubah.

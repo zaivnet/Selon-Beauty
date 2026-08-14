@@ -9,6 +9,45 @@ use Carbon\Carbon;
 
 class AttendanceStatusResolver
 {
+    /** Resolve status from the effective calendar/override result. */
+    public function resolveEffective(
+        array $effective,
+        ?AttendanceRecord $record = null,
+        ?LeaveRequest $approvedLeave = null,
+        ?Carbon $nowServerTime = null,
+    ): array {
+        if (! $effective['is_working_day']) {
+            if ($effective['source'] === 'none') {
+                return $this->resolve(null, $record, $approvedLeave, $nowServerTime);
+            }
+
+            $isOverride = $effective['source'] === 'employee_override';
+            $isRegularOff = $effective['source'] === 'regular_schedule'
+                && $effective['regular_schedule']?->schedule_type === 'off';
+
+            return [
+                'key' => ($isOverride || $isRegularOff) ? 'off' : 'holiday',
+                'label' => $isOverride ? 'LIBUR KHUSUS' : ($isRegularOff ? 'OFF' : 'LIBUR'),
+                'badge_class' => ($isOverride || $isRegularOff)
+                    ? 'bg-slate-100 text-slate-700 border-slate-200'
+                    : 'bg-purple-50 text-purple-700 border-purple-200',
+            ];
+        }
+
+        $schedule = $effective['regular_schedule'];
+        if (! $schedule || $effective['source'] === 'employee_override') {
+            $schedule = new EmployeeSchedule([
+                'employee_id' => $effective['employee']->id,
+                'work_date' => $effective['date'],
+                'shift_id' => $effective['shift']?->id,
+                'schedule_type' => 'work',
+            ]);
+            $schedule->setRelation('shift', $effective['shift']);
+        }
+
+        return $this->resolve($schedule, $record, $approvedLeave, $nowServerTime);
+    }
+
     /**
      * Resolve the operational status for an employee schedule / attendance record context.
      */

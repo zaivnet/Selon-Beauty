@@ -21,7 +21,10 @@ class OvertimeSessionService
     public function __construct(
         protected AttendanceService $attendanceService,
         protected SelfieService $selfieService,
-    ) {}
+        protected ?EffectiveScheduleService $effectiveScheduleService = null,
+    ) {
+        $this->effectiveScheduleService = $effectiveScheduleService ?? new EffectiveScheduleService;
+    }
 
     public function start(User $actor, int $requestId, array $evidence): OvertimeSession
     {
@@ -46,17 +49,18 @@ class OvertimeSessionService
                     throw ValidationException::withMessages(['overtime' => 'Anda masih memiliki sesi lembur aktif.']);
                 }
 
-                $schedule = EmployeeSchedule::with('shift')
-                    ->where('employee_id', $employee->id)
-                    ->whereDate('work_date', $request->work_date)
-                    ->first();
+                $effective = $this->effectiveScheduleService->resolve($employee, $request->work_date);
+                if ($effective['source'] === 'none') {
+                    throw ValidationException::withMessages(['overtime' => 'Tanggal lembur belum memiliki konteks jadwal atau kalender kerja.']);
+                }
+                $schedule = $this->effectiveScheduleService->scheduleContext($effective);
                 $this->ensureRequestDateIsValid($request, $schedule);
 
                 $attendance = AttendanceRecord::where('employee_id', $employee->id)
                     ->whereDate('work_date', $request->work_date)
                     ->lockForUpdate()
                     ->first();
-                if (! $attendance?->check_out_at) {
+                if ($effective['is_working_day'] && ! $attendance?->check_out_at) {
                     throw ValidationException::withMessages(['overtime' => 'Selesaikan absensi kerja reguler terlebih dahulu.']);
                 }
 
@@ -67,7 +71,7 @@ class OvertimeSessionService
                 $session = OvertimeSession::create([
                     'overtime_request_id' => $request->id,
                     'employee_id' => $employee->id,
-                    'work_schedule_id' => $schedule?->id,
+                    'work_schedule_id' => $schedule?->exists ? $schedule->id : null,
                     'work_date' => $request->work_date,
                     'status' => 'active',
                     'check_in_at' => $now,

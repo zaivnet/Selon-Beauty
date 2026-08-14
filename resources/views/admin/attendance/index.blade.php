@@ -121,6 +121,7 @@
                                 $emp = $item['employee'];
                                 $sched = $item['schedule'];
                                 $rec = $item['record'];
+                                $effective = $item['effective_schedule'] ?? null;
                             @endphp
                             <tr class="hover:bg-slate-50/80 transition-colors">
                                 <td class="py-3.5 px-4">
@@ -135,7 +136,15 @@
                                     </div>
                                 </td>
                                 <td class="py-3.5 px-4 font-medium">
-                                    @if($sched && $sched->shift)
+                                    @if($effective && $effective['shift'])
+                                        <span class="font-bold text-slate-800 block">{{ $effective['shift']->name }}</span>
+                                        <span class="text-[10px] text-slate-500 font-mono">{{ substr($effective['shift']->start_time, 0, 5) }} - {{ substr($effective['shift']->end_time, 0, 5) }}</span>
+                                        @if($effective['source'] === 'employee_override')<span class="mt-1 inline-block text-[8px] font-black text-indigo-700">JADWAL KHUSUS</span>@elseif($effective['source'] === 'special_working_day')<span class="mt-1 inline-block text-[8px] font-black text-emerald-700">HARI KERJA KHUSUS</span>@endif
+                                    @elseif($effective && in_array($effective['source'], ['public_holiday', 'company_holiday'], true))
+                                        <span class="font-black text-amber-800">LIBUR</span><span class="block max-w-32 truncate text-[10px] text-amber-700">{{ $effective['holiday_name'] }}</span>
+                                    @elseif($effective && $effective['source'] === 'employee_override')
+                                        <span class="font-black text-violet-800">LIBUR KHUSUS</span>
+                                    @elseif($sched && $sched->shift)
                                         <span class="font-bold text-slate-800 block">{{ $sched->shift->name }}</span>
                                         <span class="text-[10px] text-slate-500 font-mono">{{ substr($sched->shift->start_time, 0, 5) }} - {{ substr($sched->shift->end_time, 0, 5) }}</span>
                                     @elseif($sched && $sched->schedule_type === 'off')
@@ -197,6 +206,7 @@
                         $emp = $item['employee'];
                         $sched = $item['schedule'];
                         $rec = $item['record'];
+                        $effective = $item['effective_schedule'] ?? null;
                     @endphp
                     <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
                         <div class="flex items-center justify-between">
@@ -213,6 +223,14 @@
                                 {{ $item['status_label'] }}
                             </span>
                         </div>
+
+                        @if($effective && in_array($effective['source'], ['public_holiday', 'company_holiday'], true))
+                            <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[10px] font-black text-amber-900">LIBUR · {{ $effective['holiday_name'] }}</div>
+                        @elseif($effective && $effective['source'] === 'employee_override')
+                            <div class="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-[10px] font-black text-indigo-900">{{ $effective['is_working_day'] ? 'JADWAL KHUSUS · '.($effective['shift']?->code ?? '') : 'LIBUR KHUSUS' }}</div>
+                        @elseif($effective && $effective['source'] === 'special_working_day')
+                            <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-[10px] font-black text-emerald-900">HARI KERJA KHUSUS</div>
+                        @endif
 
                         <div class="grid grid-cols-2 gap-2 text-[11px] border-t border-b border-slate-200/60 py-2 font-mono">
                             <div>

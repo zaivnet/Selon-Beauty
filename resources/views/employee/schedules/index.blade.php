@@ -4,91 +4,81 @@
 
 @section('content')
 <div class="space-y-4">
-
-    <!-- Header & Week Navigation -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 space-y-3">
+    <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
         <div class="text-center">
-            <h3 class="text-xs sm:text-sm font-black text-slate-900 leading-snug">
-                {{ $startDate->locale('id')->isoFormat('D MMM') }} — {{ $endDate->locale('id')->isoFormat('D MMM YYYY') }}
-            </h3>
-            <span class="text-[10px] text-rose-600 font-extrabold uppercase tracking-wider block mt-0.5">Jadwal Mingguan</span>
+            <h3 class="text-xs font-black leading-snug text-slate-900 sm:text-sm">{{ $startDate->locale('id')->isoFormat('D MMM') }} — {{ $endDate->locale('id')->isoFormat('D MMM YYYY') }}</h3>
+            <span class="mt-0.5 block text-[10px] font-extrabold uppercase tracking-wider text-rose-600">Jadwal Efektif Mingguan</span>
         </div>
-
-        <div class="flex items-center justify-between gap-2 border-t border-slate-100 pt-3">
-            <a href="{{ route('employee.schedules.index', ['start_date' => $prevWeekDate]) }}" class="flex-1 py-2 px-3 text-xs font-extrabold text-slate-700 hover:text-slate-900 border border-slate-200 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors text-center flex items-center justify-center gap-1 min-h-[44px]">
-                &larr; Minggu Lalu
-            </a>
-            <a href="{{ route('employee.schedules.index', ['start_date' => $nextWeekDate]) }}" class="flex-1 py-2 px-3 text-xs font-extrabold text-slate-700 hover:text-slate-900 border border-slate-200 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors text-center flex items-center justify-center gap-1 min-h-[44px]">
-                Minggu Depan &rarr;
-            </a>
+        <div class="mt-3 grid grid-cols-2 gap-2 border-t border-slate-100 pt-3">
+            <a href="{{ route('employee.schedules.index', ['start_date' => $prevWeekDate]) }}" class="flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-2 text-center text-[11px] font-extrabold text-slate-700 transition hover:bg-slate-100">&larr; Minggu Lalu</a>
+            <a href="{{ route('employee.schedules.index', ['start_date' => $nextWeekDate]) }}" class="flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-2 text-center text-[11px] font-extrabold text-slate-700 transition hover:bg-slate-100">Minggu Depan &rarr;</a>
         </div>
-    </div>
+    </section>
 
-    <!-- Error Alert if account unlinked -->
     @if(isset($errorMsg))
-        <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-bold">
-            {{ $errorMsg }}
-        </div>
+        <div class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs font-bold text-rose-800" role="alert">{{ $errorMsg }}</div>
     @endif
 
-    <!-- Daily Schedule Card List -->
-    <div class="space-y-3">
-        @if($schedules->isEmpty())
-            <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center space-y-2 shadow-xs">
-                <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                </div>
-                <h4 class="text-xs font-black text-slate-800">Belum Ada Jadwal</h4>
-                <p class="text-[11px] text-slate-500">Jadwal kerja Anda untuk minggu ini belum diterbitkan oleh Admin.</p>
-            </div>
-        @else
-            @foreach($schedules as $sch)
-                @php
-                    $isToday = $sch->work_date->isToday();
-                @endphp
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition-all {{ $isToday ? 'ring-2 ring-rose-500 bg-rose-50/20' : '' }}">
-                    <div class="space-y-1">
+    <section class="space-y-3" aria-label="Jadwal efektif tujuh hari">
+        @forelse($schedules as $effective)
+            @php
+                $date = \Carbon\Carbon::parse($effective['date'], config('app.timezone'));
+                $isToday = $date->isToday();
+                $source = $effective['source'];
+                $shift = $effective['shift'];
+                $isOverride = $source === 'employee_override';
+                $isHoliday = in_array($source, ['public_holiday', 'company_holiday'], true);
+                $isSpecial = $source === 'special_working_day';
+                $cardTone = $isOverride ? 'border-indigo-200 bg-indigo-50/40' : ($isHoliday ? 'border-amber-200 bg-amber-50/40' : ($isSpecial ? 'border-emerald-200 bg-emerald-50/40' : 'border-slate-200 bg-white'));
+            @endphp
+            <article class="rounded-2xl border p-4 shadow-xs {{ $cardTone }} {{ $isToday ? 'ring-2 ring-rose-500 ring-offset-1' : '' }}">
+                <div class="flex flex-wrap items-start justify-between gap-2">
+                    <div class="min-w-0">
                         <div class="flex flex-wrap items-center gap-1.5">
-                            <span class="text-xs font-black text-slate-900">
-                                {{ $sch->work_date->locale('id')->isoFormat('dddd, D MMMM YYYY') }}
-                            </span>
-                            @if($isToday)
-                                <span class="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider bg-rose-600 text-white rounded-md shrink-0">Hari Ini</span>
-                            @endif
+                            <h4 class="text-xs font-black text-slate-900">{{ $date->locale('id')->isoFormat('dddd, D MMMM') }}</h4>
+                            @if($isToday)<span class="rounded-md bg-rose-600 px-2 py-0.5 text-[9px] font-black uppercase text-white">Hari Ini</span>@endif
                         </div>
-                        
-                        @if($sch->notes)
-                            <div class="text-[11px] text-slate-500 italic">"{{ $sch->notes }}"</div>
-                        @endif
+                        <p class="mt-0.5 text-[10px] text-slate-500">{{ $date->isoFormat('YYYY') }}</p>
                     </div>
-
-                    <div class="sm:text-right">
-                        @if($sch->schedule_type === 'work' && $sch->shift)
-                            <div class="space-y-0.5">
-                                <span class="px-2.5 py-1 bg-rose-50 text-rose-800 border border-rose-200 font-mono font-extrabold text-xs rounded-lg inline-block max-w-full truncate">
-                                    {{ $sch->shift->code }} ({{ $sch->shift->name }})
-                                </span>
-                                <div class="text-[11px] font-bold text-slate-700 font-mono">
-                                    {{ substr($sch->shift->start_time, 0, 5) }} — {{ substr($sch->shift->end_time, 0, 5) }} WIB
-                                </div>
-                                @if($sch->shift->crosses_midnight)
-                                    <span class="text-[9px] font-bold text-indigo-700 block">🌙 Lintas Tengah Malam</span>
-                                @endif
-                            </div>
-                        @elseif($sch->schedule_type === 'off')
-                            <span class="px-3 py-1 bg-slate-100 text-slate-700 border border-slate-200 font-extrabold text-xs rounded-xl inline-block">
-                                OFF Pekanan
-                            </span>
-                        @elseif($sch->schedule_type === 'holiday')
-                            <span class="px-3 py-1 bg-amber-50 text-amber-900 border border-amber-200 font-extrabold text-xs rounded-xl inline-block">
-                                Libur Toko
-                            </span>
-                        @endif
-                    </div>
+                    @if($isOverride && $effective['is_working_day'])
+                        <span class="rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-1 text-[9px] font-black text-indigo-800">JADWAL KHUSUS</span>
+                    @elseif($isOverride)
+                        <span class="rounded-lg border border-violet-200 bg-violet-50 px-2 py-1 text-[9px] font-black text-violet-800">LIBUR KHUSUS</span>
+                    @elseif($isHoliday)
+                        <span class="rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-[9px] font-black text-amber-900">LIBUR</span>
+                    @elseif($isSpecial)
+                        <span class="rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1 text-[9px] font-black text-emerald-800">HARI KERJA KHUSUS</span>
+                    @elseif($source === 'regular_schedule')
+                        <span class="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[9px] font-black text-slate-600">REGULER</span>
+                    @else
+                        <span class="rounded-lg border border-slate-200 bg-slate-100 px-2 py-1 text-[9px] font-black text-slate-500">BELUM DITETAPKAN</span>
+                    @endif
                 </div>
-            @endforeach
-        @endif
-    </div>
 
+                <div class="mt-3 border-t border-current/10 pt-3">
+                    @if($effective['is_working_day'] && $shift)
+                        <div class="flex items-end justify-between gap-3">
+                            <div class="min-w-0"><p class="truncate text-sm font-black text-slate-900">{{ $shift->name }}</p><p class="mt-0.5 text-[10px] font-bold text-slate-500">{{ $shift->code }}</p></div>
+                            <p class="shrink-0 font-mono text-xs font-black text-slate-800">{{ substr($shift->start_time, 0, 5) }}–{{ substr($shift->end_time, 0, 5) }}</p>
+                        </div>
+                        @if($shift->crosses_midnight)<p class="mt-2 text-[10px] font-bold text-indigo-700">Lintas tengah malam · tetap mengikuti tanggal mulai kerja</p>@endif
+                    @elseif($isHoliday)
+                        <p class="text-sm font-black text-amber-900">{{ $effective['holiday_name'] ?: 'Hari Libur' }}</p><p class="mt-1 text-[11px] text-amber-800">Tidak ada kewajiban check-in.</p>
+                    @elseif($isOverride)
+                        <p class="text-sm font-black text-violet-900">Libur Khusus</p><p class="mt-1 text-[11px] text-violet-800">Tidak ada kewajiban check-in.</p>
+                    @elseif($isSpecial)
+                        <p class="text-xs font-black text-emerald-900">Shift belum ditetapkan</p><p class="mt-1 text-[11px] leading-4 text-emerald-800">Hubungi admin karena hari kerja khusus memerlukan shift reguler atau override.</p>
+                    @elseif($source === 'regular_schedule')
+                        <p class="text-xs font-black text-slate-700">OFF Pekanan</p><p class="mt-1 text-[11px] text-slate-500">Tidak ada kewajiban check-in.</p>
+                    @else
+                        <p class="text-xs font-black text-slate-600">Belum ada jadwal</p><p class="mt-1 text-[11px] text-slate-500">Admin belum menetapkan jadwal pada tanggal ini.</p>
+                    @endif
+                    @if($effective['reason'] && ! $isHoliday)<p class="mt-2 text-[10px] italic leading-4 text-slate-500">{{ $effective['reason'] }}</p>@endif
+                </div>
+            </article>
+        @empty
+            <div class="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-xs"><p class="text-xs font-black text-slate-800">Jadwal belum tersedia</p><p class="mt-1 text-[11px] text-slate-500">Coba muat ulang halaman atau hubungi admin.</p></div>
+        @endforelse
+    </section>
 </div>
 @endsection

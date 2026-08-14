@@ -172,6 +172,20 @@ Database timestamps dapat menggunakan strategi framework yang konsisten, tetapi 
 
 Untuk shift lintas tengah malam, attendance work date mengikuti tanggal schedule, bukan semata-mata tanggal kalender check-out.
 
+## 9A. Effective Work Calendar
+
+`EffectiveScheduleService` adalah source of truth untuk konteks `employee + work_date`:
+
+```text
+Employee Schedule Override
+  ↓ jika tidak ada
+Global Work Calendar (holiday / special working day)
+  ↓ jika tidak ada
+Regular Employee Schedule
+```
+
+Attendance resolver, monitoring, weekly schedule, leave validation, overtime start, dan report mengonsumsi hasil yang sama. Company/public holiday serta OFF tidak masuk denominator kehadiran. Actual attendance yang sudah ada tetap dipertahankan ketika kalender historis berubah. Global holiday tidak melakukan mass notification; perubahan override employee mengirim notification database dengan deep link ke jadwal mingguan.
+
 ## 10. File Storage
 
 Selfie:

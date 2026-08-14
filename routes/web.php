@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\OvertimeRequestController as AdminOvertimeRequest
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\ScheduleController as AdminScheduleController;
 use App\Http\Controllers\Admin\ShiftController;
+use App\Http\Controllers\Admin\WorkCalendarController;
 use App\Http\Controllers\AttendanceSelfieController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Employee\AttendanceController as EmployeeAttendanceController;
@@ -141,6 +142,14 @@ Route::middleware(['auth', 'role:superadmin,owner,admin', 'prevent.private.cache
     Route::post('/schedules/mark-off', [AdminScheduleController::class, 'markOff'])->name('schedules.mark-off');
     Route::post('/schedules/copy-week/execute', [AdminScheduleController::class, 'copyWeekExecute'])->name('schedules.copy-week.execute');
     Route::delete('/schedules/{schedule}', [AdminScheduleController::class, 'destroy'])->name('schedules.destroy');
+    Route::get('/work-calendar', [WorkCalendarController::class, 'index'])->name('work-calendar.index');
+    Route::get('/work-calendar/effective-preview', [WorkCalendarController::class, 'effectivePreview'])->name('work-calendar.effective-preview');
+    Route::post('/work-calendar', [WorkCalendarController::class, 'store'])->name('work-calendar.store');
+    Route::put('/work-calendar/{holiday}', [WorkCalendarController::class, 'update'])->name('work-calendar.update');
+    Route::delete('/work-calendar/{holiday}', [WorkCalendarController::class, 'destroy'])->name('work-calendar.destroy');
+    Route::post('/schedule-overrides', [WorkCalendarController::class, 'storeOverride'])->name('schedule-overrides.store');
+    Route::put('/schedule-overrides/{override}', [WorkCalendarController::class, 'updateOverride'])->name('schedule-overrides.update');
+    Route::delete('/schedule-overrides/{override}', [WorkCalendarController::class, 'destroyOverride'])->name('schedule-overrides.destroy');
 
     // Attendance Monitoring Dashboard (Sprint 09)
     Route::get('/attendance', [AdminAttendanceController::class, 'index'])->name('attendance.index');

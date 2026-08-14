@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Models\EmployeeSchedule;
+use App\Models\EmployeeScheduleOverride;
+use App\Models\Holiday;
+use App\Services\EffectiveScheduleService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,6 +14,8 @@ use Illuminate\View\View;
 
 class ScheduleController extends Controller
 {
+    public function __construct(protected EffectiveScheduleService $effectiveScheduleService) {}
+
     public function index(Request $request): View
     {
         $user = Auth::user();
@@ -31,11 +36,21 @@ class ScheduleController extends Controller
         $endDate = (clone $startDate)->endOfWeek();
 
         // Privacy Enforcement: Query ONLY schedules belonging to the authenticated employee
-        $schedules = EmployeeSchedule::with(['shift'])
-            ->where('employee_id', $employee->id)
-            ->whereBetween('work_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
-            ->orderBy('work_date')
-            ->get();
+        $regular = EmployeeSchedule::with('shift')->where('employee_id', $employee->id)
+            ->whereBetween('work_date', [$startDate->toDateString(), $endDate->toDateString()])
+            ->get()->keyBy(fn ($item) => $item->work_date->format('Y-m-d'));
+        $overrides = EmployeeScheduleOverride::with('shift')->where('employee_id', $employee->id)
+            ->whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()])
+            ->get()->keyBy(fn ($item) => $item->date->format('Y-m-d'));
+        $calendarDays = Holiday::whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()])
+            ->get()->keyBy(fn ($item) => $item->date->format('Y-m-d'));
+        $schedules = collect(range(0, 6))->map(function (int $offset) use ($employee, $startDate, $regular, $overrides, $calendarDays) {
+            $date = $startDate->copy()->addDays($offset)->format('Y-m-d');
+
+            return $this->effectiveScheduleService->resolveFromModels(
+                $employee, $date, $regular->get($date), $overrides->get($date), $calendarDays->get($date),
+            );
+        });
 
         $prevWeekDate = (clone $startDate)->subWeek()->format('Y-m-d');
         $nextWeekDate = (clone $startDate)->addWeek()->format('Y-m-d');

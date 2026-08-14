@@ -9,6 +9,7 @@ use App\Models\AttendanceRecord;
 use App\Models\LeaveRequest;
 use App\Models\OvertimeRequest;
 use App\Services\AttendanceService;
+use App\Services\EffectiveScheduleService;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -16,7 +17,10 @@ use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
-    public function __construct(protected AttendanceService $attendanceService) {}
+    public function __construct(
+        protected AttendanceService $attendanceService,
+        protected EffectiveScheduleService $effectiveScheduleService,
+    ) {}
 
     public function index(Request $request): View
     {
@@ -33,6 +37,7 @@ class DashboardController extends Controller
         $activeLocation = AttendanceLocation::where('is_active', true)->first();
         $todayOvertime = null;
         $correctedAttendance = null;
+        $todayEffective = null;
 
         if ($employee) {
             if ($request->filled('attendance')) {
@@ -46,11 +51,15 @@ class DashboardController extends Controller
                 ->where('status', 'approved')
                 ->first();
 
+            $todayEffective = $this->effectiveScheduleService->resolve($employee, $todayStr);
             $todaySchedule = $this->attendanceService->resolveActiveSchedule($employee);
 
             if ($todaySchedule) {
+                $attendanceWorkDate = $todaySchedule->work_date instanceof \DateTimeInterface
+                    ? $todaySchedule->work_date->format('Y-m-d')
+                    : substr((string) $todaySchedule->work_date, 0, 10);
                 $todayAttendance = AttendanceRecord::where('employee_id', $employee->id)
-                    ->where('work_schedule_id', $todaySchedule->id)
+                    ->whereDate('work_date', $attendanceWorkDate)
                     ->first();
             }
 
@@ -69,6 +78,7 @@ class DashboardController extends Controller
             'employee' => $employee,
             'today' => $todayFormatted,
             'todaySchedule' => $todaySchedule,
+            'todayEffective' => $todayEffective,
             'todayAttendance' => $todayAttendance,
             'todayLeave' => $todayLeave,
             'activeLocation' => $activeLocation,

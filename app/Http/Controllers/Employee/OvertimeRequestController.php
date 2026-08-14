@@ -6,8 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\AppSetting;
 use App\Models\AttendanceRecord;
 use App\Models\EmployeeSchedule;
+use App\Models\EmployeeScheduleOverride;
+use App\Models\Holiday;
 use App\Models\OvertimeRequest;
+use App\Services\EffectiveScheduleService;
 use App\Services\OvertimeRequestService;
+use Carbon\CarbonPeriod;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,7 +19,10 @@ use Illuminate\Support\Facades\Auth;
 
 class OvertimeRequestController extends Controller
 {
-    public function __construct(protected OvertimeRequestService $overtimeService) {}
+    public function __construct(
+        protected OvertimeRequestService $overtimeService,
+        protected EffectiveScheduleService $effectiveScheduleService,
+    ) {}
 
     public function index(Request $request): View|RedirectResponse
     {
@@ -40,19 +47,38 @@ class OvertimeRequestController extends Controller
             ->get()
             ->keyBy(fn ($a) => $a->work_date->format('Y-m-d'));
 
-        $schedules = EmployeeSchedule::where('employee_id', $employee->id)
-            ->whereIn('work_date', $workDates)
-            ->with('shift')
-            ->get()
-            ->keyBy(fn ($s) => $s->work_date->format('Y-m-d'));
+        $requestRegular = EmployeeSchedule::with('shift')->where('employee_id', $employee->id)
+            ->whereIn('work_date', $workDates)->get()->keyBy(fn ($item) => $item->work_date->format('Y-m-d'));
+        $requestOverrides = EmployeeScheduleOverride::with('shift')->where('employee_id', $employee->id)
+            ->whereIn('date', $workDates)->get()->keyBy(fn ($item) => $item->date->format('Y-m-d'));
+        $requestCalendars = Holiday::whereIn('date', $workDates)->get()->keyBy(fn ($item) => $item->date->format('Y-m-d'));
+        $schedules = collect($workDates)->mapWithKeys(function (string $date) use ($employee, $requestRegular, $requestOverrides, $requestCalendars) {
+            $effective = $this->effectiveScheduleService->resolveFromModels(
+                $employee, $date, $requestRegular->get($date), $requestOverrides->get($date), $requestCalendars->get($date),
+            );
+
+            return [$date => $this->effectiveScheduleService->displaySchedule($effective)];
+        });
 
         // Available work schedules for new requests (WORK type, last 30 days to next 7 days)
-        $availableSchedules = EmployeeSchedule::where('employee_id', $employee->id)
-            ->where('schedule_type', 'work')
-            ->whereBetween('work_date', [now()->subDays(30)->format('Y-m-d'), now()->addDays(7)->format('Y-m-d')])
-            ->with(['shift'])
-            ->orderBy('work_date', 'desc')
-            ->get();
+        $rangeStart = now(config('app.timezone'))->subDays(30)->startOfDay();
+        $rangeEnd = now(config('app.timezone'))->addDays(7)->startOfDay();
+        $regularRange = EmployeeSchedule::with('shift')->where('employee_id', $employee->id)
+            ->whereBetween('work_date', [$rangeStart->toDateString(), $rangeEnd->toDateString()])
+            ->get()->keyBy(fn ($item) => $item->work_date->format('Y-m-d'));
+        $overrideRange = EmployeeScheduleOverride::with('shift')->where('employee_id', $employee->id)
+            ->whereBetween('date', [$rangeStart->toDateString(), $rangeEnd->toDateString()])
+            ->get()->keyBy(fn ($item) => $item->date->format('Y-m-d'));
+        $calendarRange = Holiday::whereBetween('date', [$rangeStart->toDateString(), $rangeEnd->toDateString()])
+            ->get()->keyBy(fn ($item) => $item->date->format('Y-m-d'));
+        $availableSchedules = collect(CarbonPeriod::create($rangeStart, $rangeEnd))->map(function ($date) use ($employee, $regularRange, $overrideRange, $calendarRange) {
+            $key = $date->format('Y-m-d');
+            $effective = $this->effectiveScheduleService->resolveFromModels(
+                $employee, $key, $regularRange->get($key), $overrideRange->get($key), $calendarRange->get($key),
+            );
+
+            return $effective['source'] === 'none' ? null : $this->effectiveScheduleService->displaySchedule($effective);
+        })->filter()->sortByDesc('work_date')->values();
 
         // Map attendance details onto available schedules for context display
         $availableAttendances = AttendanceRecord::where('employee_id', $employee->id)

@@ -2,15 +2,12 @@
 
 namespace Tests\Feature\Overtime;
 
-use App\Models\AttendanceLocation;
 use App\Models\AttendanceRecord;
-use App\Models\AuditLog;
 use App\Models\Employee;
 use App\Models\EmployeeSchedule;
 use App\Models\OvertimeRequest;
 use App\Models\Shift;
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -20,12 +17,19 @@ class OvertimeRequestTest extends TestCase
     use RefreshDatabase;
 
     protected User $ownerUser;
+
     protected User $adminUser;
+
     protected User $employeeUser1;
+
     protected Employee $employee1;
+
     protected User $employeeUser2;
+
     protected Employee $employee2;
+
     protected Shift $shiftNormal;
+
     protected Shift $shiftCrossMidnight;
 
     protected function setUp(): void
@@ -181,15 +185,9 @@ class OvertimeRequestTest extends TestCase
         $response->assertDontSee('Lembur Budi');
     }
 
-    public function test_employee_without_valid_work_schedule_cannot_request_overtime(): void
+    public function test_employee_without_schedule_or_calendar_context_cannot_request_overtime(): void
     {
         $offDate = '2026-08-12';
-        EmployeeSchedule::create([
-            'employee_id' => $this->employee1->id,
-            'work_date' => $offDate,
-            'schedule_type' => 'off',
-        ]);
-
         $response = $this->actingAs($this->employeeUser1)->post(route('employee.overtime-requests.store'), [
             'work_date' => $offDate,
             'requested_minutes' => 60,
@@ -451,7 +449,7 @@ class OvertimeRequestTest extends TestCase
         ]);
 
         $response->assertRedirect(route('employee.overtime-requests.index'));
-        
+
         $req = OvertimeRequest::where('employee_id', $this->employee1->id)->first();
         $this->assertNotNull($req);
         $this->assertEquals($workDate, $req->work_date->format('Y-m-d')); // Original work_date 2026-08-11 preserved

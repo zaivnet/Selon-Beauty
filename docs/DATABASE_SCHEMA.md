@@ -93,9 +93,15 @@ Constraint aplikasi:
 
 - id
 - date DATE UNIQUE
+- type VARCHAR(30) INDEX (`public_holiday`, `company_holiday`, `special_working_day`)
 - name VARCHAR(150)
 - description TEXT NULL
+- is_working_day BOOLEAN
+- applies_to_all_employees BOOLEAN
+- created_by FK users.id NULL
 - timestamps
+
+Tabel existing ini menjadi kalender kerja global. Satu tanggal mempunyai maksimal satu event global; scope lokasi belum diterapkan pada sprint ini.
 
 ## 7. work_schedules
 
@@ -120,7 +126,20 @@ schedule_type:
 Aturan:
 - `work` wajib memiliki shift_id.
 - `off` tidak perlu shift_id.
-- holiday dapat berasal dari kalender hari libur tetapi schedule eksplisit tetap menjadi sumber final.
+- `work_schedules` adalah jadwal reguler; hasil final selalu dihitung oleh `EffectiveScheduleService`.
+
+## 7A. employee_schedule_overrides
+
+- id
+- employee_id FK INDEX
+- date DATE INDEX
+- override_type VARCHAR(20) INDEX (`work`, `off`)
+- shift_id FK NULL (wajib untuk `work`)
+- reason TEXT
+- created_by FK users.id NULL
+- timestamps
+
+Unique: `employee_id + date`. Override tidak mengubah atau menghapus template/jadwal reguler.
 
 ## 8. attendance_records
 

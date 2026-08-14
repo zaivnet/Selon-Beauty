@@ -5,14 +5,19 @@ namespace App\Services;
 use App\Models\AttendanceRecord;
 use App\Models\Employee;
 use App\Models\EmployeeSchedule;
+use App\Models\EmployeeScheduleOverride;
+use App\Models\Holiday;
 use App\Models\LeaveRequest;
 use Carbon\Carbon;
 
 class AttendanceMonitoringService
 {
-    public function __construct(protected ?AttendanceStatusResolver $statusResolver = null)
-    {
+    public function __construct(
+        protected ?AttendanceStatusResolver $statusResolver = null,
+        protected ?EffectiveScheduleService $effectiveScheduleService = null,
+    ) {
         $this->statusResolver = $statusResolver ?? new AttendanceStatusResolver;
+        $this->effectiveScheduleService = $effectiveScheduleService ?? new EffectiveScheduleService;
     }
 
     /**
@@ -71,6 +76,8 @@ class AttendanceMonitoringService
             ->whereDate('work_date', $targetDate)
             ->get()
             ->keyBy('employee_id');
+        $overrides = EmployeeScheduleOverride::with('shift')->whereDate('date', $targetDate)->get()->keyBy('employee_id');
+        $calendarDay = Holiday::whereDate('date', $targetDate)->first();
 
         // Fetch attendance records for target date with location
         $records = AttendanceRecord::with(['location'])
@@ -92,7 +99,10 @@ class AttendanceMonitoringService
             $record = $records->get($emp->id);
             $approvedLeave = $approvedLeaves->get($emp->id);
 
-            $resolved = $this->statusResolver->resolve($schedule, $record, $approvedLeave, $nowServerTime);
+            $effective = $this->effectiveScheduleService->resolveFromModels(
+                $emp, $targetDate, $schedule, $overrides->get($emp->id), $calendarDay,
+            );
+            $resolved = $this->statusResolver->resolveEffective($effective, $record, $approvedLeave, $nowServerTime);
             $statusKey = $resolved['key'];
             $statusLabel = $resolved['label'];
             $badgeClass = $resolved['badge_class'];
@@ -128,6 +138,7 @@ class AttendanceMonitoringService
             $items[] = [
                 'employee' => $emp,
                 'schedule' => $schedule,
+                'effective_schedule' => $effective,
                 'record' => $record,
                 'status_key' => $statusKey,
                 'status_label' => $statusLabel,

@@ -22,7 +22,10 @@ class AttendanceService
         protected GeofenceService $geofenceService,
         protected SelfieService $selfieService,
         protected AttendanceStatusResolver $statusResolver,
-    ) {}
+        protected ?EffectiveScheduleService $effectiveScheduleService = null,
+    ) {
+        $this->effectiveScheduleService = $effectiveScheduleService ?? new EffectiveScheduleService;
+    }
 
     /**
      * Resolve the active work schedule for an employee considering timezone and cross-midnight shifts.
@@ -36,30 +39,28 @@ class AttendanceService
             ->latest('check_in_at')
             ->first();
 
-        if ($openAttendance?->schedule?->shift) {
-            return $openAttendance->schedule;
+        if ($openAttendance) {
+            if ($openAttendance->schedule?->shift) {
+                return $openAttendance->schedule;
+            }
+            $openEffective = $this->effectiveScheduleService->resolve($employee, $openAttendance->work_date);
+            if ($context = $this->effectiveScheduleService->scheduleContext($openEffective)) {
+                return $context;
+            }
         }
 
         $now = Carbon::now($this->timezone());
         $todayDateStr = $now->format('Y-m-d');
 
-        // 1. Query schedule for today's date
-        $schedule = EmployeeSchedule::with(['shift'])
-            ->where('employee_id', $employee->id)
-            ->whereDate('work_date', $todayDateStr)
-            ->first();
-
-        if ($schedule) {
+        $todayEffective = $this->effectiveScheduleService->resolve($employee, $todayDateStr);
+        if ($schedule = $this->effectiveScheduleService->scheduleContext($todayEffective)) {
             return $schedule;
         }
 
         // 2. Cross-midnight shift resolver: check if yesterday's night shift is still active in early morning
         $yesterdayDateStr = (clone $now)->subDay()->format('Y-m-d');
-        $yesterdaySchedule = EmployeeSchedule::with(['shift'])
-            ->where('employee_id', $employee->id)
-            ->whereDate('work_date', $yesterdayDateStr)
-            ->where('schedule_type', 'work')
-            ->first();
+        $yesterdayEffective = $this->effectiveScheduleService->resolve($employee, $yesterdayDateStr);
+        $yesterdaySchedule = $this->effectiveScheduleService->scheduleContext($yesterdayEffective);
 
         if ($yesterdaySchedule && $yesterdaySchedule->shift && $yesterdaySchedule->shift->crosses_midnight) {
             $currentTime = $now->format('H:i');
@@ -210,7 +211,7 @@ class AttendanceService
 
                 $record = AttendanceRecord::create([
                     'employee_id' => $employee->id,
-                    'work_schedule_id' => $schedule->id,
+                    'work_schedule_id' => $schedule->exists ? $schedule->id : null,
                     'work_date' => $workDateStr,
                     'attendance_location_id' => $location->id,
                     'status' => $status,
@@ -263,8 +264,11 @@ class AttendanceService
                     throw new \InvalidArgumentException('Jadwal kerja aktif tidak ditemukan.');
                 }
 
+                $workDateStr = $schedule->work_date instanceof \DateTimeInterface
+                    ? $schedule->work_date->format('Y-m-d')
+                    : substr((string) $schedule->work_date, 0, 10);
                 $record = AttendanceRecord::where('employee_id', $employee->id)
-                    ->where('work_schedule_id', $schedule->id)
+                    ->whereDate('work_date', $workDateStr)
                     ->lockForUpdate()
                     ->first();
 
@@ -455,6 +459,11 @@ class AttendanceService
             $timezone = $this->timezone();
             $checkInAt = $this->parseCorrectionTimestamp($checkInStr, $workDateStr, $timezone);
             $checkOutAt = $this->parseCorrectionTimestamp($checkOutStr, $workDateStr, $timezone);
+            $effective = $this->effectiveScheduleService->resolve($record->employee, $workDateStr);
+            $effectiveSchedule = $this->effectiveScheduleService->scheduleContext($effective);
+            if ($effectiveSchedule) {
+                $record->setRelation('schedule', $effectiveSchedule);
+            }
 
             if ($checkInAt && $checkInAt->toDateString() !== $workDateStr) {
                 throw new \InvalidArgumentException('Jam masuk harus tetap berada pada tanggal kerja record.');
@@ -480,7 +489,7 @@ class AttendanceService
             $candidate->check_out_at = $checkOutAt;
             $candidate->late_minutes = $metrics['late_minutes'];
             $candidate->status = $checkInAt ? ($metrics['late_minutes'] > 0 ? 'late' : 'present') : 'absent';
-            $resolvedStatus = $this->statusResolver->resolve($record->schedule, $candidate)['key'];
+            $resolvedStatus = $this->statusResolver->resolveEffective($effective, $candidate)['key'];
             if (! in_array($resolvedStatus, ['present', 'late', 'absent'], true)) {
                 $resolvedStatus = $candidate->status;
             }

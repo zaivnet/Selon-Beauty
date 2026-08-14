@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\UI;
 
-use App\Models\User;
 use App\Models\Employee;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -77,5 +77,22 @@ class DateInputArchitectureTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('ios-date-field', false);
+    }
+
+    public function test_work_calendar_and_override_forms_reuse_ios_date_component(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin Calendar UI',
+            'email' => 'calendar.ui@example.test',
+            'password' => Hash::make('password123'),
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.work-calendar.index'));
+
+        $response->assertOk();
+        $response->assertSee('ios-date-field', false);
+        $this->assertGreaterThanOrEqual(3, substr_count($response->getContent(), 'ios-date-field'));
     }
 }

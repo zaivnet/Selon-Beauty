@@ -11,6 +11,10 @@
         'early_leave_minutes' => 'Pulang Awal', 'overtime_minutes' => 'Kandidat Lembur',
         'actual_minutes' => 'Menit Aktual', 'credited_minutes' => 'Menit Dikreditkan',
         'completion_source' => 'Sumber Penyelesaian',
+        'date' => 'Tanggal', 'type' => 'Jenis Kalender', 'name' => 'Nama',
+        'description' => 'Keterangan', 'is_working_day' => 'Hari Kerja',
+        'employee_id' => 'Karyawan', 'override_type' => 'Jenis Override',
+        'shift_id' => 'Shift', 'reason' => 'Alasan Jadwal',
     ];
 @endphp
 <div class="space-y-5">
@@ -20,8 +24,8 @@
             <p class="text-xs text-slate-500">Append-only; record tidak dapat diedit atau dihapus dari aplikasi.</p>
         </div>
         <form method="GET" action="{{ route('admin.audit-logs.index') }}" class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-6">
-            <input type="date" name="date_from" value="{{ $filters['date_from'] ?? '' }}" aria-label="Tanggal mulai" class="min-w-0 min-h-[44px] rounded-xl border border-slate-300 bg-slate-50 px-3 text-xs">
-            <input type="date" name="date_to" value="{{ $filters['date_to'] ?? '' }}" aria-label="Tanggal akhir" class="min-w-0 min-h-[44px] rounded-xl border border-slate-300 bg-slate-50 px-3 text-xs">
+            <div class="w-full min-w-0 max-w-full"><x-date-input name="date_from" id="audit_date_from" value="{{ $filters['date_from'] ?? '' }}" aria-label="Tanggal mulai" /></div>
+            <div class="w-full min-w-0 max-w-full"><x-date-input name="date_to" id="audit_date_to" value="{{ $filters['date_to'] ?? '' }}" aria-label="Tanggal akhir" /></div>
             <select name="user_id" class="min-w-0 min-h-[44px] rounded-xl border border-slate-300 bg-slate-50 px-3 text-xs">
                 <option value="">Semua actor</option>
                 @foreach($actors as $actor)<option value="{{ $actor->id }}" @selected(($filters['user_id'] ?? '') == $actor->id)>{{ $actor->name }}</option>@endforeach
@@ -30,6 +34,8 @@
                 <option value="">Semua modul</option>
                 <option value="attendance" @selected(($filters['module'] ?? '') === 'attendance')>Attendance</option>
                 <option value="overtime" @selected(($filters['module'] ?? '') === 'overtime')>Overtime</option>
+                <option value="work_calendar" @selected(($filters['module'] ?? '') === 'work_calendar')>Kalender Kerja</option>
+                <option value="schedule_override" @selected(($filters['module'] ?? '') === 'schedule_override')>Jadwal Khusus</option>
             </select>
             <select name="employee_id" class="min-w-0 min-h-[44px] rounded-xl border border-slate-300 bg-slate-50 px-3 text-xs">
                 <option value="">Semua karyawan</option>

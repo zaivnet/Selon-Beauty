@@ -62,19 +62,21 @@
             <!-- Tanggal Kerja -->
             <div>
                 <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Tanggal Kerja <span class="text-rose-600">*</span></label>
-                <select name="work_date" id="work_date_select" required onchange="updateAttendanceContext()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
-                    <option value="">-- Pilih Tanggal Kerja (Jadwal WORK) --</option>
+                <select name="work_date" id="work_date_select" required onchange="updateAttendanceContext()" class="min-h-[44px] w-full min-w-0 px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                    <option value="">-- Pilih Tanggal Lembur --</option>
                     @foreach($availableSchedules as $sch)
                         @php
                             $dateStr = $sch->work_date->format('Y-m-d');
-                            $shiftName = $sch->shift ? $sch->shift->name . ' (' . substr($sch->shift->start_time, 0, 5) . ' - ' . substr($sch->shift->end_time, 0, 5) . ')' : 'Jadwal Kerja';
+                            $shiftName = $sch->shift
+                                ? $sch->shift->name . ' (' . substr($sch->shift->start_time, 0, 5) . ' - ' . substr($sch->shift->end_time, 0, 5) . ')'
+                                : ($sch->holiday_name ? 'LIBUR · '.$sch->holiday_name : ($sch->effective_label ?: 'Hari nonkerja'));
                         @endphp
                         <option value="{{ $dateStr }}" {{ old('work_date') === $dateStr ? 'selected' : '' }}>
                             {{ $sch->work_date->translatedFormat('d F Y') }} — {{ $shiftName }}
                         </option>
                     @endforeach
                 </select>
-                <p class="text-[10px] text-slate-500 mt-1">Lembur hanya dapat diajukan pada tanggal dengan jadwal kerja aktif (WORK).</p>
+                <p class="text-[10px] text-slate-500 mt-1">Lembur dapat diajukan pada hari kerja maupun hari libur. Persetujuan tetap wajib.</p>
             </div>
 
             <!-- Attendance Context Preview Card -->
@@ -141,7 +143,9 @@
                         $dateKey = $req->work_date->format('Y-m-d');
                         $att = $attendances[$dateKey] ?? null;
                         $sch = $schedules[$dateKey] ?? null;
-                        $canStartSession = !$req->session && $req->approved_minutes > 0 && $req->isStartDateValid($sch) && $att?->check_out_at;
+                        $isEffectiveWorkingDay = (bool) ($sch?->effective_is_working_day ?? true);
+                        $regularAttendanceReady = ! $isEffectiveWorkingDay || (bool) $att?->check_out_at;
+                        $canStartSession = ! $req->session && $req->approved_minutes > 0 && $req->isStartDateValid($sch) && $regularAttendanceReady;
                     @endphp
                     <div id="overtime-{{ $req->id }}" class="p-4 rounded-xl border {{ request('highlight') == $req->id ? 'border-rose-400 ring-2 ring-rose-100' : 'border-slate-200' }} bg-slate-50/30 hover:bg-white transition-all space-y-2.5">
                         <div class="flex items-start justify-between">
@@ -216,7 +220,7 @@
                                     </form>
                                 @elseif(!$req->session)
                                     <p class="text-[11px] font-semibold text-slate-600">
-                                        {{ !$att?->check_out_at ? 'Selesaikan absensi kerja reguler terlebih dahulu.' : 'Tanggal mulai sesi lembur sudah tidak valid.' }}
+                                        {{ $isEffectiveWorkingDay && ! $att?->check_out_at ? 'Selesaikan absensi kerja reguler terlebih dahulu.' : 'Tanggal mulai sesi lembur sudah tidak valid.' }}
                                     </p>
                                 @endif
                             </div>
@@ -291,7 +295,7 @@
                 const end = sch.shift.end_time.substring(0, 5);
                 document.getElementById('ctx_shift').innerText = `${sch.shift.name} (${start} - ${end})`;
             } else {
-                document.getElementById('ctx_shift').innerText = 'Jadwal Kerja';
+                document.getElementById('ctx_shift').innerText = sch.holiday_name ? `LIBUR · ${sch.holiday_name}` : (sch.effective_label || 'Hari nonkerja');
             }
 
             // Attendance details
@@ -306,8 +310,9 @@
 
                 document.getElementById('ctx_candidate').innerText = `${att.overtime_minutes || 0} menit`;
             } else {
-                document.getElementById('ctx_checkin').innerText = 'Belum Check-in';
-                document.getElementById('ctx_checkout').innerText = 'Belum Check-out';
+                const nonWorking = sch && sch.effective_is_working_day === false;
+                document.getElementById('ctx_checkin').innerText = nonWorking ? 'Tidak diwajibkan' : 'Belum Check-in';
+                document.getElementById('ctx_checkout').innerText = nonWorking ? 'Tidak diwajibkan' : 'Belum Check-out';
                 document.getElementById('ctx_worked').innerText = '0j 0m';
                 document.getElementById('ctx_candidate').innerText = '0 menit';
             }

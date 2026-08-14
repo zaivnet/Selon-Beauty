@@ -83,66 +83,58 @@
     </div>
 
     <!-- Today Shift Card -->
+    @php
+        $effectiveShift = $todayEffective && $todayEffective['is_working_day'] ? $todayEffective['shift'] : null;
+        $activeShift = $todaySchedule?->shift;
+        $displayShift = $effectiveShift ?: $activeShift;
+        $isCarryoverShift = ! $effectiveShift && $activeShift;
+    @endphp
     <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-3">
         <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Shift Hari Ini</span>
-            
-            @if($todaySchedule)
-                @if($todaySchedule->schedule_type === 'work' && $todaySchedule->shift)
-                    <span class="text-[11px] font-mono font-extrabold text-rose-800 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-full">
-                        {{ $todaySchedule->shift->code }}
-                    </span>
-                @elseif($todaySchedule->schedule_type === 'off')
-                    <span class="text-[11px] font-extrabold text-slate-600 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full">
-                        OFF
-                    </span>
-                @elseif($todaySchedule->schedule_type === 'holiday')
-                    <span class="text-[11px] font-extrabold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
-                        LIBUR TOKO
-                    </span>
-                @endif
-            @else
-                <span class="text-[11px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full">
-                    Belum Ada Jadwal
-                </span>
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Jadwal Efektif Hari Ini</span>
+            @if($isCarryoverShift)
+                <span class="rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-1 text-[9px] font-black text-indigo-800">SHIFT AKTIF · LINTAS HARI</span>
+            @elseif($todayEffective)
+                @php($effectiveSource = $todayEffective['source'])
+                <span class="rounded-lg border px-2 py-1 text-[9px] font-black {{ $effectiveSource === 'employee_override' ? 'border-indigo-200 bg-indigo-50 text-indigo-800' : (in_array($effectiveSource, ['public_holiday', 'company_holiday'], true) ? 'border-amber-200 bg-amber-50 text-amber-900' : ($effectiveSource === 'special_working_day' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-slate-200 bg-slate-50 text-slate-600')) }}">{{ $todayEffective['label'] }}</span>
             @endif
         </div>
 
-        @if($todaySchedule)
-            @if($todaySchedule->schedule_type === 'work' && $todaySchedule->shift)
-                <div class="bg-rose-50/70 border border-rose-200/80 rounded-xl p-4 space-y-2">
+        @if($displayShift)
+                <div class="{{ $isCarryoverShift || $todayEffective['source'] === 'employee_override' ? 'bg-indigo-50/70 border-indigo-200/80' : ($todayEffective['source'] === 'special_working_day' ? 'bg-emerald-50/70 border-emerald-200/80' : 'bg-rose-50/70 border-rose-200/80') }} border rounded-xl p-4 space-y-2">
                     <div class="flex items-center justify-between">
-                        <h4 class="text-base font-extrabold text-slate-900">{{ $todaySchedule->shift->name }}</h4>
-                        @if($todaySchedule->shift->crosses_midnight)
+                        <div><span class="mb-1 inline-block rounded-md border border-current/20 bg-white/60 px-2 py-0.5 font-mono text-[10px] font-black text-rose-800">{{ $displayShift->code }}</span><h4 class="text-base font-extrabold text-slate-900">{{ $displayShift->name }}</h4></div>
+                        @if($displayShift->crosses_midnight)
                             <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md">
-                                🌙 Lintas Tengah Malam
+                                Lintas Tengah Malam
                             </span>
                         @endif
                     </div>
 
                     <div class="flex items-center gap-2 text-xs font-bold text-slate-700 font-mono">
                         <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <span>{{ substr($todaySchedule->shift->start_time, 0, 5) }} — {{ substr($todaySchedule->shift->end_time, 0, 5) }} WIB</span>
-                        <span class="text-[11px] text-slate-500 font-normal">({{ $todaySchedule->shift->formatted_work_hours }})</span>
+                        <span>{{ substr($displayShift->start_time, 0, 5) }} — {{ substr($displayShift->end_time, 0, 5) }} WIB</span>
+                        <span class="text-[11px] text-slate-500 font-normal">({{ $displayShift->formatted_work_hours }})</span>
                     </div>
-
-                    @if($todaySchedule->notes)
+                    @if($isCarryoverShift)
+                        <p class="text-xs text-indigo-700 border-t border-indigo-200/60 pt-2 mt-1">Shift ini dimulai pada work date sebelumnya dan tetap aktif sampai waktu pulang.</p>
+                    @elseif($todayEffective['reason'])
                         <p class="text-xs text-slate-600 italic border-t border-rose-200/60 pt-2 mt-1">
-                            "{{ $todaySchedule->notes }}"
+                            "{{ $todayEffective['reason'] }}"
                         </p>
                     @endif
                 </div>
-            @elseif($todaySchedule->schedule_type === 'off')
-                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center space-y-1">
-                    <p class="text-xs font-bold text-slate-800">Jadwal Libur Pekanan (OFF)</p>
-                    <p class="text-[11px] text-slate-500">Hari ini Anda dijadwalkan Libur. Nikmati waktu istirahat Anda!</p>
-                </div>
-            @elseif($todaySchedule->schedule_type === 'holiday')
+        @elseif($todayEffective && in_array($todayEffective['source'], ['public_holiday', 'company_holiday'], true))
                 <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center space-y-1">
-                    <p class="text-xs font-bold text-amber-900">Hari Libur Toko</p>
-                    <p class="text-[11px] text-amber-800">Hari ini adalah Hari Libur Toko SELON BEAUTY.</p>
+                    <p class="text-xs font-black text-amber-900">LIBUR · {{ $todayEffective['holiday_name'] }}</p>
+                    <p class="text-[11px] text-amber-800">Tidak ada kewajiban check-in reguler hari ini.</p>
                 </div>
-            @endif
+        @elseif($todayEffective && $todayEffective['source'] === 'employee_override')
+                <div class="bg-violet-50 border border-violet-200 rounded-xl p-4 text-center space-y-1"><p class="text-xs font-black text-violet-900">LIBUR KHUSUS</p><p class="text-[11px] text-violet-800">Jadwal Anda diubah menjadi libur oleh admin.</p></div>
+        @elseif($todayEffective && $todayEffective['source'] === 'special_working_day')
+                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center space-y-1"><p class="text-xs font-black text-emerald-900">Hari Kerja Khusus</p><p class="text-[11px] text-emerald-800">Shift belum ditetapkan. Hubungi admin sebelum melakukan presensi.</p></div>
+        @elseif($todayEffective && $todayEffective['source'] === 'regular_schedule')
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center space-y-1"><p class="text-xs font-bold text-slate-800">Jadwal Libur Pekanan (OFF)</p><p class="text-[11px] text-slate-500">Tidak ada kewajiban check-in hari ini.</p></div>
         @else
             <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
                 <svg class="w-8 h-8 text-slate-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -261,11 +253,12 @@
                     @endif
                 </div>
             @endif
-            @if(($todayAttendance?->check_out_at && !$todayOvertime->session && $todayOvertime->approved_minutes > 0) || $todayOvertime->session?->isActive())
+            @php($overtimeCanStartWithoutAttendance = $todayEffective && ! $todayEffective['is_working_day'])
+            @if(((($overtimeCanStartWithoutAttendance || $todayAttendance?->check_out_at) && !$todayOvertime->session && $todayOvertime->approved_minutes > 0)) || $todayOvertime->session?->isActive())
                 <a href="{{ route('employee.overtime-requests.index', ['highlight' => $todayOvertime->id]) }}#overtime-{{ $todayOvertime->id }}" class="flex min-h-[44px] w-full items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-extrabold text-white">
                     {{ !$todayOvertime->session ? 'Mulai Lembur' : 'Selesai Lembur' }}
                 </a>
-            @elseif(!$todayOvertime->session)
+            @elseif(!$todayOvertime->session && ! $overtimeCanStartWithoutAttendance)
                 <p class="text-[11px] font-semibold text-indigo-800">Selesaikan absensi kerja reguler terlebih dahulu.</p>
             @endif
         </div>
@@ -416,7 +409,7 @@
                 </form>
             @endif
         </div>
-    @elseif($todaySchedule && $todaySchedule->schedule_type !== 'work')
+    @elseif($todayEffective && ! $todayEffective['is_working_day'])
         <div class="bg-white rounded-2xl p-5 border border-slate-200 text-center">
             <button disabled class="w-full py-3.5 px-4 bg-slate-200 text-slate-500 font-bold rounded-xl text-sm flex items-center justify-center gap-2 cursor-not-allowed">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>

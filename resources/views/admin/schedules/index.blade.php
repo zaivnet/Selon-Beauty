@@ -1,10 +1,15 @@
 @extends('layouts.admin')
 
-@section('title', 'Penjadwalan Kerja Karyawan')
-@section('page-title', 'Matriks Penjadwalan Kerja Mingguan')
+@section('title', 'Jadwal Mingguan')
+@section('page-title', 'Jadwal & Kalender')
 
 @section('content')
 <div class="space-y-6">
+
+    <nav class="flex max-w-full gap-1 overflow-x-auto rounded-xl bg-slate-200/70 p-1" aria-label="Navigasi penjadwalan">
+        <span class="min-h-[44px] shrink-0 rounded-lg bg-white px-4 py-3 text-center text-xs font-black text-rose-700 shadow-xs" aria-current="page">Jadwal Mingguan</span>
+        <a href="{{ route('admin.work-calendar.index') }}" class="min-h-[44px] shrink-0 rounded-lg px-4 py-3 text-center text-xs font-bold text-slate-600 transition hover:bg-white hover:text-slate-900">Kalender Kerja</a>
+    </nav>
 
     <!-- Flash Alerts -->
     @if(session('success'))
@@ -19,10 +24,10 @@
     @endif
 
     <!-- Header Actions & Week Navigation Bar -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <!-- Date Range Navigation -->
-        <div class="flex items-center gap-3">
-            <a href="{{ route('admin.schedules.index', ['start_date' => $prevWeekDate]) }}" class="p-2 border border-slate-300 rounded-xl hover:bg-slate-50 transition-colors text-slate-600 text-xs font-bold flex items-center gap-1">
+        <div class="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
+            <a href="{{ route('admin.schedules.index', ['start_date' => $prevWeekDate]) }}" class="min-h-[44px] p-2 border border-slate-300 rounded-xl hover:bg-slate-50 transition-colors text-slate-600 text-xs font-bold flex items-center gap-1">
                 &larr; Minggu Lalu
             </a>
 
@@ -33,7 +38,7 @@
                 <span class="text-[10px] text-rose-600 font-bold uppercase tracking-wider">Minggu ke-{{ $startDate->weekOfYear }}</span>
             </div>
 
-            <a href="{{ route('admin.schedules.index', ['start_date' => $nextWeekDate]) }}" class="p-2 border border-slate-300 rounded-xl hover:bg-slate-50 transition-colors text-slate-600 text-xs font-bold flex items-center gap-1">
+            <a href="{{ route('admin.schedules.index', ['start_date' => $nextWeekDate]) }}" class="min-h-[44px] p-2 border border-slate-300 rounded-xl hover:bg-slate-50 transition-colors text-slate-600 text-xs font-bold flex items-center gap-1">
                 Minggu Depan &rarr;
             </a>
 
@@ -43,13 +48,14 @@
         </div>
 
         <!-- Right Action Buttons -->
-        <div class="flex items-center gap-2">
-            <a href="{{ route('admin.schedules.index', ['start_date' => $startDate->format('Y-m-d'), 'show_copy_preview' => 1]) }}" class="px-3.5 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-xs rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer">
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ route('admin.work-calendar.index') }}#tambah-kalender" class="min-h-[44px] px-3.5 py-2 border border-indigo-200 bg-indigo-50 text-indigo-800 hover:bg-indigo-100 font-bold text-xs rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer">Override / Libur</a>
+            <a href="{{ route('admin.schedules.index', ['start_date' => $startDate->format('Y-m-d'), 'show_copy_preview' => 1]) }}" class="min-h-[44px] px-3.5 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold text-xs rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer">
                 <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
                 <span>Salin Minggu Lalu</span>
             </a>
 
-            <button type="button" onclick="openAssignModal('', '{{ date('Y-m-d') }}')" class="px-4 py-2 bg-gradient-to-r from-rose-600 to-pink-600 text-white font-extrabold text-xs rounded-xl shadow-xs hover:from-rose-700 hover:to-pink-700 transition-all flex items-center gap-1.5 cursor-pointer">
+            <button type="button" onclick="openAssignModal('', '{{ date('Y-m-d') }}')" class="min-h-[44px] px-4 py-2 bg-gradient-to-r from-rose-600 to-pink-600 text-white font-extrabold text-xs rounded-xl shadow-xs hover:from-rose-700 hover:to-pink-700 transition-all flex items-center gap-1.5 cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                 <span>Atur Jadwal</span>
             </button>
@@ -127,9 +133,24 @@
                                     @php
                                         $key = $emp->id . '_' . $day['date'];
                                         $sch = $scheduleMatrix[$key] ?? null;
+                                        $effective = $effectiveScheduleMatrix[$key] ?? null;
                                     @endphp
                                     <td class="p-2 text-center align-middle {{ $day['is_today'] ? 'bg-rose-50/40 border-x border-rose-100' : '' }}">
-                                        @if($sch)
+                                        @if($effective && $effective['source'] === 'employee_override')
+                                            <a href="{{ route('admin.work-calendar.index') }}" class="block rounded-xl border p-2 text-[10px] font-black transition hover:shadow-xs {{ $effective['is_working_day'] ? 'border-indigo-200 bg-indigo-50 text-indigo-900' : 'border-violet-200 bg-violet-50 text-violet-900' }}">
+                                                <span class="block">{{ $effective['is_working_day'] ? ($effective['shift']?->code ?? 'WORK') : 'LIBUR KHUSUS' }}</span>
+                                                <span class="mt-1 block text-[8px] tracking-wide opacity-70">OVERRIDE</span>
+                                            </a>
+                                        @elseif($effective && in_array($effective['source'], ['public_holiday', 'company_holiday'], true))
+                                            <a href="{{ route('admin.work-calendar.index', ['date' => $day['date']]) }}" class="block rounded-xl border border-amber-200 bg-amber-50 p-2 text-[10px] font-black text-amber-900 transition hover:bg-amber-100">
+                                                <span class="block">LIBUR</span><span class="mt-1 block truncate text-[8px] opacity-75">{{ $effective['holiday_name'] }}</span>
+                                            </a>
+                                        @elseif($effective && $effective['source'] === 'special_working_day')
+                                            <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-2 text-emerald-900">
+                                                <span class="block text-[10px] font-black">{{ $effective['shift']?->code ?? 'SHIFT?' }}</span><span class="mt-1 block text-[8px] font-black">KERJA KHUSUS</span>
+                                                @if($sch)<button type="button" onclick="openEditModal('{{ $sch->id }}', '{{ $emp->id }}', '{{ $day['date'] }}', '{{ $sch->schedule_type }}', '{{ $sch->shift_id }}', '{{ e($sch->notes) }}')" class="mt-1 min-h-[24px] text-[8px] font-bold underline">Ubah reguler</button>@endif
+                                            </div>
+                                        @elseif($sch)
                                             @if($sch->schedule_type === 'work' && $sch->shift)
                                                 <div onclick="openEditModal('{{ $sch->id }}', '{{ $emp->id }}', '{{ $day['date'] }}', '{{ $sch->schedule_type }}', '{{ $sch->shift_id }}', '{{ e($sch->notes) }}')"
                                                      class="p-2 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 hover:border-rose-300 hover:shadow-xs text-rose-900 transition-all cursor-pointer space-y-0.5 group">
@@ -153,7 +174,7 @@
                                                 </div>
                                             @endif
                                         @else
-                                            <button type="button" onclick="openAssignModal('{{ $emp->id }}', '{{ $day['date'] }}')" class="w-full py-2 border border-dashed border-slate-200 hover:border-rose-300 hover:bg-rose-50/40 rounded-xl text-[11px] text-slate-400 font-medium transition-colors cursor-pointer">
+                                            <button type="button" onclick="openAssignModal('{{ $emp->id }}', '{{ $day['date'] }}')" class="min-h-[44px] w-full py-2 border border-dashed border-slate-200 hover:border-rose-300 hover:bg-rose-50/40 rounded-xl text-[11px] text-slate-400 font-medium transition-colors cursor-pointer">
                                                 + Set
                                             </button>
                                         @endif
@@ -183,33 +204,40 @@
                                 @php
                                     $key = $emp->id . '_' . $day['date'];
                                     $sch = $scheduleMatrix[$key] ?? null;
+                                    $effective = $effectiveScheduleMatrix[$key] ?? null;
                                 @endphp
-                                <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200 text-xs">
-                                    <div>
+                                <div class="flex min-w-0 flex-col gap-3 bg-white p-3 rounded-lg border border-slate-200 text-xs sm:flex-row sm:items-center sm:justify-between">
+                                    <div class="min-w-0">
                                         <h5 class="font-bold text-slate-900">{{ $emp->full_name }}</h5>
                                         <span class="text-[10px] text-slate-500 font-mono">{{ $emp->employee_code }}</span>
                                     </div>
 
-                                    <div>
-                                        @if($sch)
+                                    <div class="min-w-0 sm:text-right">
+                                        @if($effective && $effective['source'] === 'employee_override')
+                                            <a href="{{ route('admin.work-calendar.index') }}" class="inline-flex min-h-[44px] max-w-full items-center rounded-xl border px-3 text-[10px] font-black {{ $effective['is_working_day'] ? 'border-indigo-200 bg-indigo-50 text-indigo-800' : 'border-violet-200 bg-violet-50 text-violet-800' }}">{{ $effective['is_working_day'] ? 'JADWAL KHUSUS · '.($effective['shift']?->code ?? 'WORK') : 'LIBUR KHUSUS' }}</a>
+                                        @elseif($effective && in_array($effective['source'], ['public_holiday', 'company_holiday'], true))
+                                            <a href="{{ route('admin.work-calendar.index', ['date' => $day['date']]) }}" class="inline-flex min-h-[44px] max-w-full items-center rounded-xl border border-amber-200 bg-amber-50 px-3 text-left text-[10px] font-black text-amber-900">LIBUR · {{ $effective['holiday_name'] }}</a>
+                                        @elseif($effective && $effective['source'] === 'special_working_day')
+                                            <span class="inline-flex min-h-[44px] max-w-full items-center rounded-xl border border-emerald-200 bg-emerald-50 px-3 text-[10px] font-black text-emerald-900">KERJA KHUSUS · {{ $effective['shift']?->code ?? 'SHIFT BELUM ADA' }}</span>
+                                        @elseif($sch)
                                             @if($sch->schedule_type === 'work' && $sch->shift)
                                                 <button type="button" onclick="openEditModal('{{ $sch->id }}', '{{ $emp->id }}', '{{ $day['date'] }}', '{{ $sch->schedule_type }}', '{{ $sch->shift_id }}', '{{ e($sch->notes) }}')"
-                                                        class="px-2.5 py-1 bg-rose-50 text-rose-800 border border-rose-200 font-mono font-extrabold text-[11px] rounded-lg active:scale-95 transition-transform cursor-pointer">
+                                                        class="min-h-[44px] px-2.5 py-1 bg-rose-50 text-rose-800 border border-rose-200 font-mono font-extrabold text-[11px] rounded-lg active:scale-95 transition-transform cursor-pointer">
                                                     {{ $sch->shift->code }} ({{ substr($sch->shift->start_time, 0, 5) }}-{{ substr($sch->shift->end_time, 0, 5) }})
                                                 </button>
                                             @elseif($sch->schedule_type === 'off')
                                                 <button type="button" onclick="openEditModal('{{ $sch->id }}', '{{ $emp->id }}', '{{ $day['date'] }}', '{{ $sch->schedule_type }}', '', '{{ e($sch->notes) }}')"
-                                                        class="px-2.5 py-1 bg-slate-100 text-slate-600 border border-slate-200 font-extrabold text-[11px] rounded-lg active:scale-95 transition-transform cursor-pointer">
+                                                        class="min-h-[44px] px-2.5 py-1 bg-slate-100 text-slate-600 border border-slate-200 font-extrabold text-[11px] rounded-lg active:scale-95 transition-transform cursor-pointer">
                                                     OFF / LIBUR
                                                 </button>
                                             @elseif($sch->schedule_type === 'holiday')
                                                 <button type="button" onclick="openEditModal('{{ $sch->id }}', '{{ $emp->id }}', '{{ $day['date'] }}', '{{ $sch->schedule_type }}', '', '{{ e($sch->notes) }}')"
-                                                        class="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 font-extrabold text-[11px] rounded-lg active:scale-95 transition-transform cursor-pointer">
+                                                        class="min-h-[44px] px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 font-extrabold text-[11px] rounded-lg active:scale-95 transition-transform cursor-pointer">
                                                     HOLIDAY
                                                 </button>
                                             @endif
                                         @else
-                                            <button type="button" onclick="openAssignModal('{{ $emp->id }}', '{{ $day['date'] }}')" class="text-rose-600 font-bold text-[11px] underline">
+                                            <button type="button" onclick="openAssignModal('{{ $emp->id }}', '{{ $day['date'] }}')" class="min-h-[44px] text-rose-600 font-bold text-[11px] underline">
                                                 + Set Jadwal
                                             </button>
                                         @endif
@@ -227,10 +255,10 @@
 
 <!-- Modal Form Assign / Edit Schedule -->
 <div id="modal-assign-schedule" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-md w-full p-6 space-y-4">
+    <div class="max-h-[calc(100dvh-2rem)] overflow-y-auto bg-white rounded-2xl border border-slate-200 shadow-xl max-w-md w-full p-4 sm:p-6 space-y-4">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 id="modal_title" class="text-sm font-extrabold text-slate-900">Atur Jadwal Kerja Karyawan</h3>
-            <button type="button" onclick="document.getElementById('modal-assign-schedule').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
+            <button type="button" onclick="document.getElementById('modal-assign-schedule').classList.add('hidden')" class="min-h-[44px] min-w-[44px] text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
         </div>
 
         <form id="schedule-form" action="{{ route('admin.schedules.store') }}" method="POST" class="space-y-4">
@@ -277,13 +305,13 @@
             </div>
 
             <div class="flex items-center justify-between border-t border-slate-100 pt-3">
-                <button type="button" id="btn_delete_schedule" class="hidden px-3.5 py-2 bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl transition-colors cursor-pointer" onclick="confirmDeleteSchedule()">
+                <button type="button" id="btn_delete_schedule" class="hidden min-h-[44px] px-3.5 py-2 bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl transition-colors cursor-pointer" onclick="confirmDeleteSchedule()">
                     Hapus Jadwal
                 </button>
 
                 <div class="flex items-center gap-2 ml-auto">
-                    <button type="button" onclick="document.getElementById('modal-assign-schedule').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-900">Batal</button>
-                    <button type="submit" id="btn_submit_schedule" class="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-colors cursor-pointer">
+                    <button type="button" onclick="document.getElementById('modal-assign-schedule').classList.add('hidden')" class="min-h-[44px] px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-900">Batal</button>
+                    <button type="submit" id="btn_submit_schedule" class="min-h-[44px] px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-colors cursor-pointer">
                         Simpan Jadwal
                     </button>
                 </div>

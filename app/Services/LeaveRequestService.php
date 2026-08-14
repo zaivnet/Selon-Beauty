@@ -8,7 +8,6 @@ use App\Events\LeaveRequestRejected;
 use App\Events\LeaveRequestSubmitted;
 use App\Models\AuditLog;
 use App\Models\Employee;
-use App\Models\EmployeeSchedule;
 use App\Models\LeaveRequest;
 use App\Models\User;
 use App\Notifications\LeaveRequestApprovedNotification;
@@ -23,6 +22,11 @@ use Illuminate\Validation\ValidationException;
 
 class LeaveRequestService
 {
+    public function __construct(protected ?EffectiveScheduleService $effectiveScheduleService = null)
+    {
+        $this->effectiveScheduleService = $effectiveScheduleService ?? new EffectiveScheduleService;
+    }
+
     /**
      * Submit a new permission, sick, or leave request for an employee.
      */
@@ -42,14 +46,10 @@ class LeaveRequestService
 
         // 2. Single Day OFF / Holiday Validation (Requirement 18 & 19)
         if ($startDate === $endDate) {
-            $schedule = EmployeeSchedule::where('employee_id', $employee->id)
-                ->whereDate('work_date', $startDate)
-                ->first();
-
-            if ($schedule && in_array($schedule->schedule_type, ['off', 'holiday'], true)) {
-                $scheduleTypeName = $schedule->schedule_type === 'off' ? 'OFF Pekanan' : 'Libur Toko';
+            $effective = $this->effectiveScheduleService->resolve($employee, $startDate);
+            if ($effective['source'] !== 'none' && ! $effective['is_working_day']) {
                 throw ValidationException::withMessages([
-                    'start_date' => "Tanggal {$startDate} adalah hari {$scheduleTypeName}, tidak memerlukan pengajuan izin/cuti.",
+                    'start_date' => "Tanggal {$startDate} adalah hari libur, tidak memerlukan pengajuan izin/cuti.",
                 ]);
             }
         }
@@ -59,7 +59,7 @@ class LeaveRequestService
             ->whereIn('status', ['pending', 'approved'])
             ->where(function ($q) use ($startDate, $endDate) {
                 $q->whereDate('start_date', '<=', $endDate)
-                  ->whereDate('end_date', '>=', $startDate);
+                    ->whereDate('end_date', '>=', $startDate);
             })
             ->exists();
 
