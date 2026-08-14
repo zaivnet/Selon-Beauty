@@ -10,7 +10,7 @@
     <link rel="manifest" href="{{ route('pwa.manifest', [], false) }}">
     <meta name="theme-color" content="{{ $branding['pwa_theme_color'] }}">
     <link rel="apple-touch-icon" href="{{ $branding['app_icon_url'] }}">
-    <link rel="icon" type="image/x-icon" href="{{ $branding['favicon_url'] }}">
+    <link rel="icon" type="{{ $branding['favicon_mime_type'] }}" href="{{ $branding['favicon_url'] }}">
     <style>
         :root {
             --brand-primary: {{ $branding['brand_primary'] }};

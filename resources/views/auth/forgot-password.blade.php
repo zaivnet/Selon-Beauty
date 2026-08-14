@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <meta name="theme-color" content="{{ $branding['pwa_theme_color'] ?? '#E11D48' }}">
-    <link rel="icon" type="image/x-icon" href="{{ $branding['favicon_url'] ?? asset('favicon.ico') }}">
+    <link rel="icon" type="{{ $branding['favicon_mime_type'] ?? 'image/x-icon' }}" href="{{ $branding['favicon_url'] ?? asset('favicon.ico') }}">
     <style>
         :root {
             --brand-primary: {{ $branding['brand_primary'] ?? '#E11D48' }};

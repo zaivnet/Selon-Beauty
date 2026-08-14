@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Backup;
 
-use App\Models\AuditLog;
+use App\Models\AppSetting;
 use App\Models\BackupRecord;
 use App\Models\User;
 use App\Services\BackupService;
@@ -16,14 +16,18 @@ class RestoreTest extends TestCase
     use RefreshDatabase;
 
     protected User $superadminUser;
+
     protected User $ownerUser;
+
     protected User $employeeUser;
+
     protected BackupService $backupService;
 
     protected function setUp(): void
     {
         parent::setUp();
         Storage::fake('local');
+        Storage::fake('public');
 
         $this->superadminUser = User::create([
             'name' => 'Superadmin Utama',
@@ -114,5 +118,23 @@ class RestoreTest extends TestCase
 
         $response->assertSessionHas('error');
         $this->assertStringContainsString('Integritas file backup (Checksum SHA-256) tidak cocok', session('error'));
+    }
+
+    public function test_full_restore_preserves_branding_path_and_public_media(): void
+    {
+        Storage::disk('public')->put('branding/logo-restored.png', 'restored-branding');
+        AppSetting::set('app_logo_path', 'branding/logo-restored.png', 'string', true);
+        $backup = $this->backupService->createBackup('full', $this->superadminUser);
+
+        Storage::disk('public')->delete('branding/logo-restored.png');
+        AppSetting::set('app_logo_path', 'branding/replaced.png', 'string', true);
+
+        $this->backupService->restoreBackup($backup, 'password123', $this->superadminUser);
+
+        $this->assertSame('branding/logo-restored.png', AppSetting::get('app_logo_path'));
+        Storage::disk('public')->assertExists('branding/logo-restored.png');
+        $this->get(route('branding.media', ['type' => 'logo']))
+            ->assertOk()
+            ->assertHeader('X-Content-Type-Options', 'nosniff');
     }
 }

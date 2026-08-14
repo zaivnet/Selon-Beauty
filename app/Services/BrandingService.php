@@ -7,6 +7,12 @@ use Illuminate\Support\Facades\Storage;
 
 class BrandingService
 {
+    public const MEDIA_SETTINGS = [
+        'logo' => 'app_logo_path',
+        'pwa-icon' => 'app_icon_path',
+        'favicon' => 'app_favicon_path',
+    ];
+
     protected ?array $cachedSettings = null;
 
     public function clearCache(): void
@@ -46,46 +52,70 @@ class BrandingService
     public function getBrandPrimary(): string
     {
         $color = $this->getSetting('brand_primary', '#e11d48');
+
         return preg_match('/^#[0-9A-Fa-f]{6}$/', $color) ? $color : '#e11d48';
     }
 
     public function getBrandAccent(): string
     {
         $color = $this->getSetting('brand_accent', '#f43f5e');
+
         return preg_match('/^#[0-9A-Fa-f]{6}$/', $color) ? $color : '#f43f5e';
     }
 
     public function getPwaThemeColor(): string
     {
         $color = $this->getSetting('pwa_theme_color', '#e11d48');
+
         return preg_match('/^#[0-9A-Fa-f]{6}$/', $color) ? $color : '#e11d48';
     }
 
     public function getAppLogoUrl(): ?string
     {
-        $path = $this->getSetting('app_logo_path');
-        if ($path && Storage::disk('public')->exists($path)) {
-            return asset('storage/' . $path);
-        }
-        return null;
+        return $this->mediaUrl('logo');
     }
 
     public function getAppIconUrl(): string
     {
-        $path = $this->getSetting('app_icon_path');
-        if ($path && Storage::disk('public')->exists($path)) {
-            return asset('storage/' . $path);
-        }
-        return asset('icons/icon-192x192.png');
+        return $this->mediaUrl('pwa-icon') ?? asset('icons/icon-192x192.png');
     }
 
     public function getFaviconUrl(): string
     {
-        $path = $this->getSetting('app_favicon_path');
-        if ($path && Storage::disk('public')->exists($path)) {
-            return asset('storage/' . $path);
+        return $this->mediaUrl('favicon') ?? asset('favicon.ico');
+    }
+
+    public function getFaviconMimeType(): string
+    {
+        $path = $this->getMediaPath('favicon');
+
+        return $path && strtolower(pathinfo($path, PATHINFO_EXTENSION)) === 'png'
+            ? 'image/png'
+            : 'image/x-icon';
+    }
+
+    public function getMediaPath(string $type): ?string
+    {
+        $setting = self::MEDIA_SETTINGS[$type] ?? null;
+        if (! $setting) {
+            return null;
         }
-        return asset('favicon.ico');
+
+        $path = str_replace('\\', '/', (string) $this->getSetting($setting, ''));
+        if ($path === '' || ! str_starts_with($path, 'branding/') || str_contains($path, '../')) {
+            return null;
+        }
+
+        return Storage::disk('public')->exists($path) ? $path : null;
+    }
+
+    protected function mediaUrl(string $type): ?string
+    {
+        $path = $this->getMediaPath($type);
+
+        return $path
+            ? route('branding.media', ['type' => $type, 'v' => substr(sha1($path), 0, 12)], false)
+            : null;
     }
 
     /**
@@ -112,6 +142,7 @@ class BrandingService
             'app_logo_url' => $this->getAppLogoUrl(),
             'app_icon_url' => $this->getAppIconUrl(),
             'favicon_url' => $this->getFaviconUrl(),
+            'favicon_mime_type' => $this->getFaviconMimeType(),
         ];
     }
 }

@@ -98,7 +98,7 @@
                     <div class="h-20 bg-white border border-slate-200 rounded-xl flex items-center justify-center p-2 overflow-hidden">
                         <img src="{{ $brandingData['app_icon_url'] }}" alt="Icon PWA" class="w-14 h-14 object-cover rounded-xl shadow-xs">
                     </div>
-                    <input type="file" name="icon" accept="image/png,image/jpeg,image/webp" class="block w-full text-[11px] text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-900 file:text-white hover:file:bg-slate-800 cursor-pointer">
+                    <input type="file" name="icon" accept="image/png" class="block w-full text-[11px] text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-900 file:text-white hover:file:bg-slate-800 cursor-pointer">
                     <span class="text-[10px] text-slate-400 block">Format: PNG Persegi. Min 192x192px.</span>
                 </div>
 

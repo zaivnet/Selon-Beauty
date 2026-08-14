@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\ScheduleController as AdminScheduleController;
 use App\Http\Controllers\Admin\ShiftController;
 use App\Http\Controllers\Admin\WorkCalendarController;
 use App\Http\Controllers\AttendanceSelfieController;
+use App\Http\Controllers\BrandingMediaController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Employee\AttendanceController as EmployeeAttendanceController;
 use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;
@@ -37,6 +38,9 @@ Route::get('/health', HealthCheckController::class);
 
 // PWA Dynamic Assets (Sprint 15 & 17.5)
 Route::get('/manifest.webmanifest', \App\Http\Controllers\PwaManifestController::class)->name('pwa.manifest');
+Route::get('/branding/{type}', BrandingMediaController::class)
+    ->whereIn('type', array_keys(\App\Services\BrandingService::MEDIA_SETTINGS))
+    ->name('branding.media');
 Route::get('/sw.js', function () {
     return response(file_get_contents(public_path('sw.js')), 200, [
         'Content-Type' => 'application/javascript',

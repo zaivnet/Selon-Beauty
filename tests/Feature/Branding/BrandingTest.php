@@ -4,10 +4,12 @@ namespace Tests\Feature\Branding;
 
 use App\Models\AppSetting;
 use App\Models\User;
+use App\Services\BrandingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 use Tests\TestCase;
 
 class BrandingTest extends TestCase
@@ -15,6 +17,7 @@ class BrandingTest extends TestCase
     use RefreshDatabase;
 
     protected User $ownerUser;
+
     protected User $employeeUser;
 
     protected function setUp(): void
@@ -121,6 +124,101 @@ class BrandingTest extends TestCase
         Storage::disk('public')->assertExists($logoPath);
     }
 
+    public function test_uploaded_logo_is_served_without_public_storage_symlink(): void
+    {
+        $this->actingAs($this->ownerUser)->post(route('admin.settings.branding.update'), [
+            ...$this->validPayload(),
+            'logo' => UploadedFile::fake()->image('logo.png', 320, 120),
+        ])->assertSessionHas('success');
+
+        $url = app(BrandingService::class)->getAppLogoUrl();
+
+        $this->assertStringStartsWith('/branding/logo?v=', $url);
+        $this->assertStringNotContainsString('/storage/', $url);
+        $this->get($url)->assertOk()->assertHeader('Content-Type', 'image/png');
+    }
+
+    public function test_uploaded_pwa_icon_is_served_with_correct_content_type(): void
+    {
+        $this->actingAs($this->ownerUser)->post(route('admin.settings.branding.update'), [
+            ...$this->validPayload(),
+            'icon' => UploadedFile::fake()->image('icon.png', 192, 192),
+        ])->assertSessionHas('success');
+
+        $url = app(BrandingService::class)->getAppIconUrl();
+
+        $this->assertStringStartsWith('/branding/pwa-icon?v=', $url);
+        $this->get($url)->assertOk()->assertHeader('Content-Type', 'image/png');
+    }
+
+    public function test_uploaded_favicon_is_served_with_correct_content_type(): void
+    {
+        $this->actingAs($this->ownerUser)->post(route('admin.settings.branding.update'), [
+            ...$this->validPayload(),
+            'favicon' => UploadedFile::fake()->image('favicon.png', 32, 32),
+        ])->assertSessionHas('success');
+
+        $url = app(BrandingService::class)->getFaviconUrl();
+
+        $this->assertStringStartsWith('/branding/favicon?v=', $url);
+        $this->get($url)->assertOk()->assertHeader('Content-Type', 'image/png');
+        $this->actingAs($this->ownerUser)->get(route('admin.settings.branding.index'))
+            ->assertOk()
+            ->assertSee('type="image/png"', false)
+            ->assertSee($url, false);
+    }
+
+    public function test_missing_custom_media_falls_back_without_broken_urls(): void
+    {
+        AppSetting::set('app_logo_path', 'branding/missing-logo.png', 'string', true);
+        AppSetting::set('app_icon_path', 'branding/missing-icon.png', 'string', true);
+        AppSetting::set('app_favicon_path', 'branding/missing-favicon.png', 'string', true);
+        $branding = new BrandingService;
+
+        $this->assertNull($branding->getAppLogoUrl());
+        $this->assertStringEndsWith('/icons/icon-192x192.png', $branding->getAppIconUrl());
+        $this->assertStringEndsWith('/favicon.ico', $branding->getFaviconUrl());
+    }
+
+    public function test_successful_replacement_deletes_old_branding_file(): void
+    {
+        Storage::disk('public')->put('branding/old-logo.png', 'old-logo');
+        AppSetting::set('app_logo_path', 'branding/old-logo.png', 'string', true);
+
+        $this->actingAs($this->ownerUser)->post(route('admin.settings.branding.update'), [
+            ...$this->validPayload(),
+            'logo' => UploadedFile::fake()->image('new-logo.png', 320, 120),
+        ])->assertSessionHas('success');
+
+        Storage::disk('public')->assertMissing('branding/old-logo.png');
+        Storage::disk('public')->assertExists(AppSetting::get('app_logo_path'));
+    }
+
+    public function test_failed_database_update_removes_new_branding_file(): void
+    {
+        AppSetting::saving(function (AppSetting $setting): void {
+            if ($setting->key === 'app_logo_path') {
+                throw new RuntimeException('Simulated setting failure');
+            }
+        });
+        $this->withoutExceptionHandling();
+
+        try {
+            $this->actingAs($this->ownerUser)->post(route('admin.settings.branding.update'), [
+                ...$this->validPayload(),
+                'logo' => UploadedFile::fake()->image('orphan.png', 320, 120),
+            ]);
+            $this->fail('Database failure was not raised.');
+        } catch (RuntimeException $exception) {
+            $this->assertSame('Simulated setting failure', $exception->getMessage());
+        } finally {
+            AppSetting::flushEventListeners();
+        }
+
+        $this->assertSame([], Storage::disk('public')->allFiles('branding'));
+        $this->assertNull(AppSetting::get('app_logo_path'));
+    }
+
     public function test_dynamic_pwa_manifest_uses_app_name_and_theme_color(): void
     {
         AppSetting::set('app_name', 'DYNAMIC SALON APP', 'string', true);
@@ -136,5 +234,40 @@ class BrandingTest extends TestCase
             'short_name' => 'DYNAMIC SALON',
             'theme_color' => '#123456',
         ]);
+    }
+
+    public function test_manifest_custom_icon_url_is_publicly_accessible(): void
+    {
+        $this->actingAs($this->ownerUser)->post(route('admin.settings.branding.update'), [
+            ...$this->validPayload(),
+            'icon' => UploadedFile::fake()->image('manifest-icon.png', 512, 512),
+        ])->assertSessionHas('success');
+
+        $iconUrl = $this->get(route('pwa.manifest'))->assertOk()->json('icons.0.src');
+
+        $this->assertStringStartsWith('/branding/pwa-icon?v=', $iconUrl);
+        $this->get($iconUrl)->assertOk()->assertHeader('Content-Type', 'image/png');
+    }
+
+    public function test_branding_endpoint_rejects_unknown_types_and_traversal_paths(): void
+    {
+        AppSetting::set('app_logo_path', '../private/secret.txt', 'string', true);
+
+        $this->get('/branding/not-supported')->assertNotFound();
+        $this->get('/branding/%2E%2E%2F.env')->assertNotFound();
+        $this->get(route('branding.media', ['type' => 'logo']))->assertNotFound();
+    }
+
+    private function validPayload(): array
+    {
+        return [
+            'app_name' => 'BEAUTY PRO',
+            'app_short_name' => 'BEAUTY',
+            'company_name' => 'PT Beauty Indonesia',
+            'app_tagline' => 'Sistem Presensi Modern',
+            'brand_primary' => '#111827',
+            'brand_accent' => '#F43F5E',
+            'pwa_theme_color' => '#111827',
+        ];
     }
 }

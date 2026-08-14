@@ -14,12 +14,12 @@ class EnsureFirstRunSetupCompleted
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
         // Always allow public static assets, PWA manifest, service worker, health check, login, and password reset routes
-        if ($request->is('up', 'sw.js', 'offline.html', 'manifest.webmanifest', 'login', 'forgot-password', 'reset-password*') || $request->routeIs('login', 'password.*', 'pwa.manifest', 'offline')) {
+        if ($request->is('up', 'sw.js', 'offline.html', 'manifest.webmanifest', 'branding/*', 'login', 'forgot-password', 'reset-password*') || $request->routeIs('login', 'password.*', 'pwa.manifest', 'branding.media', 'offline')) {
             return $next($request);
         }
 

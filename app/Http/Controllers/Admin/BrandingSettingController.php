@@ -9,8 +9,11 @@ use App\Services\BrandingService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use RuntimeException;
+use Throwable;
 
 class BrandingSettingController extends Controller
 {
@@ -38,8 +41,8 @@ class BrandingSettingController extends Controller
             'brand_primary' => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'brand_accent' => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'pwa_theme_color' => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'logo' => 'nullable|file|mimes:png,jpg,jpeg,webp|max:2048',
-            'icon' => 'nullable|file|mimes:png,jpg,jpeg,webp|max:2048',
+            'logo' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:2048',
+            'icon' => 'nullable|image|mimes:png|dimensions:min_width=192,min_height=192|max:2048',
             'favicon' => 'nullable|file|mimes:png,ico|max:1024',
         ], [
             'app_name.required' => 'Nama Aplikasi wajib diisi.',
@@ -48,71 +51,76 @@ class BrandingSettingController extends Controller
             'pwa_theme_color.regex' => 'Format warna Theme PWA harus berupa kode Hex 6 digit (contoh: #E11D48).',
             'logo.mimes' => 'Logo harus berupa gambar berformat PNG, JPG, JPEG, atau WEBP.',
             'logo.max' => 'Ukuran file logo maksimal 2 MB.',
-            'icon.mimes' => 'Icon aplikasi harus berupa gambar berformat PNG, JPG, JPEG, atau WEBP.',
+            'icon.mimes' => 'Icon aplikasi harus berupa file PNG.',
+            'icon.dimensions' => 'Icon aplikasi minimal berukuran 192x192 piksel.',
             'icon.max' => 'Ukuran file icon maksimal 2 MB.',
             'favicon.mimes' => 'Favicon harus berupa file PNG atau ICO.',
         ]);
 
         $beforeData = $brandingService->getBrandingData();
+        $media = [
+            'logo' => ['setting' => 'app_logo_path', 'prefix' => 'logo'],
+            'icon' => ['setting' => 'app_icon_path', 'prefix' => 'icon'],
+            'favicon' => ['setting' => 'app_favicon_path', 'prefix' => 'favicon'],
+        ];
+        $newPaths = [];
+        $oldPaths = [];
 
-        // 1. Text settings
-        AppSetting::set('app_name', trim($request->input('app_name')), 'string', true);
-        AppSetting::set('app_short_name', trim($request->input('app_short_name')), 'string', true);
-        AppSetting::set('company_name', trim($request->input('company_name', '')), 'string', true);
-        AppSetting::set('app_tagline', trim($request->input('app_tagline', '')), 'string', true);
-        AppSetting::set('brand_primary', strtoupper(trim($request->input('brand_primary'))), 'string', true);
-        AppSetting::set('brand_accent', strtoupper(trim($request->input('brand_accent'))), 'string', true);
-        AppSetting::set('pwa_theme_color', strtoupper(trim($request->input('pwa_theme_color'))), 'string', true);
+        try {
+            foreach ($media as $input => $definition) {
+                if (! $request->hasFile($input)) {
+                    continue;
+                }
 
-        // 2. Logo Upload
-        if ($request->hasFile('logo')) {
-            $oldLogoPath = AppSetting::get('app_logo_path');
-            $file = $request->file('logo');
-            $ext = strtolower($file->getClientOriginalExtension() ?: 'png');
-            $filename = 'branding/logo-' . Str::uuid() . '.' . $ext;
+                $file = $request->file($input);
+                $extension = strtolower($file->getClientOriginalExtension() ?: ($input === 'favicon' ? 'ico' : 'png'));
+                $filename = 'branding/'.$definition['prefix'].'-'.Str::uuid().'.'.$extension;
+                $path = Storage::disk('public')->putFileAs('', $file, $filename);
+                if (! $path) {
+                    throw new RuntimeException("Gagal menyimpan media branding {$input}.");
+                }
 
-            $path = Storage::disk('public')->putFileAs('', $file, $filename);
-            AppSetting::set('app_logo_path', $path, 'string', true);
+                $newPaths[$definition['setting']] = $path;
+                $oldPaths[] = AppSetting::get($definition['setting']);
+            }
 
-            if ($oldLogoPath && Storage::disk('public')->exists($oldLogoPath)) {
-                Storage::disk('public')->delete($oldLogoPath);
+            DB::transaction(function () use ($request, $brandingService, $beforeData, $newPaths): void {
+                AppSetting::set('app_name', trim($request->input('app_name')), 'string', true);
+                AppSetting::set('app_short_name', trim($request->input('app_short_name')), 'string', true);
+                AppSetting::set('company_name', trim($request->input('company_name', '')), 'string', true);
+                AppSetting::set('app_tagline', trim($request->input('app_tagline', '')), 'string', true);
+                AppSetting::set('brand_primary', strtoupper(trim($request->input('brand_primary'))), 'string', true);
+                AppSetting::set('brand_accent', strtoupper(trim($request->input('brand_accent'))), 'string', true);
+                AppSetting::set('pwa_theme_color', strtoupper(trim($request->input('pwa_theme_color'))), 'string', true);
+
+                foreach ($newPaths as $setting => $path) {
+                    AppSetting::set($setting, $path, 'string', true);
+                }
+
+                $brandingService->clearCache();
+                AuditLog::log(
+                    'branding.updated',
+                    null,
+                    $beforeData,
+                    $brandingService->getBrandingData(),
+                    $request->user(),
+                );
+            });
+        } catch (Throwable $exception) {
+            Storage::disk('public')->delete(array_values($newPaths));
+            $brandingService->clearCache();
+
+            throw $exception;
+        }
+
+        foreach (array_filter($oldPaths) as $oldPath) {
+            $normalized = str_replace('\\', '/', (string) $oldPath);
+            if (str_starts_with($normalized, 'branding/') && ! in_array($normalized, $newPaths, true)) {
+                Storage::disk('public')->delete($normalized);
             }
         }
 
-        // 3. Icon Upload
-        if ($request->hasFile('icon')) {
-            $oldIconPath = AppSetting::get('app_icon_path');
-            $file = $request->file('icon');
-            $ext = strtolower($file->getClientOriginalExtension() ?: 'png');
-            $filename = 'branding/icon-' . Str::uuid() . '.' . $ext;
-
-            $path = Storage::disk('public')->putFileAs('', $file, $filename);
-            AppSetting::set('app_icon_path', $path, 'string', true);
-
-            if ($oldIconPath && Storage::disk('public')->exists($oldIconPath)) {
-                Storage::disk('public')->delete($oldIconPath);
-            }
-        }
-
-        // 4. Favicon Upload
-        if ($request->hasFile('favicon')) {
-            $oldFaviconPath = AppSetting::get('app_favicon_path');
-            $file = $request->file('favicon');
-            $ext = strtolower($file->getClientOriginalExtension() ?: 'ico');
-            $filename = 'branding/favicon-' . Str::uuid() . '.' . $ext;
-
-            $path = Storage::disk('public')->putFileAs('', $file, $filename);
-            AppSetting::set('app_favicon_path', $path, 'string', true);
-
-            if ($oldFaviconPath && Storage::disk('public')->exists($oldFaviconPath)) {
-                Storage::disk('public')->delete($oldFaviconPath);
-            }
-        }
-
-        $afterData = $brandingService->getBrandingData();
         $brandingService->clearCache();
-
-        AuditLog::log('branding.updated', null, $beforeData, $afterData, $request->user());
 
         return redirect()->back()->with('success', 'Profil dan identitas visual aplikasi berhasil diperbarui.');
     }
