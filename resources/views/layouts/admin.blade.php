@@ -21,18 +21,7 @@
             --brand-accent: {{ $branding['brand_accent'] }};
         }
     </style>
-    <script>
-        (function() {
-            try {
-                const theme = localStorage.getItem('attendance-theme') || 'system';
-                if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                }
-            } catch (e) {}
-        })();
-    </script>
+    @include('partials.theme_bootstrap')
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -43,14 +32,7 @@
           themeMenuOpen: false,
           setTheme(val) {
               this.theme = val;
-              try {
-                  localStorage.setItem('attendance-theme', val);
-              } catch(e) {}
-              if (val === 'dark' || (val === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                  document.documentElement.classList.add('dark');
-              } else {
-                  document.documentElement.classList.remove('dark');
-              }
+              window.applyAttendanceTheme(val);
           }
       }"
       x-init="

@@ -21,18 +21,7 @@
             --brand-accent: {{ $branding['brand_accent'] }};
         }
     </style>
-    <!-- FOUC Prevention: sync theme before render -->
-    <script>
-        (function () {
-            try {
-                var stored = localStorage.getItem('attendance-theme') || 'system';
-                var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                var isDark = stored === 'dark' || (stored === 'system' && prefersDark);
-                if (isDark) document.documentElement.classList.add('dark');
-                else document.documentElement.classList.remove('dark');
-            } catch (e) {}
-        })();
-    </script>
+    @include('partials.theme_bootstrap')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen antialiased flex items-center justify-center p-4 transition-colors">
