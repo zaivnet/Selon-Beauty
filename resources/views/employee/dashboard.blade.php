@@ -7,20 +7,20 @@
 
     <!-- Flash Alerts -->
     @if(session('success'))
-        <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold flex items-center gap-2">
-            <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        <div class="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-200 rounded-xl text-xs font-semibold flex items-center gap-2">
+            <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
             <span>{{ session('success') }}</span>
         </div>
     @endif
     @if(session('error'))
-        <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-semibold flex items-center gap-2">
-            <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <div class="p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-800 dark:text-rose-200 rounded-xl text-xs font-semibold flex items-center gap-2">
+            <svg class="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <span>{{ session('error') }}</span>
         </div>
     @endif
 
     @if($correctedAttendance)
-        <div id="attendance-{{ $correctedAttendance->id }}" class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900 shadow-xs">
+        <div id="attendance-{{ $correctedAttendance->id }}" class="rounded-2xl border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/40 p-4 text-xs text-amber-900 dark:text-amber-200 shadow-xs">
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <p class="font-extrabold">Absensi {{ $correctedAttendance->work_date->format('d M Y') }} · Dikoreksi Admin</p>
                 @if($correctedAttendance->corrected_at)<span class="text-[10px] font-bold">{{ $correctedAttendance->corrected_at->format('d M Y H:i') }}</span>@endif
@@ -62,25 +62,25 @@
     </div>
 
     @if($user->role === 'superadmin' || ($employee && $employee->attendance_enabled === false))
-        <section class="w-full min-w-0 overflow-hidden rounded-2xl border border-amber-200 bg-white shadow-xs" aria-labelledby="attendance-disabled-heading">
-            <div class="border-b border-amber-200 bg-amber-50/80 px-4 py-3.5 sm:px-5">
-                <span class="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-white px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-amber-900">
+        <section class="w-full min-w-0 overflow-hidden rounded-2xl border border-amber-200 dark:border-amber-800/60 bg-white dark:bg-slate-900 shadow-xs" aria-labelledby="attendance-disabled-heading">
+            <div class="border-b border-amber-200 dark:border-amber-800/60 bg-amber-50/80 dark:bg-amber-950/40 px-4 py-3.5 sm:px-5">
+                <span class="inline-flex items-center gap-2 rounded-lg border border-amber-200 dark:border-amber-800/60 bg-white dark:bg-amber-950/80 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-amber-900 dark:text-amber-200">
                     <span class="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true"></span>
                     Tidak Ikut Absensi
                 </span>
             </div>
             <div class="p-5 sm:p-6">
                 <div class="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start">
-                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-600">
+                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                     </div>
                     <div class="min-w-0">
-                        <h3 id="attendance-disabled-heading" class="text-base font-extrabold leading-snug text-slate-900">Akun ini tidak diwajibkan mengikuti sistem kehadiran.</h3>
-                        <p class="mt-2 text-xs leading-relaxed text-slate-600">Akun login dan akses aplikasi Anda tetap aktif sesuai role. Status ini hanya menonaktifkan kewajiban jadwal, absensi, izin, dan lembur.</p>
-                        <div class="mt-4 grid grid-cols-1 gap-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500 sm:grid-cols-3" aria-label="Konsep akun yang saling terpisah">
-                            <span class="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-center">Status Karyawan</span>
-                            <span class="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-center">Role Aplikasi</span>
-                            <span class="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2 text-center text-amber-900">Sistem Kehadiran</span>
+                        <h3 id="attendance-disabled-heading" class="text-base font-extrabold leading-snug text-slate-900 dark:text-slate-100">Akun ini tidak diwajibkan mengikuti sistem kehadiran.</h3>
+                        <p class="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-400">Akun login dan akses aplikasi Anda tetap aktif sesuai role. Status ini hanya menonaktifkan kewajiban jadwal, absensi, izin, dan lembur.</p>
+                        <div class="mt-4 grid grid-cols-1 gap-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 sm:grid-cols-3" aria-label="Konsep akun yang saling terpisah">
+                            <span class="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-2.5 py-2 text-center text-slate-700 dark:text-slate-300">Status Karyawan</span>
+                            <span class="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-2.5 py-2 text-center text-slate-700 dark:text-slate-300">Role Aplikasi</span>
+                            <span class="rounded-lg border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/60 px-2.5 py-2 text-center text-amber-900 dark:text-amber-200">Sistem Kehadiran</span>
                         </div>
                     </div>
                 </div>
@@ -89,33 +89,33 @@
     @else
     <!-- Quick Menu Shortcuts -->
     <div class="grid grid-cols-3 gap-2.5">
-        <a href="{{ route('employee.leave-requests.index') }}" class="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs hover:border-indigo-300 transition-all flex flex-col items-center text-center gap-1.5 group">
-            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold group-hover:scale-105 transition-transform">
+        <a href="{{ route('employee.leave-requests.index') }}" class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-indigo-300 dark:hover:border-indigo-500 transition-all flex flex-col items-center text-center gap-1.5 group">
+            <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold group-hover:scale-105 transition-transform">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             </div>
             <div>
-                <h4 class="text-xs font-extrabold text-slate-900 leading-tight">Izin & Cuti</h4>
-                <p class="text-[9px] text-slate-500 font-semibold">Pengajuan</p>
+                <h4 class="text-xs font-extrabold text-slate-900 dark:text-slate-100 leading-tight">Izin & Cuti</h4>
+                <p class="text-[9px] text-slate-500 dark:text-slate-400 font-semibold">Pengajuan</p>
             </div>
         </a>
 
-        <a href="{{ route('employee.overtime-requests.index') }}" class="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs hover:border-amber-300 transition-all flex flex-col items-center text-center gap-1.5 group">
-            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold group-hover:scale-105 transition-transform">
+        <a href="{{ route('employee.overtime-requests.index') }}" class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-amber-300 dark:hover:border-amber-500 transition-all flex flex-col items-center text-center gap-1.5 group">
+            <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold group-hover:scale-105 transition-transform">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
             <div>
-                <h4 class="text-xs font-extrabold text-slate-900 leading-tight">Lembur</h4>
-                <p class="text-[9px] text-slate-500 font-semibold">Pengajuan</p>
+                <h4 class="text-xs font-extrabold text-slate-900 dark:text-slate-100 leading-tight">Lembur</h4>
+                <p class="text-[9px] text-slate-500 dark:text-slate-400 font-semibold">Pengajuan</p>
             </div>
         </a>
 
-        <a href="{{ route('employee.shift-swaps.index') }}" class="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs hover:border-rose-300 transition-all flex flex-col items-center text-center gap-1.5 group">
-            <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold group-hover:scale-105 transition-transform">
+        <a href="{{ route('employee.shift-swaps.index') }}" class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-rose-300 dark:hover:border-rose-500 transition-all flex flex-col items-center text-center gap-1.5 group">
+            <div class="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold group-hover:scale-105 transition-transform">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
             </div>
             <div>
-                <h4 class="text-xs font-extrabold text-slate-900 leading-tight">Tukar Jadwal</h4>
-                <p class="text-[9px] text-slate-500 font-semibold">Shift Swap</p>
+                <h4 class="text-xs font-extrabold text-slate-900 dark:text-slate-100 leading-tight">Tukar Jadwal</h4>
+                <p class="text-[9px] text-slate-500 dark:text-slate-400 font-semibold">Shift Swap</p>
             </div>
         </a>
     </div>
@@ -127,119 +127,119 @@
         $displayShift = $effectiveShift ?: $activeShift;
         $isCarryoverShift = ! $effectiveShift && $activeShift;
     @endphp
-    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-3">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
         <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Jadwal Efektif Hari Ini</span>
+            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Jadwal Efektif Hari Ini</span>
             @if($isCarryoverShift)
-                <span class="rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-1 text-[9px] font-black text-indigo-800">SHIFT AKTIF · LINTAS HARI</span>
+                <span class="rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-1 text-[9px] font-black text-indigo-800 dark:text-indigo-300">SHIFT AKTIF · LINTAS HARI</span>
             @elseif($todayEffective)
                 @php($effectiveSource = $todayEffective['source'])
-                <span class="rounded-lg border px-2 py-1 text-[9px] font-black {{ $effectiveSource === 'employee_override' ? 'border-indigo-200 bg-indigo-50 text-indigo-800' : (in_array($effectiveSource, ['public_holiday', 'company_holiday'], true) ? 'border-amber-200 bg-amber-50 text-amber-900' : ($effectiveSource === 'special_working_day' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-slate-200 bg-slate-50 text-slate-600')) }}">{{ $todayEffective['label'] }}</span>
+                <span class="rounded-lg border px-2 py-1 text-[9px] font-black {{ $effectiveSource === 'employee_override' ? 'border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300' : (in_array($effectiveSource, ['public_holiday', 'company_holiday'], true) ? 'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300' : ($effectiveSource === 'special_working_day' ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300')) }}">{{ $todayEffective['label'] }}</span>
             @endif
         </div>
 
         @if($displayShift)
-                <div class="{{ $isCarryoverShift || $todayEffective['source'] === 'employee_override' ? 'bg-indigo-50/70 border-indigo-200/80' : ($todayEffective['source'] === 'special_working_day' ? 'bg-emerald-50/70 border-emerald-200/80' : 'bg-rose-50/70 border-rose-200/80') }} border rounded-xl p-4 space-y-2">
+                <div class="{{ $isCarryoverShift || $todayEffective['source'] === 'employee_override' ? 'bg-indigo-50/70 dark:bg-indigo-950/30 border-indigo-200/80 dark:border-indigo-800/60' : ($todayEffective['source'] === 'special_working_day' ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-200/80 dark:border-emerald-800/60' : 'bg-rose-50/70 dark:bg-rose-950/20 border-rose-200/80 dark:border-rose-800/50') }} border rounded-xl p-4 space-y-2">
                     <div class="flex items-center justify-between">
-                        <div><span class="mb-1 inline-block rounded-md border border-current/20 bg-white/60 px-2 py-0.5 font-mono text-[10px] font-black text-rose-800">{{ $displayShift->code }}</span><h4 class="text-base font-extrabold text-slate-900">{{ $displayShift->name }}</h4></div>
+                        <div><span class="mb-1 inline-block rounded-md border border-current/20 bg-white/60 dark:bg-slate-900/60 px-2 py-0.5 font-mono text-[10px] font-black text-rose-800 dark:text-rose-300">{{ $displayShift->code }}</span><h4 class="text-base font-extrabold text-slate-900 dark:text-slate-100">{{ $displayShift->name }}</h4></div>
                         @if($displayShift->crosses_midnight)
-                            <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md">
+                            <span class="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 px-2 py-0.5 rounded-md">
                                 Lintas Tengah Malam
                             </span>
                         @endif
                     </div>
 
-                    <div class="flex items-center gap-2 text-xs font-bold text-slate-700 font-mono">
-                        <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <div class="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 font-mono">
+                        <svg class="w-4 h-4 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         <span>{{ substr($displayShift->start_time, 0, 5) }} — {{ substr($displayShift->end_time, 0, 5) }} WIB</span>
-                        <span class="text-[11px] text-slate-500 font-normal">({{ $displayShift->formatted_work_hours }})</span>
+                        <span class="text-[11px] text-slate-500 dark:text-slate-400 font-normal">({{ $displayShift->formatted_work_hours }})</span>
                     </div>
                     @if($isCarryoverShift)
-                        <p class="text-xs text-indigo-700 border-t border-indigo-200/60 pt-2 mt-1">Shift ini dimulai pada work date sebelumnya dan tetap aktif sampai waktu pulang.</p>
+                        <p class="text-xs text-indigo-700 dark:text-indigo-300 border-t border-indigo-200/60 dark:border-indigo-800/60 pt-2 mt-1">Shift ini dimulai pada work date sebelumnya dan tetap aktif sampai waktu pulang.</p>
                     @elseif($todayEffective['reason'])
-                        <p class="text-xs text-slate-600 italic border-t border-rose-200/60 pt-2 mt-1">
+                        <p class="text-xs text-slate-600 dark:text-slate-400 italic border-t border-rose-200/60 dark:border-rose-800/60 pt-2 mt-1">
                             "{{ $todayEffective['reason'] }}"
                         </p>
                     @endif
                 </div>
         @elseif($todayEffective && in_array($todayEffective['source'], ['public_holiday', 'company_holiday'], true))
-                <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center space-y-1">
-                    <p class="text-xs font-black text-amber-900">LIBUR · {{ $todayEffective['holiday_name'] }}</p>
-                    <p class="text-[11px] text-amber-800">Tidak ada kewajiban check-in reguler hari ini.</p>
+                <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 rounded-xl p-4 text-center space-y-1">
+                    <p class="text-xs font-black text-amber-900 dark:text-amber-200">LIBUR · {{ $todayEffective['holiday_name'] }}</p>
+                    <p class="text-[11px] text-amber-800 dark:text-amber-300">Tidak ada kewajiban check-in reguler hari ini.</p>
                 </div>
         @elseif($todayEffective && $todayEffective['source'] === 'employee_override')
-                <div class="bg-violet-50 border border-violet-200 rounded-xl p-4 text-center space-y-1"><p class="text-xs font-black text-violet-900">LIBUR KHUSUS</p><p class="text-[11px] text-violet-800">Jadwal Anda diubah menjadi libur oleh admin.</p></div>
+                <div class="bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-800/60 rounded-xl p-4 text-center space-y-1"><p class="text-xs font-black text-violet-900 dark:text-violet-200">LIBUR KHUSUS</p><p class="text-[11px] text-violet-800 dark:text-violet-300">Jadwal Anda diubah menjadi libur oleh admin.</p></div>
         @elseif($todayEffective && $todayEffective['source'] === 'special_working_day')
-                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center space-y-1"><p class="text-xs font-black text-emerald-900">Hari Kerja Khusus</p><p class="text-[11px] text-emerald-800">Shift belum ditetapkan. Hubungi admin sebelum melakukan presensi.</p></div>
+                <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-xl p-4 text-center space-y-1"><p class="text-xs font-black text-emerald-900 dark:text-emerald-200">Hari Kerja Khusus</p><p class="text-[11px] text-emerald-800 dark:text-emerald-300">Shift belum ditetapkan. Hubungi admin sebelum melakukan presensi.</p></div>
         @elseif($todayEffective && $todayEffective['source'] === 'regular_schedule')
-                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center space-y-1"><p class="text-xs font-bold text-slate-800">Jadwal Libur Pekanan (OFF)</p><p class="text-[11px] text-slate-500">Tidak ada kewajiban check-in hari ini.</p></div>
+                <div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-center space-y-1"><p class="text-xs font-bold text-slate-800 dark:text-slate-200">Jadwal Libur Pekanan (OFF)</p><p class="text-[11px] text-slate-500 dark:text-slate-400">Tidak ada kewajiban check-in hari ini.</p></div>
         @else
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
-                <svg class="w-8 h-8 text-slate-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                <p class="text-xs font-semibold text-slate-700">Jadwal Kerja Belum Ditetapkan</p>
-                <p class="text-[11px] text-slate-500 mt-0.5">Owner/Admin belum mengatur jadwal kerja Anda untuk hari ini.</p>
+            <div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-center">
+                <svg class="w-8 h-8 text-slate-400 dark:text-slate-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">Jadwal Kerja Belum Ditetapkan</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Owner/Admin belum mengatur jadwal kerja Anda untuk hari ini.</p>
             </div>
         @endif
     </div>
 
     <!-- Attendance Summary / Record Card if Already Recorded -->
     @if($todayAttendance)
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-3">
-            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Status Presensi Hari Ini</span>
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Status Presensi Hari Ini</span>
             
             <div class="space-y-3">
                 @if($todayAttendance->is_manually_adjusted)
-                    <div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[11px] font-bold text-amber-800">
+                    <div class="rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/40 p-3 text-[11px] font-bold text-amber-800 dark:text-amber-200">
                         Dikoreksi Admin @if($todayAttendance->corrected_at) · Terakhir {{ $todayAttendance->corrected_at->format('d M Y H:i') }} @endif
                     </div>
                 @endif
                 <!-- Check-in Status Box -->
-                <div class="p-3.5 bg-emerald-50/80 border border-emerald-200 rounded-xl flex items-center gap-3">
+                <div class="p-3.5 bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-xl flex items-center gap-3">
                     @if($todayAttendance->check_in_selfie_path)
-                        <img src="{{ route('attendance.selfie', ['record' => $todayAttendance->id, 'type' => 'check_in']) }}" alt="Selfie Masuk" class="w-14 h-14 rounded-lg object-cover border border-emerald-300 shadow-2xs shrink-0 bg-slate-200">
+                        <img src="{{ route('attendance.selfie', ['record' => $todayAttendance->id, 'type' => 'check_in']) }}" alt="Selfie Masuk" class="w-14 h-14 rounded-lg object-cover border border-emerald-300 dark:border-emerald-700 shadow-2xs shrink-0 bg-slate-200 dark:bg-slate-800">
                     @else
-                        <div class="w-14 h-14 rounded-lg bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-700 font-bold text-xs shrink-0">
+                        <div class="w-14 h-14 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700 flex items-center justify-center text-emerald-700 dark:text-emerald-300 font-bold text-xs shrink-0">
                             Masuk
                         </div>
                     @endif
                     
                     <div class="flex-1">
                         <div class="flex items-center justify-between">
-                            <span class="text-xs font-extrabold text-emerald-900">✓ Absen Masuk Berhasil</span>
-                            <span class="text-xs font-mono font-bold text-emerald-800">{{ $todayAttendance->check_in_at?->format('H:i') }} WIB</span>
+                            <span class="text-xs font-extrabold text-emerald-900 dark:text-emerald-200">✓ Absen Masuk Berhasil</span>
+                            <span class="text-xs font-mono font-bold text-emerald-800 dark:text-emerald-300">{{ $todayAttendance->check_in_at?->format('H:i') }} WIB</span>
                         </div>
-                        <p class="text-[11px] text-emerald-700 mt-0.5 font-medium">
+                        <p class="text-[11px] text-emerald-700 dark:text-emerald-400 mt-0.5 font-medium">
                             Status:
                             @if($todayAttendance->status === 'late')
-                                <span class="text-rose-700 font-extrabold">Terlambat ({{ $todayAttendance->late_minutes }}m)</span>
+                                <span class="text-rose-700 dark:text-rose-400 font-extrabold">Terlambat ({{ $todayAttendance->late_minutes }}m)</span>
                             @else
-                                <span class="text-emerald-800 font-extrabold">Tepat Waktu</span>
+                                <span class="text-emerald-800 dark:text-emerald-300 font-extrabold">Tepat Waktu</span>
                             @endif
                         </p>
-                        <p class="text-[10px] text-emerald-600 mt-0.5">📍 {{ $todayAttendance->location?->name ?? 'SELON BEAUTY' }} (±{{ round($todayAttendance->check_in_accuracy_meters) }}m)</p>
+                        <p class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5">📍 {{ $todayAttendance->location?->name ?? 'SELON BEAUTY' }} (±{{ round($todayAttendance->check_in_accuracy_meters) }}m)</p>
                     </div>
                 </div>
 
                 <!-- Check-out Status Box if completed -->
                 @if($todayAttendance->check_out_at)
-                    <div class="p-3.5 bg-indigo-50/80 border border-indigo-200 rounded-xl flex items-center gap-3">
+                    <div class="p-3.5 bg-indigo-50/80 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800/60 rounded-xl flex items-center gap-3">
                         @if($todayAttendance->check_out_selfie_path)
-                            <img src="{{ route('attendance.selfie', ['record' => $todayAttendance->id, 'type' => 'check_out']) }}" alt="Selfie Pulang" class="w-14 h-14 rounded-lg object-cover border border-indigo-300 shadow-2xs shrink-0 bg-slate-200">
+                            <img src="{{ route('attendance.selfie', ['record' => $todayAttendance->id, 'type' => 'check_out']) }}" alt="Selfie Pulang" class="w-14 h-14 rounded-lg object-cover border border-indigo-300 dark:border-indigo-700 shadow-2xs shrink-0 bg-slate-200 dark:bg-slate-800">
                         @else
-                            <div class="w-14 h-14 rounded-lg bg-indigo-100 border border-indigo-300 flex items-center justify-center text-indigo-700 font-bold text-xs shrink-0">
+                            <div class="w-14 h-14 rounded-lg bg-indigo-100 dark:bg-indigo-950/80 border border-indigo-300 dark:border-indigo-700 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold text-xs shrink-0">
                                 Pulang
                             </div>
                         @endif
 
                         <div class="flex-1">
                             <div class="flex items-center justify-between">
-                                <span class="text-xs font-extrabold text-indigo-900">✓ Absen Pulang Berhasil</span>
-                                <span class="text-xs font-mono font-bold text-indigo-800">{{ $todayAttendance->check_out_at?->format('H:i') }} WIB</span>
+                                <span class="text-xs font-extrabold text-indigo-900 dark:text-indigo-200">✓ Absen Pulang Berhasil</span>
+                                <span class="text-xs font-mono font-bold text-indigo-800 dark:text-indigo-300">{{ $todayAttendance->check_out_at?->format('H:i') }} WIB</span>
                             </div>
-                            <p class="text-[11px] text-indigo-700 mt-0.5 font-medium">
-                                Worked Time: <span class="font-bold text-slate-900 font-mono">{{ floor($todayAttendance->worked_minutes / 60) }}j {{ $todayAttendance->worked_minutes % 60 }}m</span>
+                            <p class="text-[11px] text-indigo-700 dark:text-indigo-400 mt-0.5 font-medium">
+                                Worked Time: <span class="font-bold text-slate-900 dark:text-slate-100 font-mono">{{ floor($todayAttendance->worked_minutes / 60) }}j {{ $todayAttendance->worked_minutes % 60 }}m</span>
                             </p>
-                            <p class="text-[10px] text-indigo-600 mt-0.5">📍 {{ $todayAttendance->location?->name ?? 'SELON BEAUTY' }} (±{{ round($todayAttendance->check_out_accuracy_meters) }}m)</p>
+                            <p class="text-[10px] text-indigo-600 dark:text-indigo-400 mt-0.5">📍 {{ $todayAttendance->location?->name ?? 'SELON BEAUTY' }} (±{{ round($todayAttendance->check_out_accuracy_meters) }}m)</p>
                         </div>
                     </div>
                 @endif
@@ -247,38 +247,38 @@
         </div>
     @elseif($todayLeave)
         <!-- Approved Leave Banner Card -->
-        <div class="bg-indigo-50 border border-indigo-200 rounded-2xl p-5 shadow-xs text-center space-y-2">
-            <div class="w-12 h-12 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center mx-auto">
+        <div class="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 rounded-2xl p-5 shadow-xs text-center space-y-2">
+            <div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 flex items-center justify-center mx-auto">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
             <div>
-                <span class="text-[10px] font-extrabold text-indigo-700 uppercase tracking-wider block">Status Presensi Hari Ini</span>
-                <h3 class="text-xl font-black text-indigo-900 mt-0.5">{{ strtoupper($todayLeave->type_label) }}</h3>
-                <p class="text-xs text-indigo-800 font-medium max-w-xs mx-auto mt-1">
+                <span class="text-[10px] font-extrabold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider block">Status Presensi Hari Ini</span>
+                <h3 class="text-xl font-black text-indigo-900 dark:text-indigo-100 mt-0.5">{{ strtoupper($todayLeave->type_label) }}</h3>
+                <p class="text-xs text-indigo-800 dark:text-indigo-200 font-medium max-w-xs mx-auto mt-1">
                     Anda sedang dalam masa <strong>{{ $todayLeave->type_label }}</strong> yang telah disetujui untuk hari ini ({{ $todayLeave->start_date->format('d M Y') }} - {{ $todayLeave->end_date->format('d M Y') }}).
                 </p>
-                <p class="text-[11px] text-indigo-600 italic mt-2">Tombol Absen Masuk tidak aktif pada hari izin/cuti ini.</p>
+                <p class="text-[11px] text-indigo-600 dark:text-indigo-400 italic mt-2">Tombol Absen Masuk tidak aktif pada hari izin/cuti ini.</p>
             </div>
         </div>
     @endif
 
     <!-- Attendance Form Section (GPS & Selfie) -->
     @if($todayOvertime)
-        <div class="bg-indigo-50 rounded-2xl p-5 border border-indigo-200 shadow-xs space-y-3">
+        <div class="bg-indigo-50 dark:bg-indigo-950/40 rounded-2xl p-5 border border-indigo-200 dark:border-indigo-800/60 shadow-xs space-y-3">
             <div class="flex items-center justify-between gap-3">
                 <div>
-                    <span class="text-[10px] font-black text-indigo-700 uppercase tracking-widest">Lembur Hari Ini</span>
-                    <p class="text-sm font-extrabold text-slate-900 mt-1">{{ !$todayOvertime->session ? 'Disetujui · Belum Dimulai' : ($todayOvertime->session->isActive() ? 'Sedang Lembur' : ($todayOvertime->session->isCancelled() ? 'Dibatalkan Admin' : 'Selesai')) }}</p>
+                    <span class="text-[10px] font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-widest">Lembur Hari Ini</span>
+                    <p class="text-sm font-extrabold text-slate-900 dark:text-slate-100 mt-1">{{ !$todayOvertime->session ? 'Disetujui · Belum Dimulai' : ($todayOvertime->session->isActive() ? 'Sedang Lembur' : ($todayOvertime->session->isCancelled() ? 'Dibatalkan Admin' : 'Selesai')) }}</p>
                 </div>
-                <span class="rounded-full bg-white px-3 py-1 text-[11px] font-extrabold text-indigo-700 border border-indigo-200">
+                <span class="rounded-full bg-white dark:bg-slate-900 px-3 py-1 text-[11px] font-extrabold text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
                     {{ \App\Models\OvertimeSession::formatMinutes($todayOvertime->approved_minutes) }} approved
                 </span>
             </div>
             @if($todayOvertime->session)
                 @if($todayOvertime->session->corrected_at)
-                    <p class="rounded-lg bg-amber-100 px-2 py-1 text-[10px] font-bold text-amber-800">Dikoreksi Admin · {{ $todayOvertime->session->corrected_at->format('d M Y H:i') }}</p>
+                    <p class="rounded-lg bg-amber-100 dark:bg-amber-950/80 px-2 py-1 text-[10px] font-bold text-amber-800 dark:text-amber-200">Dikoreksi Admin · {{ $todayOvertime->session->corrected_at->format('d M Y H:i') }}</p>
                 @endif
-                <div class="text-xs text-slate-700">
+                <div class="text-xs text-slate-700 dark:text-slate-300">
                     Mulai <strong>{{ $todayOvertime->session->check_in_at?->format('H:i') }}</strong>
                     @if($todayOvertime->session->isCancelled())
                         · Credited <strong>0m</strong>
@@ -293,84 +293,84 @@
             @endif
             @php($overtimeCanStartWithoutAttendance = $todayEffective && ! $todayEffective['is_working_day'])
             @if(((($overtimeCanStartWithoutAttendance || $todayAttendance?->check_out_at) && !$todayOvertime->session && $todayOvertime->approved_minutes > 0)) || $todayOvertime->session?->isActive())
-                <a href="{{ route('employee.overtime-requests.index', ['highlight' => $todayOvertime->id]) }}#overtime-{{ $todayOvertime->id }}" class="flex min-h-[44px] w-full items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-extrabold text-white">
+                <a href="{{ route('employee.overtime-requests.index', ['highlight' => $todayOvertime->id]) }}#overtime-{{ $todayOvertime->id }}" class="flex min-h-[44px] w-full items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-xs font-extrabold text-white">
                     {{ !$todayOvertime->session ? 'Mulai Lembur' : 'Selesai Lembur' }}
                 </a>
             @elseif(!$todayOvertime->session && ! $overtimeCanStartWithoutAttendance)
-                <p class="text-[11px] font-semibold text-indigo-800">Selesaikan absensi kerja reguler terlebih dahulu.</p>
+                <p class="text-[11px] font-semibold text-indigo-800 dark:text-indigo-300">Selesaikan absensi kerja reguler terlebih dahulu.</p>
             @endif
         </div>
     @endif
 
     @if($todaySchedule && $todaySchedule->schedule_type === 'work' && (!$todayAttendance || !$todayAttendance->check_out_at) && !$todayLeave)
         <!-- GPS Geofence Section -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">1. Lokasi GPS</span>
-                <span id="gps-badge-status" class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
+                <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">1. Lokasi GPS</span>
+                <span id="gps-badge-status" class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full">
                     <span class="w-2 h-2 rounded-full bg-slate-400 animate-pulse"></span> Initializing...
                 </span>
             </div>
 
             <!-- Location Status Box -->
-            <div id="gps-info-box" class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+            <div id="gps-info-box" class="p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl space-y-3">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h5 class="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
-                            <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        <h5 class="text-xs font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                             <span>SELON BEAUTY</span>
                         </h5>
-                        <p id="gps-status-text" class="text-[11px] text-slate-600 mt-0.5 font-medium">Mendeteksi lokasi perangkat...</p>
+                        <p id="gps-status-text" class="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 font-medium">Mendeteksi lokasi perangkat...</p>
                     </div>
 
-                    <button type="button" onclick="detectGPSLocation()" class="px-3 py-1.5 border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 font-bold text-[11px] rounded-lg shadow-2xs transition-colors flex items-center gap-1 cursor-pointer">
-                        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    <button type="button" onclick="detectGPSLocation()" class="px-3 py-1.5 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 font-bold text-[11px] rounded-lg shadow-2xs transition-colors flex items-center gap-1 cursor-pointer">
+                        <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                         <span>Perbarui Lokasi</span>
                     </button>
                 </div>
 
                 <!-- GPS Detail Metrics Grid -->
-                <div id="gps-metrics-grid" class="hidden grid grid-cols-2 gap-2 border-t border-slate-200/80 pt-3 text-xs">
-                    <div class="bg-white p-2.5 rounded-lg border border-slate-200/70">
-                        <span class="text-[10px] text-slate-500 font-medium block">Jarak ke Toko</span>
-                        <span id="gps-metric-distance" class="font-extrabold font-mono text-slate-900 text-sm">-- m</span>
+                <div id="gps-metrics-grid" class="hidden grid grid-cols-2 gap-2 border-t border-slate-200/80 dark:border-slate-700/80 pt-3 text-xs">
+                    <div class="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200/70 dark:border-slate-800">
+                        <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">Jarak ke Toko</span>
+                        <span id="gps-metric-distance" class="font-extrabold font-mono text-slate-900 dark:text-slate-100 text-sm">-- m</span>
                     </div>
-                    <div class="bg-white p-2.5 rounded-lg border border-slate-200/70">
-                        <span class="text-[10px] text-slate-500 font-medium block">Akurasi GPS</span>
-                        <span id="gps-metric-accuracy" class="font-extrabold font-mono text-slate-900 text-sm">±-- m</span>
+                    <div class="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200/70 dark:border-slate-800">
+                        <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">Akurasi GPS</span>
+                        <span id="gps-metric-accuracy" class="font-extrabold font-mono text-slate-900 dark:text-slate-100 text-sm">±-- m</span>
                     </div>
                 </div>
 
                 <!-- GPS PWA / Permission / Accuracy Guidance Box -->
-                <div id="gps-guidance-box" class="hidden text-xs p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 space-y-1 mt-3">
-                    <p id="gps-guidance-title" class="font-extrabold flex items-center gap-1.5 text-amber-900">
-                        <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <div id="gps-guidance-box" class="hidden text-xs p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 space-y-1 mt-3">
+                    <p id="gps-guidance-title" class="font-extrabold flex items-center gap-1.5 text-amber-900 dark:text-amber-200">
+                        <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                         <span>Panduan Akses Lokasi</span>
                     </p>
-                    <p id="gps-guidance-desc" class="text-[11px] font-medium text-amber-800 leading-relaxed"></p>
+                    <p id="gps-guidance-desc" class="text-[11px] font-medium text-amber-800 dark:text-amber-300 leading-relaxed"></p>
                 </div>
             </div>
         </div>
 
         @if($requireSelfie)
         <!-- Selfie Camera Section -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">2. Foto Selfie Bukti</span>
-                <span id="camera-badge-status" class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
+                <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">2. Foto Selfie Bukti</span>
+                <span id="camera-badge-status" class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full">
                     <span class="w-2 h-2 rounded-full bg-slate-400"></span> Kamera Belum Dibuka
                 </span>
             </div>
 
             <!-- Camera Viewport / Preview Box -->
-            <div class="relative w-full overflow-hidden rounded-xl bg-slate-900 border border-slate-200">
+            <div class="relative w-full overflow-hidden rounded-xl bg-slate-900 border border-slate-200 dark:border-slate-800">
                 <!-- Unopened Camera Placeholder -->
-                <div id="camera-placeholder" class="w-full h-52 sm:h-60 rounded-xl bg-slate-100 border-2 border-dashed border-slate-300 flex flex-col items-center justify-center p-4 text-center">
-                    <div class="w-12 h-12 rounded-full bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center mb-2">
+                <div id="camera-placeholder" class="w-full h-52 sm:h-60 rounded-xl bg-slate-100 dark:bg-slate-800/60 border-2 border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center p-4 text-center">
+                    <div class="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-2">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     </div>
-                    <p class="text-xs font-extrabold text-slate-800">Kamera Belum Dibuka</p>
-                    <p class="text-[11px] text-slate-500 mt-1 max-w-xs">Klik tombol "Buka Kamera" di bawah untuk mengambil foto selfie presensi.</p>
+                    <p class="text-xs font-extrabold text-slate-800 dark:text-slate-200">Kamera Belum Dibuka</p>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-xs">Klik tombol "Buka Kamera" di bawah untuk mengambil foto selfie presensi.</p>
                 </div>
 
                 <!-- Video Element -->
@@ -384,21 +384,21 @@
             </div>
 
             <!-- Camera Status Text -->
-            <p id="camera-status-text" class="text-xs text-slate-600 font-medium text-center">
+            <p id="camera-status-text" class="text-xs text-slate-600 dark:text-slate-400 font-medium text-center">
                 Posisikan wajah Anda dengan jelas di depan kamera.
             </p>
 
             <!-- Camera Action Buttons -->
             <div class="space-y-2">
                 <!-- Initial Action: Open Camera -->
-                <button type="button" id="btn-open-camera" onclick="openCamera()" class="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer">
+                <button type="button" id="btn-open-camera" onclick="openCamera()" class="w-full py-3 px-4 bg-slate-900 dark:bg-rose-600 hover:bg-slate-800 dark:hover:bg-rose-700 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     <span>Buka Kamera</span>
                 </button>
 
                 <!-- Active Camera Actions: Capture Photo & Close -->
                 <div id="camera-actions-active" class="hidden grid grid-cols-2 gap-2">
-                    <button type="button" id="btn-close-camera" onclick="closeCamera()" class="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold rounded-xl text-xs transition-colors cursor-pointer">
+                    <button type="button" id="btn-close-camera" onclick="closeCamera()" class="py-2.5 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-extrabold rounded-xl text-xs transition-colors cursor-pointer">
                         Batal
                     </button>
                     <button type="button" id="btn-capture-photo" onclick="capturePhoto()" class="py-2.5 px-3 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
@@ -409,8 +409,8 @@
 
                 <!-- Captured Actions: Retake & Confirm -->
                 <div id="camera-actions-captured" class="hidden grid grid-cols-2 gap-2">
-                    <button type="button" onclick="retakePhoto()" class="py-2.5 px-3 border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 font-extrabold rounded-xl text-xs transition-colors flex items-center justify-center gap-1 cursor-pointer">
-                        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    <button type="button" onclick="retakePhoto()" class="py-2.5 px-3 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 font-extrabold rounded-xl text-xs transition-colors flex items-center justify-center gap-1 cursor-pointer">
+                        <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                         <span>Foto Ulang</span>
                     </button>
                     <button type="button" id="btn-use-photo" onclick="confirmPhoto()" class="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs transition-colors flex items-center justify-center gap-1 cursor-pointer">
@@ -423,7 +423,7 @@
         @endif
 
         <!-- Submit Attendance Form Container -->
-        <div id="absen-card" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-3">
+        <div id="absen-card" class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
             @if(!$todayAttendance)
                 <!-- Check-In Form -->
                 <form id="form-check-in" action="{{ route('employee.attendance.check-in') }}" method="POST" enctype="multipart/form-data">
@@ -457,8 +457,8 @@
             @endif
         </div>
     @elseif($todayEffective && ! $todayEffective['is_working_day'])
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 text-center">
-            <button disabled class="w-full py-3.5 px-4 bg-slate-200 text-slate-500 font-bold rounded-xl text-sm flex items-center justify-center gap-2 cursor-not-allowed">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 text-center">
+            <button disabled class="w-full py-3.5 px-4 bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold rounded-xl text-sm flex items-center justify-center gap-2 cursor-not-allowed">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <span>Presensi Nonaktif (Bukan Shift Kerja)</span>
             </button>
@@ -508,7 +508,7 @@ function updateCameraUI(state, message = '') {
 
     if (state === 'unopened') {
         if (badge) {
-            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full";
+            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full";
             badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-400"></span> Kamera Belum Dibuka';
         }
         if (placeholder) placeholder.classList.remove('hidden');
@@ -519,7 +519,7 @@ function updateCameraUI(state, message = '') {
         if (actionsCaptured) actionsCaptured.classList.add('hidden');
     } else if (state === 'requesting') {
         if (badge) {
-            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full";
+            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 px-2.5 py-1 rounded-full";
             badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Meminta Izin Kamera...';
         }
         if (placeholder) placeholder.classList.remove('hidden');
@@ -530,7 +530,7 @@ function updateCameraUI(state, message = '') {
         if (actionsCaptured) actionsCaptured.classList.add('hidden');
     } else if (state === 'active') {
         if (badge) {
-            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full";
+            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 px-2.5 py-1 rounded-full";
             badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Kamera Aktif';
         }
         if (placeholder) placeholder.classList.add('hidden');
@@ -541,7 +541,7 @@ function updateCameraUI(state, message = '') {
         if (actionsCaptured) actionsCaptured.classList.add('hidden');
     } else if (state === 'captured') {
         if (badge) {
-            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-1 rounded-full";
+            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60 px-2.5 py-1 rounded-full";
             badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-indigo-500"></span> Foto Diambil';
         }
         if (placeholder) placeholder.classList.add('hidden');
@@ -552,7 +552,7 @@ function updateCameraUI(state, message = '') {
         if (actionsCaptured) actionsCaptured.classList.remove('hidden');
     } else if (state === 'confirmed') {
         if (badge) {
-            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full";
+            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 px-2.5 py-1 rounded-full";
             badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Selfie Dikonfirmasi';
         }
         if (placeholder) placeholder.classList.add('hidden');
@@ -564,7 +564,7 @@ function updateCameraUI(state, message = '') {
     } else {
         // Error state
         if (badge) {
-            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-full";
+            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/60 px-2.5 py-1 rounded-full";
             badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span> Akses Kamera Gagal';
         }
         if (placeholder) placeholder.classList.remove('hidden');
@@ -733,7 +733,7 @@ function updateGpsUIState(state, message, distanceMeters = null, accuracyMeters 
     const showGuidance = (title, desc) => {
         if (guidanceBox) {
             if (guidanceTitle) {
-                guidanceTitle.innerHTML = `<svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> <span>${title}</span>`;
+                guidanceTitle.innerHTML = `<svg class="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> <span>${title}</span>`;
             }
             if (guidanceDesc) guidanceDesc.innerText = desc;
             guidanceBox.classList.remove('hidden');
@@ -743,7 +743,7 @@ function updateGpsUIState(state, message, distanceMeters = null, accuracyMeters 
     if (state === 'requesting') {
         isGpsValid = false;
         if (badge) {
-            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full";
+            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full";
             badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-400 animate-pulse"></span> MEMERIKSA...';
         }
         if (metricsGrid) metricsGrid.classList.add('hidden');
@@ -751,7 +751,7 @@ function updateGpsUIState(state, message, distanceMeters = null, accuracyMeters 
     } else if (state === 'ready') {
         isGpsValid = true;
         if (badge) {
-            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full";
+            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 px-2.5 py-1 rounded-full";
             badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> DALAM AREA';
         }
         if (metricsGrid) metricsGrid.classList.remove('hidden');
@@ -761,7 +761,7 @@ function updateGpsUIState(state, message, distanceMeters = null, accuracyMeters 
     } else if (state === 'outside_radius') {
         isGpsValid = false;
         if (badge) {
-            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-full";
+            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/60 px-2.5 py-1 rounded-full";
             badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span> DI LUAR AREA';
         }
         if (metricsGrid) metricsGrid.classList.remove('hidden');
@@ -771,7 +771,7 @@ function updateGpsUIState(state, message, distanceMeters = null, accuracyMeters 
     } else if (state === 'low_accuracy') {
         isGpsValid = false;
         if (badge) {
-            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full";
+            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 px-2.5 py-1 rounded-full";
             badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> AKURASI RENDAH';
         }
         if (metricsGrid) metricsGrid.classList.remove('hidden');
@@ -785,7 +785,7 @@ function updateGpsUIState(state, message, distanceMeters = null, accuracyMeters 
     } else if (state === 'permission_denied') {
         isGpsValid = false;
         if (badge) {
-            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full";
+            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 px-2.5 py-1 rounded-full";
             badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> IZIN LOKASI DIPERLUKAN';
         }
         if (metricsGrid) metricsGrid.classList.add('hidden');
@@ -797,7 +797,7 @@ function updateGpsUIState(state, message, distanceMeters = null, accuracyMeters 
     } else if (state === 'position_unavailable') {
         isGpsValid = false;
         if (badge) {
-            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-full";
+            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/60 px-2.5 py-1 rounded-full";
             badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span> LOKASI TIDAK TERSEDIA';
         }
         if (metricsGrid) metricsGrid.classList.add('hidden');
@@ -806,7 +806,7 @@ function updateGpsUIState(state, message, distanceMeters = null, accuracyMeters 
     } else if (state === 'timeout') {
         isGpsValid = false;
         if (badge) {
-            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full";
+            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 px-2.5 py-1 rounded-full";
             badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> PENCARIAN TIMEOUT';
         }
         if (metricsGrid) metricsGrid.classList.add('hidden');
@@ -815,7 +815,7 @@ function updateGpsUIState(state, message, distanceMeters = null, accuracyMeters 
     } else {
         isGpsValid = false;
         if (badge) {
-            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-full";
+            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/60 px-2.5 py-1 rounded-full";
             badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span> TIDAK VALID';
         }
         if (metricsGrid) metricsGrid.classList.add('hidden');
@@ -912,7 +912,7 @@ document.addEventListener('visibilitychange', function() {
             const badge = document.getElementById('gps-badge-status');
             const statusText = document.getElementById('gps-status-text');
             if (badge) {
-                badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full";
+                badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 px-2.5 py-1 rounded-full";
                 badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> PERLU PERBARUI';
             }
             if (statusText) {
