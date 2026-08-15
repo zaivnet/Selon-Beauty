@@ -207,7 +207,14 @@ class AuthenticationTest extends TestCase
             'is_active' => true,
         ]);
 
+        $ownerEmp = \App\Models\Employee::create([
+            'employee_code' => 'EMP-OWNER-01',
+            'full_name' => 'Owner Test',
+            'status' => 'active',
+        ]);
+
         $owner = User::create([
+            'employee_id' => $ownerEmp->id,
             'name' => 'Owner Test',
             'email' => 'owner2@selonbeauty.com',
             'password' => Hash::make('password123'),

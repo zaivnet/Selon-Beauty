@@ -197,7 +197,7 @@ Route::middleware(['auth', 'role:superadmin,owner,admin', 'prevent.private.cache
 });
 
 // Employee & Owner Protected Routes (/app/*)
-Route::middleware(['auth', 'role:owner,employee', 'prevent.private.cache'])->prefix('app')->name('employee.')->group(function () {
+Route::middleware(['auth', \App\Http\Middleware\EnsureEmployeePortalAccess::class, 'prevent.private.cache'])->prefix('app')->name('employee.')->group(function () {
     Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard');
 
     // Employee Personal Schedule View (Sprint 05)

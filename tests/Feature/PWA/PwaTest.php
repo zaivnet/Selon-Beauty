@@ -97,4 +97,128 @@ class PwaTest extends TestCase
         $response->assertOk();
         $response->assertSee('href="/manifest.webmanifest"', false);
     }
+
+    public function test_owner_without_employee_hitting_app_dashboard_redirects_to_admin_dashboard(): void
+    {
+        $adminOwner = User::create([
+            'name' => 'Owner Admin Only',
+            'email' => 'owneradmin@selonbeauty.com',
+            'password' => Hash::make('password123'),
+            'role' => 'owner',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($adminOwner)->get(route('employee.dashboard'));
+        $response->assertRedirect(route('admin.dashboard'));
+    }
+
+    public function test_owner_without_employee_hitting_app_profile_redirects_to_admin_dashboard(): void
+    {
+        $adminOwner = User::create([
+            'name' => 'Owner Admin Only 2',
+            'email' => 'owneradmin2@selonbeauty.com',
+            'password' => Hash::make('password123'),
+            'role' => 'owner',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($adminOwner)->get(route('employee.profile.index'));
+        $response->assertRedirect(route('admin.dashboard'));
+    }
+
+    public function test_admin_hitting_app_dashboard_redirects_to_admin_dashboard(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin Role',
+            'email' => 'adminrole@selonbeauty.com',
+            'password' => Hash::make('password123'),
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('employee.dashboard'));
+        $response->assertRedirect(route('admin.dashboard'));
+    }
+
+    public function test_superadmin_hitting_app_dashboard_redirects_to_admin_dashboard(): void
+    {
+        $superadmin = User::create([
+            'name' => 'Superadmin Role',
+            'email' => 'superadminrole@selonbeauty.com',
+            'password' => Hash::make('password123'),
+            'role' => 'superadmin',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($superadmin)->get(route('employee.dashboard'));
+        $response->assertRedirect(route('admin.dashboard'));
+    }
+
+    public function test_employee_with_profile_can_access_dashboard_and_profile(): void
+    {
+        $this->actingAs($this->employeeUser)
+            ->get(route('employee.dashboard'))
+            ->assertOk();
+
+        $this->actingAs($this->employeeUser)
+            ->get(route('employee.profile.index'))
+            ->assertOk()
+            ->assertSee('Ayu Pratama');
+    }
+
+    public function test_employee_with_attendance_disabled_still_accesses_employee_dashboard(): void
+    {
+        $this->employee->update(['attendance_enabled' => false]);
+
+        $this->actingAs($this->employeeUser)
+            ->get(route('employee.dashboard'))
+            ->assertOk()
+            ->assertSee('Home');
+    }
+
+    public function test_missing_employee_relation_for_employee_role_does_not_500(): void
+    {
+        $brokenEmployeeUser = User::create([
+            'employee_id' => null,
+            'name' => 'Broken Employee',
+            'email' => 'broken@selonbeauty.com',
+            'password' => Hash::make('password123'),
+            'role' => 'employee',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($brokenEmployeeUser)->get(route('employee.dashboard'));
+        $response->assertOk();
+
+        $responseProfile = $this->actingAs($brokenEmployeeUser)->get(route('employee.profile.index'));
+        $responseProfile->assertRedirect(route('login'));
+    }
+
+    public function test_owner_with_legitimate_employee_profile_can_access_employee_portal(): void
+    {
+        $dualOwnerEmp = Employee::create([
+            'employee_code' => 'SB-OWNER-01',
+            'full_name' => 'Owner Dual Capability',
+            'status' => 'active',
+            'attendance_enabled' => true,
+        ]);
+
+        $dualOwnerUser = User::create([
+            'employee_id' => $dualOwnerEmp->id,
+            'name' => 'Owner Dual Capability',
+            'email' => 'ownerdual@selonbeauty.com',
+            'password' => Hash::make('password123'),
+            'role' => 'owner',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($dualOwnerUser)
+            ->get(route('employee.dashboard'))
+            ->assertOk();
+
+        $this->actingAs($dualOwnerUser)
+            ->get(route('employee.profile.index'))
+            ->assertOk()
+            ->assertSee('Owner Dual Capability');
+    }
 }

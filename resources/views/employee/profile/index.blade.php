@@ -18,15 +18,15 @@
                 </div>
             </div>
 
-            <h2 class="text-base font-black text-slate-900 tracking-tight">{{ $employee->full_name }}</h2>
-            <p class="text-xs font-semibold text-slate-500 font-mono">{{ $employee->employee_code }}</p>
+            <h2 class="text-base font-black text-slate-900 tracking-tight">{{ $employee?->full_name ?? $user->name }}</h2>
+            <p class="text-xs font-semibold text-slate-500 font-mono">{{ $employee?->employee_code ?? '-' }}</p>
 
             <div class="flex items-center justify-center gap-2 mt-2">
                 <span class="px-3 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                    {{ $employee->jobTitle?->name ?? 'Karyawan' }}
+                    {{ $employee?->jobTitle?->name ?? 'Karyawan' }}
                 </span>
                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    {{ $employee->status }}
+                    {{ $employee?->status ?? 'active' }}
                 </span>
             </div>
         </div>
@@ -38,11 +38,11 @@
             </div>
             <div class="flex justify-between items-center py-1">
                 <span class="text-slate-500 font-medium">No. Telepon / WA</span>
-                <span class="font-bold text-slate-800">{{ $employee->phone ?? '-' }}</span>
+                <span class="font-bold text-slate-800">{{ $employee?->phone ?? '-' }}</span>
             </div>
             <div class="flex justify-between items-center py-1">
                 <span class="text-slate-500 font-medium">Bergabung Sejak</span>
-                <span class="font-bold text-slate-800">{{ $employee->created_at ? $employee->created_at->translatedFormat('d M Y') : '-' }}</span>
+                <span class="font-bold text-slate-800">{{ $employee?->created_at ? $employee->created_at->translatedFormat('d M Y') : '-' }}</span>
             </div>
         </div>
     </div>

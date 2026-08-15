@@ -13,10 +13,18 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
-    public function index(): View
+    public function index(): View|RedirectResponse
     {
         $user = Auth::user();
         $employee = $user->employee;
+
+        if (! $employee) {
+            if (in_array($user->role, ['owner', 'admin', 'superadmin'], true)) {
+                return redirect()->route('admin.dashboard');
+            }
+
+            return redirect()->route('login')->with('error', 'Profil karyawan tidak ditemukan. Hubungi administrator.');
+        }
 
         return view('employee.profile.index', [
             'user' => $user,
