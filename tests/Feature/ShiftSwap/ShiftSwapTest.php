@@ -870,4 +870,68 @@ class ShiftSwapTest extends TestCase
             ->assertStatus(200)
             ->assertSee('Permintaan Tukar Jadwal');
     }
+
+    // ==========================================
+    // MODAL & VANILLA JS REGRESSION TESTS (L1 - L10)
+    // ==========================================
+
+    public function test_modal_1_response_modal_hidden_by_default(): void
+    {
+        $swap = $this->swapService->submitRequest($this->reqEmp, [
+            'target_employee_id' => $this->targetEmp->id,
+            'requester_work_date' => $this->futureDate,
+            'reason' => 'Modal test swap',
+        ]);
+
+        $response = $this->actingAs($this->targetUser)
+            ->get(route('employee.shift-swaps.index', ['tab' => 'incoming']));
+
+        $response->assertStatus(200);
+        $content = $response->getContent();
+
+        $this->assertStringContainsString('id="swap-modal-backdrop"', $content);
+        $this->assertStringContainsString('class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs hidden"', $content);
+    }
+
+    public function test_modal_2_triggers_contain_safe_data_attributes(): void
+    {
+        $this->targetEmp->update(['full_name' => "D'ia O'Brian"]);
+
+        $swap = $this->swapService->submitRequest($this->reqEmp, [
+            'target_employee_id' => $this->targetEmp->id,
+            'requester_work_date' => $this->futureDate,
+            'reason' => 'Special name swap test',
+        ]);
+
+        $response = $this->actingAs($this->targetUser)
+            ->get(route('employee.shift-swaps.index', ['tab' => 'incoming']));
+
+        $response->assertStatus(200);
+        $content = $response->getContent();
+
+        $this->assertStringContainsString('data-respond-url="'.route('employee.shift-swaps.respond', $swap).'"', $content);
+        $this->assertStringContainsString('data-action="accept"', $content);
+        $this->assertStringContainsString('data-action="reject"', $content);
+        $this->assertStringContainsString('data-requester-name="Ayu"', $content);
+    }
+
+    public function test_modal_3_no_alpine_directives_remain_on_employee_shift_swap_modal(): void
+    {
+        $swap = $this->swapService->submitRequest($this->reqEmp, [
+            'target_employee_id' => $this->targetEmp->id,
+            'requester_work_date' => $this->futureDate,
+            'reason' => 'No alpine test',
+        ]);
+
+        $response = $this->actingAs($this->targetUser)
+            ->get(route('employee.shift-swaps.index', ['tab' => 'incoming']));
+
+        $response->assertStatus(200);
+        $content = $response->getContent();
+
+        $this->assertStringNotContainsString('x-data="{ respondModal', $content);
+        $this->assertStringNotContainsString('x-show="respondModal"', $content);
+        $this->assertStringNotContainsString('@click.away="respondModal = false"', $content);
+        $this->assertStringNotContainsString(':action="', $content);
+    }
 }

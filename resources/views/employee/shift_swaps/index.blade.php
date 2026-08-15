@@ -3,7 +3,7 @@
 @section('title', 'Tukar Jadwal')
 
 @section('content')
-<div class="space-y-4 md:space-y-5" x-data="{ respondModal: false, swapId: null, actionType: '', targetName: '', reqDate: '' }">
+<div class="space-y-4 md:space-y-5">
     <!-- Navigation Tabs -->
     <div class="flex bg-slate-200/80 p-1 rounded-xl gap-1 text-xs font-bold">
         <a href="{{ route('employee.leave-requests.index') }}" class="flex-1 text-center py-2 rounded-lg transition-all {{ request()->routeIs('employee.leave-requests.*') ? 'bg-white text-rose-700 shadow-xs' : 'text-slate-600 hover:text-slate-900' }}">
@@ -22,6 +22,21 @@
             </a>
         @endif
     </div>
+
+    <!-- Flash Notifications -->
+    @if(session('success'))
+        <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold flex items-center gap-2">
+            <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span>{{ session('success') }}</span>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-xs font-bold flex items-center gap-2">
+            <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            <span>{{ session('error') }}</span>
+        </div>
+    @endif
 
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -150,10 +165,20 @@
 
                                 @if($swap->isPendingTarget())
                                     <div class="flex gap-2">
-                                        <button type="button" @click="respondModal = true; swapId = {{ $swap->id }}; actionType = 'accept'; targetName = '{{ $swap->requester?->full_name }}'; reqDate = '{{ $swap->target_work_date->translatedFormat('d F Y') }}'" class="flex min-h-[44px] items-center justify-center gap-1 rounded-xl bg-emerald-600 px-4 text-xs font-black text-white hover:bg-emerald-700">
+                                        <button type="button"
+                                            class="btn-swap-respond flex min-h-[44px] items-center justify-center gap-1 rounded-xl bg-emerald-600 px-4 text-xs font-black text-white hover:bg-emerald-700"
+                                            data-respond-url="{{ route('employee.shift-swaps.respond', $swap) }}"
+                                            data-action="accept"
+                                            data-requester-name="{{ e($swap->requester?->full_name) }}"
+                                            data-work-date="{{ e($swap->target_work_date->translatedFormat('d F Y')) }}">
                                             Terima
                                         </button>
-                                        <button type="button" @click="respondModal = true; swapId = {{ $swap->id }}; actionType = 'reject'; targetName = '{{ $swap->requester?->full_name }}'; reqDate = '{{ $swap->target_work_date->translatedFormat('d F Y') }}'" class="flex min-h-[44px] items-center justify-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-4 text-xs font-black text-rose-700 hover:bg-rose-100">
+                                        <button type="button"
+                                            class="btn-swap-respond flex min-h-[44px] items-center justify-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-4 text-xs font-black text-rose-700 hover:bg-rose-100"
+                                            data-respond-url="{{ route('employee.shift-swaps.respond', $swap) }}"
+                                            data-action="reject"
+                                            data-requester-name="{{ e($swap->requester?->full_name) }}"
+                                            data-work-date="{{ e($swap->target_work_date->translatedFormat('d F Y')) }}">
                                             Tolak
                                         </button>
                                     </div>
@@ -183,32 +208,137 @@
         </section>
     @endif
 
-    <!-- Respond Modal -->
-    <div x-show="respondModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
-        <div @click.away="respondModal = false" class="w-full max-w-md space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+    <!-- Respond Modal (Vanilla JS Powered - Zero Alpine Dependency) -->
+    <div id="swap-modal-backdrop" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs hidden" role="dialog" aria-modal="true" aria-labelledby="swap-modal-title">
+        <div id="swap-modal-card" class="w-full max-w-md space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 class="text-base font-black text-slate-900" x-text="actionType === 'accept' ? 'Terima Permintaan Tukar Jadwal' : 'Tolak Permintaan Tukar Jadwal'"></h3>
-                <button type="button" @click="respondModal = false" class="text-slate-400 hover:text-slate-600">&times;</button>
+                <h3 id="swap-modal-title" class="text-base font-black text-slate-900">Respon Tukar Jadwal</h3>
+                <button type="button" id="btn-swap-modal-close" class="text-slate-400 hover:text-slate-600 min-h-[44px] min-w-[44px] flex items-center justify-center text-lg font-bold" aria-label="Tutup Modal">&times;</button>
             </div>
-            <p class="text-xs text-slate-600">
-                Konfirmasi <span class="font-extrabold" x-text="actionType === 'accept' ? 'menerima' : 'menolak'"></span> permintaan tukar jadwal dari <strong class="font-bold text-slate-900" x-text="targetName"></strong> untuk tanggal <span class="font-bold text-slate-800" x-text="reqDate"></span>.
-            </p>
-            <form :action="'{{ url('app/shift-swaps') }}/' + swapId + '/respond'" method="POST" class="space-y-4">
+            <p id="swap-modal-desc" class="text-xs text-slate-600"></p>
+            <form id="swap-modal-form" action="" method="POST" class="space-y-4">
                 @csrf
-                <input type="hidden" name="action" :value="actionType">
+                <input type="hidden" id="swap-modal-action" name="action" value="">
                 <div>
-                    <label for="target-reason" class="mb-1 block text-xs font-black text-slate-700">Alasan / Catatan Respon <span x-show="actionType === 'reject'" class="text-rose-600">*</span></label>
-                    <textarea id="target-reason" name="reason" rows="3" :required="actionType === 'reject'" minlength="5" placeholder="Tuliskan catatan alasan..." class="w-full rounded-xl border-slate-300 text-xs focus:border-slate-900 focus:ring-slate-900"></textarea>
-                    <p x-show="actionType === 'reject'" class="mt-1 text-[10px] text-slate-500">Wajib diisi minimal 5 karakter jika menolak.</p>
+                    <label for="swap-modal-reason" class="mb-1 block text-xs font-black text-slate-700">
+                        Alasan / Catatan Respon <span id="swap-modal-reason-required" class="text-rose-600 hidden">*</span>
+                    </label>
+                    <textarea id="swap-modal-reason" name="reason" rows="3" placeholder="Tuliskan catatan alasan..." class="w-full rounded-xl border-slate-300 text-xs focus:border-slate-900 focus:ring-slate-900"></textarea>
+                    <p id="swap-modal-reason-help" class="mt-1 text-[10px] text-slate-500 hidden">Wajib diisi minimal 5 karakter jika menolak.</p>
                 </div>
                 <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" @click="respondModal = false" class="min-h-[44px] rounded-xl border border-slate-200 px-4 text-xs font-bold text-slate-700 hover:bg-slate-50">Batal</button>
-                    <button type="submit" :class="actionType === 'accept' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'" class="min-h-[44px] rounded-xl px-5 text-xs font-black text-white">
-                        Kirim Respon
+                    <button type="button" id="btn-swap-modal-cancel" class="min-h-[44px] rounded-xl border border-slate-200 px-4 text-xs font-bold text-slate-700 hover:bg-slate-50">Batal</button>
+                    <button type="submit" id="btn-swap-modal-submit" class="min-h-[44px] rounded-xl px-5 text-xs font-black text-white bg-emerald-600 hover:bg-emerald-700">
+                        <span>Kirim Respon</span>
                     </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const backdrop = document.getElementById('swap-modal-backdrop');
+    const card = document.getElementById('swap-modal-card');
+    const closeBtn = document.getElementById('btn-swap-modal-close');
+    const cancelBtn = document.getElementById('btn-swap-modal-cancel');
+    const form = document.getElementById('swap-modal-form');
+    const titleEl = document.getElementById('swap-modal-title');
+    const descEl = document.getElementById('swap-modal-desc');
+    const actionInput = document.getElementById('swap-modal-action');
+    const reasonInput = document.getElementById('swap-modal-reason');
+    const reasonReq = document.getElementById('swap-modal-reason-required');
+    const reasonHelp = document.getElementById('swap-modal-reason-help');
+    const submitBtn = document.getElementById('btn-swap-modal-submit');
+
+    let lastActiveTrigger = null;
+
+    function openSwapModal(trigger) {
+        lastActiveTrigger = trigger;
+        const respondUrl = trigger.dataset.respondUrl;
+        const action = trigger.dataset.action;
+        const requesterName = trigger.dataset.requesterName || '';
+        const workDate = trigger.dataset.workDate || '';
+
+        form.action = respondUrl;
+        actionInput.value = action;
+        reasonInput.value = '';
+
+        if (action === 'accept') {
+            titleEl.innerText = 'Terima Permintaan Tukar Jadwal';
+            descEl.innerHTML = 'Konfirmasi <strong class="font-extrabold text-emerald-800">menerima</strong> permintaan tukar jadwal dari <strong class="font-bold text-slate-900">' + escapeHtml(requesterName) + '</strong> untuk tanggal <span class="font-bold text-slate-800">' + escapeHtml(workDate) + '</span>.';
+            reasonInput.removeAttribute('required');
+            reasonInput.removeAttribute('minlength');
+            reasonReq.classList.add('hidden');
+            reasonHelp.classList.add('hidden');
+            submitBtn.className = 'min-h-[44px] rounded-xl px-5 text-xs font-black text-white bg-emerald-600 hover:bg-emerald-700';
+        } else {
+            titleEl.innerText = 'Tolak Permintaan Tukar Jadwal';
+            descEl.innerHTML = 'Konfirmasi <strong class="font-extrabold text-rose-800">menolak</strong> permintaan tukar jadwal dari <strong class="font-bold text-slate-900">' + escapeHtml(requesterName) + '</strong> untuk tanggal <span class="font-bold text-slate-800">' + escapeHtml(workDate) + '</span>.';
+            reasonInput.setAttribute('required', 'required');
+            reasonInput.setAttribute('minlength', '5');
+            reasonReq.classList.remove('hidden');
+            reasonHelp.classList.remove('hidden');
+            submitBtn.className = 'min-h-[44px] rounded-xl px-5 text-xs font-black text-white bg-rose-600 hover:bg-rose-700';
+        }
+
+        backdrop.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        reasonInput.focus();
+    }
+
+    function closeSwapModal() {
+        backdrop.classList.add('hidden');
+        document.body.style.overflow = '';
+        form.action = '';
+        actionInput.value = '';
+        reasonInput.value = '';
+        if (lastActiveTrigger) {
+            lastActiveTrigger.focus();
+        }
+    }
+
+    function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, function(m) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+        });
+    }
+
+    document.querySelectorAll('.btn-swap-respond').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            openSwapModal(this);
+        });
+    });
+
+    closeBtn?.addEventListener('click', closeSwapModal);
+    cancelBtn?.addEventListener('click', closeSwapModal);
+
+    backdrop?.addEventListener('click', function (e) {
+        if (e.target === backdrop) {
+            closeSwapModal();
+        }
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !backdrop.classList.contains('hidden')) {
+            closeSwapModal();
+        }
+    });
+
+    form?.addEventListener('submit', function (e) {
+        if (actionInput.value === 'reject' && reasonInput.value.trim().length < 5) {
+            e.preventDefault();
+            alert('Alasan penolakan wajib diisi minimal 5 karakter.');
+            reasonInput.focus();
+            return false;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        const span = submitBtn.querySelector('span');
+        if (span) span.innerText = 'Memproses...';
+    });
+});
+</script>
 @endsection
