@@ -71,7 +71,7 @@
                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/></svg>
                         </div>
-                        <input type="text" name="login" id="login" value="{{ old('login') }}" required autofocus placeholder="contoh@selonbeauty.com, 081234567890, atau SB-001" class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all bg-slate-50/50">
+                        <input type="text" name="login" id="login" value="{{ old('login') }}" required autofocus placeholder="name@example.com atau 081234567890" class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all bg-slate-50/50">
                     </div>
                     @error('login')
                         <p class="text-xs font-semibold text-rose-600 mt-1.5">{{ $message }}</p>
@@ -85,7 +85,11 @@
                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                         </div>
-                        <input type="password" name="password" id="password" required placeholder="••••••••" class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all bg-slate-50/50">
+                        <input type="password" name="password" id="password" required placeholder="••••••••" class="w-full pl-11 pr-11 py-3 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all bg-slate-50/50">
+                        <button type="button" id="toggle-password" aria-label="Tampilkan password" aria-controls="password" class="absolute inset-y-0 right-0 pr-3.5 pl-3 flex items-center min-w-[44px] min-h-[44px] justify-center text-slate-400 hover:text-slate-600 focus:outline-none focus:text-slate-600 cursor-pointer">
+                            <svg id="icon-eye" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            <svg id="icon-eye-off" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22"/></svg>
+                        </button>
                     </div>
                     @error('password')
                         <p class="text-xs font-semibold text-rose-600 mt-1.5">{{ $message }}</p>
@@ -115,6 +119,32 @@
 
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const passwordInput = document.getElementById('password');
+            const toggleButton = document.getElementById('toggle-password');
+            const iconEye = document.getElementById('icon-eye');
+            const iconEyeOff = document.getElementById('icon-eye-off');
+
+            if (passwordInput && toggleButton) {
+                toggleButton.addEventListener('click', function () {
+                    const isHidden = passwordInput.type === 'password';
+                    passwordInput.type = isHidden ? 'text' : 'password';
+
+                    if (isHidden) {
+                        toggleButton.setAttribute('aria-label', 'Sembunyikan password');
+                        if (iconEye) iconEye.classList.add('hidden');
+                        if (iconEyeOff) iconEyeOff.classList.remove('hidden');
+                    } else {
+                        toggleButton.setAttribute('aria-label', 'Tampilkan password');
+                        if (iconEye) iconEye.classList.remove('hidden');
+                        if (iconEyeOff) iconEyeOff.classList.add('hidden');
+                    }
+                });
+            }
+        });
+    </script>
 
 </body>
 </html>

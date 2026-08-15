@@ -225,4 +225,24 @@ class AuthenticationTest extends TestCase
         $this->actingAs($employee)->get('/app/dashboard')->assertStatus(200);
         $this->actingAs($owner)->get('/app/dashboard')->assertStatus(200);
     }
+
+    public function test_login_form_renders_new_placeholder_and_password_toggle_button(): void
+    {
+        $response = $this->get('/login');
+        $response->assertOk();
+
+        // Placeholder checks
+        $response->assertSee('placeholder="name@example.com atau 081234567890"', false);
+        $response->assertDontSee('contoh@selonbeauty.com');
+
+        // Password input & toggle button checks
+        $response->assertSee('id="password"', false);
+        $response->assertSee('type="password"', false);
+        $response->assertSee('id="toggle-password"', false);
+        $response->assertSee('type="button"', false);
+        $response->assertSee('aria-label="Tampilkan password"', false);
+        $response->assertSee('aria-controls="password"', false);
+        $response->assertSee('icon-eye', false);
+        $response->assertSee('icon-eye-off', false);
+    }
 }
