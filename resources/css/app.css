@@ -70,6 +70,23 @@ html.dark main {
     box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.25) !important;
 }
 
+.dark .ios-date-field {
+    border-color: #334155 !important;
+    background-color: #020617 !important;
+}
+
+.dark .ios-date-field:focus-within {
+    background-color: #0f172a !important;
+    border-color: #f43f5e !important;
+}
+
+.dark .ios-date-field > input[type="date"],
+.dark .ios-date-field > input[type="time"],
+.dark .ios-date-field > input[type="datetime-local"] {
+    color: #f8fafc !important;
+    color-scheme: dark !important;
+}
+
 /* Native Input inside wrapper */
 .ios-date-field > input[type="date"],
 .ios-date-field > input[type="time"],
@@ -95,6 +112,12 @@ html.dark main {
     color: #0f172a !important; /* text-slate-900 */
     -webkit-appearance: none;
     appearance: none;
+}
+
+.dark .ios-date-field > input[type="date"],
+.dark .ios-date-field > input[type="time"],
+.dark .ios-date-field > input[type="datetime-local"] {
+    color: #f8fafc !important;
 }
 
 /* iOS WebKit Internal Shadow DOM Fixes */
@@ -128,6 +151,12 @@ html.dark main {
     padding: 0 4px !important;
 }
 
+.dark .ios-date-field input[type="date"]::-webkit-calendar-picker-indicator,
+.dark .ios-date-field input[type="time"]::-webkit-calendar-picker-indicator,
+.dark .ios-date-field input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) !important;
+}
+
 @supports (-webkit-touch-callout: none) {
     .ios-date-field > input[type="date"],
     .ios-date-field > input[type="time"],
@@ -141,7 +170,7 @@ html.dark main {
    Workforce SaaS UI System Utility Tokens
    ========================================================================== */
 
-.ui-card {
+.ui-card, .ui-panel {
     background-color: #ffffff;
     border-radius: 1rem; /* rounded-2xl */
     border-width: 1px;
@@ -152,7 +181,7 @@ html.dark main {
     transition: all 0.2s ease-in-out;
 }
 
-.dark .ui-card {
+.dark .ui-card, .dark .ui-panel {
     background-color: #0f172a; /* slate-900 */
     border-color: #1e293b; /* slate-800 */
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
@@ -170,6 +199,18 @@ html.dark main {
 }
 
 .dark .ui-card-compact {
+    background-color: #0f172a;
+    border-color: #1e293b;
+}
+
+.ui-modal {
+    background-color: #ffffff;
+    border-radius: 1rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.dark .ui-modal {
     background-color: #0f172a;
     border-color: #1e293b;
 }

@@ -93,7 +93,7 @@
 @if($facts !== [])
     <dl class="flex min-w-0 flex-wrap gap-x-4 gap-y-2">
         @foreach($facts as $fact)
-            <div class="min-w-0"><dt class="text-[9px] font-bold uppercase tracking-wider text-slate-400">{{ $fact['label'] }}</dt><dd class="mt-0.5 break-words font-mono text-[11px] font-bold text-slate-700">{{ $fact['value'] }}</dd></div>
+            <div class="min-w-0"><dt class="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{{ $fact['label'] }}</dt><dd class="mt-0.5 break-words font-mono text-[11px] font-bold text-slate-700 dark:text-slate-300">{{ $fact['value'] }}</dd></div>
         @endforeach
     </dl>
 @endif
