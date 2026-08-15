@@ -6,43 +6,43 @@
 <div class="space-y-4">
 
     <!-- Profile Header Card -->
-    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs text-center space-y-3 relative overflow-hidden">
+    <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs text-center space-y-3 relative overflow-hidden">
         <!-- Decorative Header Background Accent -->
         <div class="absolute top-0 left-0 right-0 h-16 bg-gradient-to-r from-rose-600 to-pink-500 opacity-90"></div>
 
         <div class="relative pt-4">
             <!-- Large Avatar -->
-            <div class="w-20 h-20 rounded-full bg-white p-1 shadow-md mx-auto relative mb-2">
+            <div class="w-20 h-20 rounded-full bg-white dark:bg-slate-800 p-1 shadow-md mx-auto relative mb-2">
                 <div class="w-full h-full rounded-full bg-slate-900 text-white font-black text-2xl flex items-center justify-center border-2 border-rose-500">
                     {{ strtoupper(substr($user->name, 0, 2)) }}
                 </div>
             </div>
 
-            <h2 class="text-base font-black text-slate-900 tracking-tight">{{ $employee?->full_name ?? $user->name }}</h2>
-            <p class="text-xs font-semibold text-slate-500 font-mono">{{ $employee?->employee_code ?? '-' }}</p>
+            <h2 class="text-base font-black text-slate-900 dark:text-slate-100 tracking-tight">{{ $employee?->full_name ?? $user->name }}</h2>
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 font-mono">{{ $employee?->employee_code ?? '-' }}</p>
 
             <div class="flex items-center justify-center gap-2 mt-2">
-                <span class="px-3 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                <span class="px-3 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60">
                     {{ $employee?->jobTitle?->name ?? 'Karyawan' }}
                 </span>
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
                     {{ $employee?->status ?? 'active' }}
                 </span>
             </div>
         </div>
 
-        <div class="pt-3 border-t border-slate-100 text-left text-xs space-y-2">
+        <div class="pt-3 border-t border-slate-100 dark:border-slate-800 text-left text-xs space-y-2">
             <div class="flex justify-between items-center py-1">
-                <span class="text-slate-500 font-medium">Email</span>
-                <span class="font-bold text-slate-800">{{ $user->email }}</span>
+                <span class="text-slate-500 dark:text-slate-400 font-medium">Email</span>
+                <span class="font-bold text-slate-800 dark:text-slate-200">{{ $user->email }}</span>
             </div>
             <div class="flex justify-between items-center py-1">
-                <span class="text-slate-500 font-medium">No. Telepon / WA</span>
-                <span class="font-bold text-slate-800">{{ $employee?->phone ?? '-' }}</span>
+                <span class="text-slate-500 dark:text-slate-400 font-medium">No. Telepon / WA</span>
+                <span class="font-bold text-slate-800 dark:text-slate-200">{{ $employee?->phone ?? '-' }}</span>
             </div>
             <div class="flex justify-between items-center py-1">
-                <span class="text-slate-500 font-medium">Bergabung Sejak</span>
-                <span class="font-bold text-slate-800">{{ $employee?->created_at ? $employee->created_at->translatedFormat('d M Y') : '-' }}</span>
+                <span class="text-slate-500 dark:text-slate-400 font-medium">Bergabung Sejak</span>
+                <span class="font-bold text-slate-800 dark:text-slate-200">{{ $employee?->created_at ? $employee->created_at->translatedFormat('d M Y') : '-' }}</span>
             </div>
         </div>
     </div>
