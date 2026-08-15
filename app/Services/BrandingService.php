@@ -41,7 +41,22 @@ class BrandingService
 
     public function getCompanyName(): string
     {
-        return $this->getSetting('company_name', config('app.name', 'Attendance & Scheduling'));
+        $companyName = trim((string) $this->getSetting('company_name', ''));
+        if ($companyName !== '') {
+            return $companyName;
+        }
+
+        $appShortName = trim((string) $this->getSetting('app_short_name', ''));
+        if ($appShortName !== '') {
+            return $appShortName;
+        }
+
+        $appName = trim((string) $this->getSetting('app_name', ''));
+        if ($appName !== '') {
+            return $appName;
+        }
+
+        return 'SELON';
     }
 
     public function getAppTagline(): string

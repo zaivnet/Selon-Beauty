@@ -111,11 +111,7 @@
 
             </form>
 
-            <div class="pt-4 border-t border-slate-100 text-center">
-                <p class="text-[11px] text-slate-400 font-medium">
-                    SELON BEAUTY Attendance System &copy; {{ date('Y') }}
-                </p>
-            </div>
+            @include('partials.auth_footer')
 
         </div>
     </div>

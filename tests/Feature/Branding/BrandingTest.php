@@ -390,6 +390,48 @@ class BrandingTest extends TestCase
             ->assertSee('Home');
     }
 
+    public function test_login_footer_uses_dynamic_company_name_and_developer_whatsapp_link(): void
+    {
+        AppSetting::set('company_name', 'CV Ayunda Beauty', 'string', true);
+        app(BrandingService::class)->clearCache();
+
+        $response = $this->get(route('login'));
+        $response->assertOk();
+
+        $year = date('Y');
+        $response->assertSee('Attendance CV Ayunda Beauty &copy; ' . $year, false);
+        $response->assertSee('Developed by', false);
+        $response->assertSee('Ade Zaiv', false);
+        $response->assertSee('https://wa.me/6282338464846?text=Halo%20Ade%20Zaiv%2C%20saya%20menghubungi%20Anda%20dari%20aplikasi%20Attendance.', false);
+        $response->assertSee('target="_blank"', false);
+        $response->assertSee('rel="noopener noreferrer"', false);
+        $response->assertDontSee('SELON BEAUTY Attendance System');
+    }
+
+    public function test_login_footer_fallback_company_name_when_setting_is_empty(): void
+    {
+        AppSetting::set('company_name', '', 'string', true);
+        AppSetting::set('app_short_name', 'SELON BEAUTY', 'string', true);
+        app(BrandingService::class)->clearCache();
+
+        $response = $this->get(route('login'));
+        $response->assertOk();
+
+        $year = date('Y');
+        $response->assertSee('Attendance SELON BEAUTY &copy; ' . $year, false);
+    }
+
+    public function test_login_footer_escapes_xss_in_company_name(): void
+    {
+        AppSetting::set('company_name', '<b>Malicious Company</b>', 'string', true);
+        app(BrandingService::class)->clearCache();
+
+        $response = $this->get(route('login'));
+        $response->assertOk();
+        $response->assertDontSee('<b>Malicious Company</b>', false);
+        $response->assertSee('&lt;b&gt;Malicious Company&lt;/b&gt;', false);
+    }
+
     private function validPayload(): array
     {
         return [
