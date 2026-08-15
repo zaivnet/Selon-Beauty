@@ -330,6 +330,15 @@
                         <span id="gps-metric-accuracy" class="font-extrabold font-mono text-slate-900 text-sm">±-- m</span>
                     </div>
                 </div>
+
+                <!-- GPS PWA / Permission / Accuracy Guidance Box -->
+                <div id="gps-guidance-box" class="hidden text-xs p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 space-y-1 mt-3">
+                    <p id="gps-guidance-title" class="font-extrabold flex items-center gap-1.5 text-amber-900">
+                        <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        <span>Panduan Akses Lokasi</span>
+                    </p>
+                    <p id="gps-guidance-desc" class="text-[11px] font-medium text-amber-800 leading-relaxed"></p>
+                </div>
             </div>
         </div>
 
@@ -690,40 +699,117 @@ function confirmPhoto() {
 // GPS LOGIC & GEOFENCE EVALUATION
 // ----------------------------------------------------
 
+let lastGpsTimestamp = null;
+const isStandalonePWA = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const appName = "{{ $branding['app_short_name'] ?? 'SELON BEAUTY' }}";
+
 function updateGpsUIState(state, message, distanceMeters = null, accuracyMeters = null) {
     const badge = document.getElementById('gps-badge-status');
     const statusText = document.getElementById('gps-status-text');
     const metricsGrid = document.getElementById('gps-metrics-grid');
     const distEl = document.getElementById('gps-metric-distance');
     const accEl = document.getElementById('gps-metric-accuracy');
+    const guidanceBox = document.getElementById('gps-guidance-box');
+    const guidanceTitle = document.getElementById('gps-guidance-title');
+    const guidanceDesc = document.getElementById('gps-guidance-desc');
 
     if (statusText) statusText.innerText = message;
+
+    const hideGuidance = () => {
+        if (guidanceBox) guidanceBox.classList.add('hidden');
+    };
+
+    const showGuidance = (title, desc) => {
+        if (guidanceBox) {
+            if (guidanceTitle) {
+                guidanceTitle.innerHTML = `<svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> <span>${title}</span>`;
+            }
+            if (guidanceDesc) guidanceDesc.innerText = desc;
+            guidanceBox.classList.remove('hidden');
+        }
+    };
 
     if (state === 'requesting') {
         isGpsValid = false;
         if (badge) {
             badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full";
-            badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-400 animate-pulse"></span> Mendeteksi...';
+            badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-400 animate-pulse"></span> MEMERIKSA...';
         }
         if (metricsGrid) metricsGrid.classList.add('hidden');
+        hideGuidance();
     } else if (state === 'ready') {
         isGpsValid = true;
         if (badge) {
             badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full";
-            badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Dalam Area';
+            badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> DALAM AREA';
         }
         if (metricsGrid) metricsGrid.classList.remove('hidden');
         if (distEl) distEl.innerText = (distanceMeters !== null ? distanceMeters : '--') + ' m';
         if (accEl) accEl.innerText = '±' + (accuracyMeters !== null ? Math.round(accuracyMeters) : '--') + ' m';
+        hideGuidance();
+    } else if (state === 'outside_radius') {
+        isGpsValid = false;
+        if (badge) {
+            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-full";
+            badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span> DI LUAR AREA';
+        }
+        if (metricsGrid) metricsGrid.classList.remove('hidden');
+        if (distEl) distEl.innerText = (distanceMeters !== null ? distanceMeters : '--') + ' m';
+        if (accEl) accEl.innerText = '±' + (accuracyMeters !== null ? Math.round(accuracyMeters) : '--') + ' m';
+        hideGuidance();
+    } else if (state === 'low_accuracy') {
+        isGpsValid = false;
+        if (badge) {
+            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full";
+            badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> AKURASI RENDAH';
+        }
+        if (metricsGrid) metricsGrid.classList.remove('hidden');
+        if (distEl) distEl.innerText = (distanceMeters !== null ? distanceMeters : '--') + ' m';
+        if (accEl) accEl.innerText = '±' + (accuracyMeters !== null ? Math.round(accuracyMeters) : '--') + ' m';
+
+        const desc = isIOSDevice && isStandalonePWA
+            ? `Lokasi ditemukan (±${Math.round(accuracyMeters)}m), tetapi belum memenuhi batas akurasi presisi. Buka Pengaturan iPhone → Privasi & Keamanan → Layanan Lokasi → ${appName}, lalu aktifkan "Lokasi Presisi" dan tekan Perbarui Lokasi.`
+            : `Lokasi ditemukan (±${Math.round(accuracyMeters)}m), tetapi akurasinya belum cukup baik. Pindah ke tempat terbuka lalu tekan Perbarui Lokasi.`;
+        showGuidance('Panduan Lokasi Presisi', desc);
+    } else if (state === 'permission_denied') {
+        isGpsValid = false;
+        if (badge) {
+            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full";
+            badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> IZIN LOKASI DIPERLUKAN';
+        }
+        if (metricsGrid) metricsGrid.classList.add('hidden');
+
+        const desc = isIOSDevice && isStandalonePWA
+            ? `Lokasi untuk aplikasi ini belum diizinkan. Buka Pengaturan iPhone → Privasi & Keamanan → Layanan Lokasi → ${appName}, lalu pilih Saat App Digunakan dan aktifkan Lokasi Presisi.`
+            : `Akses lokasi belum diizinkan di browser Anda. Izinkan akses lokasi pada pengaturan perizinan situs browser Anda lalu tekan tombol Perbarui Lokasi.`;
+        showGuidance('Panduan Akses Lokasi PWA', desc);
+    } else if (state === 'position_unavailable') {
+        isGpsValid = false;
+        if (badge) {
+            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-full";
+            badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span> LOKASI TIDAK TERSEDIA';
+        }
+        if (metricsGrid) metricsGrid.classList.add('hidden');
+
+        showGuidance('Layanan Lokasi / GPS Tidak Aktif', 'Lokasi perangkat belum dapat ditentukan. Pastikan GPS/Location Services aktif lalu coba lagi.');
+    } else if (state === 'timeout') {
+        isGpsValid = false;
+        if (badge) {
+            badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full";
+            badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> PENCARIAN TIMEOUT';
+        }
+        if (metricsGrid) metricsGrid.classList.add('hidden');
+
+        showGuidance('Waktu Pencarian Habis', 'Pencarian lokasi terlalu lama. Pindah ke area dengan sinyal GPS lebih baik lalu coba lagi.');
     } else {
         isGpsValid = false;
         if (badge) {
             badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-full";
-            badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span> Tidak Valid';
+            badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span> TIDAK VALID';
         }
-        if (metricsGrid) metricsGrid.classList.remove('hidden');
-        if (distEl) distEl.innerText = (distanceMeters !== null ? distanceMeters : '--') + ' m';
-        if (accEl) accEl.innerText = '±' + (accuracyMeters !== null ? Math.round(accuracyMeters) : '--') + ' m';
+        if (metricsGrid) metricsGrid.classList.add('hidden');
+        hideGuidance();
     }
 
     evaluateSubmitButtons();
@@ -731,7 +817,7 @@ function updateGpsUIState(state, message, distanceMeters = null, accuracyMeters 
 
 function detectGPSLocation() {
     if (!navigator.geolocation) {
-        updateGpsUIState('error', 'Browser Anda tidak mendukung fitur lokasi GPS.');
+        updateGpsUIState('error', 'Browser/perangkat Anda tidak mendukung fitur lokasi GPS.');
         return;
     }
 
@@ -739,12 +825,13 @@ function detectGPSLocation() {
 
     const options = {
         enableHighAccuracy: true,
-        timeout: 15000,
+        timeout: 20000,
         maximumAge: 0
     };
 
     navigator.geolocation.getCurrentPosition(
         function(position) {
+            lastGpsTimestamp = Date.now();
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
             const acc = position.coords.accuracy;
@@ -774,34 +861,57 @@ function detectGPSLocation() {
                 const distance = calculateHaversineMeters(lat, lng, storeLat, storeLng);
 
                 if (acc > maxAccuracy) {
-                    updateGpsUIState('low_accuracy', `Lokasi Belum Cukup Akurat (Akurasi GPS ±${Math.round(acc)}m). Batas maksimum ±${maxAccuracy}m. Coba perbarui lokasi di tempat terbuka.`, null, acc);
+                    updateGpsUIState('low_accuracy', `Lokasi ditemukan tetapi akurasinya belum cukup baik (±${Math.round(acc)}m, Maks ±${maxAccuracy}m).`, distance, acc);
                 } else if (distance > maxRadius) {
-                    updateGpsUIState('outside_radius', `Anda berada di luar area absensi SELON BEAUTY (Jarak: ${distance}m, Maks: ${maxRadius}m).`, distance, acc);
+                    updateGpsUIState('outside_radius', `Anda berada di luar area absensi ${appName} (Jarak: ${distance}m, Maks: ${maxRadius}m).`, distance, acc);
                 } else {
-                    updateGpsUIState('ready', `✓ Lokasi terverifikasi dalam area absensi SELON BEAUTY.`, distance, acc);
+                    updateGpsUIState('ready', `✓ Lokasi terverifikasi dalam area absensi ${appName}.`, distance, acc);
                 }
             @else
                 updateGpsUIState('ready', '✓ Koordinat lokasi berhasil terdeteksi.', 0, acc);
             @endif
         },
         function(error) {
-            let errorMsg = 'Lokasi gagal dideteksi.';
             switch(error.code) {
                 case error.PERMISSION_DENIED:
-                    errorMsg = 'Akses lokasi ditolak. Izinkan akses lokasi pada browser agar dapat melakukan absensi.';
+                    const permMsg = isIOSDevice && isStandalonePWA
+                        ? 'Lokasi untuk aplikasi ini belum diizinkan.'
+                        : 'Akses lokasi belum diizinkan pada browser Anda.';
+                    updateGpsUIState('permission_denied', permMsg);
                     break;
                 case error.POSITION_UNAVAILABLE:
-                    errorMsg = 'Lokasi tidak dapat ditemukan. Pastikan GPS/lokasi perangkat aktif.';
+                    updateGpsUIState('position_unavailable', 'Lokasi perangkat belum dapat ditentukan. Pastikan GPS/Location Services aktif lalu coba lagi.');
                     break;
                 case error.TIMEOUT:
-                    errorMsg = 'Pencarian lokasi terlalu lama (timeout). Silakan coba kembali.';
+                    updateGpsUIState('timeout', 'Pencarian lokasi terlalu lama. Pindah ke area dengan sinyal GPS lebih baik lalu coba lagi.');
+                    break;
+                default:
+                    updateGpsUIState('error', 'Lokasi gagal dideteksi.');
                     break;
             }
-            updateGpsUIState('error', errorMsg);
         },
         options
     );
 }
+
+document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') {
+        const now = Date.now();
+        if (lastGpsTimestamp && (now - lastGpsTimestamp > 180000)) {
+            isGpsValid = false;
+            const badge = document.getElementById('gps-badge-status');
+            const statusText = document.getElementById('gps-status-text');
+            if (badge) {
+                badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full";
+                badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> PERLU PERBARUI';
+            }
+            if (statusText) {
+                statusText.innerText = 'Sesi diperbarui. Silakan tekan tombol "Perbarui Lokasi" untuk memverifikasi lokasi presensi terbaru.';
+            }
+            evaluateSubmitButtons();
+        }
+    }
+});
 
 // ----------------------------------------------------
 // BUTTON EVALUATION & DOUBLE SUBMIT PROTECTION

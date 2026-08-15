@@ -221,4 +221,44 @@ class PwaTest extends TestCase
             ->assertOk()
             ->assertSee('Owner Dual Capability');
     }
+
+    public function test_employee_dashboard_renders_ios_pwa_geolocation_guidance_and_refresh_button(): void
+    {
+        $shift = \App\Models\Shift::create([
+            'code' => 'SP',
+            'name' => 'Shift Pagi',
+            'start_time' => '08:00',
+            'end_time' => '17:00',
+            'is_active' => true,
+        ]);
+
+        \App\Models\EmployeeSchedule::create([
+            'employee_id' => $this->employee->id,
+            'shift_id' => $shift->id,
+            'work_date' => now()->toDateString(),
+            'schedule_type' => 'work',
+        ]);
+
+        $response = $this->actingAs($this->employeeUser)->get(route('employee.dashboard'));
+        $response->assertOk();
+
+        // User-initiated button
+        $response->assertSee('Perbarui Lokasi');
+        $response->assertSee('onclick="detectGPSLocation()"', false);
+
+        // Guidance Box elements
+        $response->assertSee('id="gps-guidance-box"', false);
+        $response->assertSee('id="gps-guidance-title"', false);
+        $response->assertSee('id="gps-guidance-desc"', false);
+
+        // iOS Standalone & Error code JS logic checks
+        $response->assertSee('display-mode: standalone', false);
+        $response->assertSee('isIOSDevice', false);
+        $response->assertSee('permission_denied', false);
+        $response->assertSee('position_unavailable', false);
+        $response->assertSee('timeout', false);
+        $response->assertSee('low_accuracy', false);
+        $response->assertSee('Pengaturan iPhone', false);
+        $response->assertSee('Lokasi Presisi', false);
+    }
 }
