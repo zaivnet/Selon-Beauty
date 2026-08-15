@@ -15,9 +15,21 @@
             --brand-accent: {{ $branding['brand_accent'] ?? '#F43F5E' }};
         }
     </style>
+    <!-- FOUC Prevention: sync theme before render -->
+    <script>
+        (function () {
+            try {
+                var stored = localStorage.getItem('attendance-theme') || 'system';
+                var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                var isDark = stored === 'dark' || (stored === 'system' && prefersDark);
+                if (isDark) document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+            } catch (e) {}
+        })();
+    </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen antialiased flex items-center justify-center p-4 relative overflow-x-hidden">
+<body class="bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen antialiased flex items-center justify-center p-4 relative overflow-x-hidden transition-colors">
 
     <!-- Ambient Background Accent Blurs -->
     <div class="absolute -top-32 -left-32 w-96 h-96 bg-rose-600/20 rounded-full blur-3xl pointer-events-none"></div>
@@ -36,17 +48,17 @@
             @endif
 
             <div>
-                <h1 class="text-xl font-black text-white tracking-tight">{{ $branding['app_name'] ?? 'SELON BEAUTY' }}</h1>
-                <p class="text-xs font-bold text-rose-400 uppercase tracking-widest mt-0.5">Atur Ulang Password</p>
+                <h1 class="text-xl font-black text-slate-900 dark:text-white tracking-tight">{{ $branding['app_name'] ?? 'SELON BEAUTY' }}</h1>
+                <p class="text-xs font-bold text-rose-500 dark:text-rose-400 uppercase tracking-widest mt-0.5">Atur Ulang Password</p>
             </div>
         </div>
 
         <!-- Forgot Password Card -->
-        <div class="bg-slate-800/90 backdrop-blur-md rounded-3xl border border-slate-700/80 shadow-2xl p-6 sm:p-8 space-y-6">
+        <div class="bg-white dark:bg-slate-800/90 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-slate-700/80 shadow-2xl p-6 sm:p-8 space-y-6 transition-colors">
             
-            <div class="border-b border-slate-700/80 pb-4">
-                <h2 class="text-base font-extrabold text-white">Lupa Password Akun</h2>
-                <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+            <div class="border-b border-slate-200 dark:border-slate-700/80 pb-4">
+                <h2 class="text-base font-extrabold text-slate-900 dark:text-white">Lupa Password Akun</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                     Masukkan email yang terdaftar pada akun Anda. Kami akan mengirimkan link aman untuk mengatur ulang password.
                 </p>
             </div>
@@ -70,7 +82,7 @@
 
                 <!-- Email Input -->
                 <div>
-                    <label for="email" class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Email Terdaftar *</label>
+                    <label for="email" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Email Terdaftar *</label>
                     <input type="email" 
                            name="email" 
                            id="email" 
@@ -78,7 +90,7 @@
                            required 
                            autofocus 
                            placeholder="nama@email.com" 
-                           class="w-full px-4 py-3 rounded-2xl bg-slate-900/80 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all">
+                           class="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all">
                     @error('email')
                         <p class="text-xs text-rose-400 font-semibold mt-1">{{ $message }}</p>
                     @enderror
@@ -91,15 +103,15 @@
                 </button>
             </form>
 
-            <div class="pt-2 border-t border-slate-700/50 text-center">
-                <a href="{{ route('login') }}" class="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white font-semibold transition-colors">
+            <div class="pt-2 border-t border-slate-200 dark:border-slate-700/50 text-center">
+                <a href="{{ route('login') }}" class="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white font-semibold transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                     <span>Kembali ke Halaman Login</span>
                 </a>
             </div>
         </div>
 
-        <p class="text-[11px] text-slate-500 text-center font-medium">
+        <p class="text-[11px] text-slate-400 dark:text-slate-500 text-center font-medium">
             &copy; {{ date('Y') }} {{ $branding['app_name'] ?? 'SELON BEAUTY' }}. All rights reserved.
         </p>
 

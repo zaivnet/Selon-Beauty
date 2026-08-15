@@ -21,11 +21,23 @@
             --brand-accent: {{ $branding['brand_accent'] }};
         }
     </style>
+    <!-- FOUC Prevention: sync theme before render -->
+    <script>
+        (function () {
+            try {
+                var stored = localStorage.getItem('attendance-theme') || 'system';
+                var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                var isDark = stored === 'dark' || (stored === 'system' && prefersDark);
+                if (isDark) document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+            } catch (e) {}
+        })();
+    </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-slate-100 text-slate-900 min-h-screen antialiased flex items-center justify-center p-4">
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen antialiased flex items-center justify-center p-4 transition-colors">
 
-    <div class="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
+    <div class="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden transition-colors">
         
         <!-- Header Branding Banner -->
         <div class="bg-gradient-to-r from-rose-700 via-rose-600 to-pink-600 p-8 text-white text-center relative">
@@ -45,64 +57,64 @@
             
             <!-- Flash Message Alerts -->
             @if (session('info'))
-                <div class="p-3.5 bg-blue-50 border border-blue-200 text-blue-800 rounded-xl text-xs font-semibold">
+                <div class="p-3.5 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800/60 text-blue-800 dark:text-blue-200 rounded-xl text-xs font-semibold">
                     {{ session('info') }}
                 </div>
             @endif
 
             @if (session('error'))
-                <div class="p-3.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-semibold">
+                <div class="p-3.5 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-300 rounded-xl text-xs font-semibold">
                     {{ session('error') }}
                 </div>
             @endif
 
             <div>
-                <h2 class="text-lg font-bold text-slate-800">Selamat Datang</h2>
-                <p class="text-xs text-slate-500 mt-0.5">Silakan masuk menggunakan Email, Nomor HP, atau Kode Karyawan terdaftar.</p>
+                <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100">Selamat Datang</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Silakan masuk menggunakan Email, Nomor HP, atau Kode Karyawan terdaftar.</p>
             </div>
 
             <form action="{{ url('/login') }}" method="POST" class="space-y-4">
                 @csrf
 
-                <!-- Login Identifier Field (Email, Phone, or Employee Code) -->
+                <!-- Login Identifier Field -->
                 <div>
-                    <label for="login" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Email / Nomor HP / Kode Karyawan</label>
+                    <label for="login" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Email / Nomor HP / Kode Karyawan</label>
                     <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/></svg>
                         </div>
-                        <input type="text" name="login" id="login" value="{{ old('login') }}" required autofocus placeholder="name@example.com atau 081234567890" class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all bg-slate-50/50">
+                        <input type="text" name="login" id="login" value="{{ old('login') }}" required autofocus placeholder="name@example.com atau 081234567890" class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all bg-slate-50/50 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500">
                     </div>
                     @error('login')
-                        <p class="text-xs font-semibold text-rose-600 mt-1.5">{{ $message }}</p>
+                        <p class="text-xs font-semibold text-rose-600 dark:text-rose-400 mt-1.5">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <!-- Password Field -->
                 <div>
-                    <label for="password" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Password</label>
+                    <label for="password" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Password</label>
                     <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                         </div>
-                        <input type="password" name="password" id="password" required placeholder="••••••••" class="w-full pl-11 pr-11 py-3 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all bg-slate-50/50">
-                        <button type="button" id="toggle-password" aria-label="Tampilkan password" aria-controls="password" class="absolute inset-y-0 right-0 pr-3.5 pl-3 flex items-center min-w-[44px] min-h-[44px] justify-center text-slate-400 hover:text-slate-600 focus:outline-none focus:text-slate-600 cursor-pointer">
+                        <input type="password" name="password" id="password" required placeholder="••••••••" class="w-full pl-11 pr-11 py-3 rounded-xl border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all bg-slate-50/50 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500">
+                        <button type="button" id="toggle-password" aria-label="Tampilkan password" aria-controls="password" class="absolute inset-y-0 right-0 pr-3.5 pl-3 flex items-center min-w-[44px] min-h-[44px] justify-center text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 focus:outline-none focus:text-slate-600 cursor-pointer">
                             <svg id="icon-eye" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                             <svg id="icon-eye-off" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22"/></svg>
                         </button>
                     </div>
                     @error('password')
-                        <p class="text-xs font-semibold text-rose-600 mt-1.5">{{ $message }}</p>
+                        <p class="text-xs font-semibold text-rose-600 dark:text-rose-400 mt-1.5">{{ $message }}</p>
                     @enderror
                 </div>
 
-                <!-- Remember Me Checkbox & Forgot Password Link -->
+                <!-- Remember Me & Forgot Password -->
                 <div class="flex items-center justify-between py-1">
-                    <label class="flex items-center gap-2 text-xs font-semibold text-slate-600 cursor-pointer">
-                        <input type="checkbox" name="remember" value="1" class="w-4 h-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500">
+                    <label class="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400 cursor-pointer">
+                        <input type="checkbox" name="remember" value="1" class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-rose-600 focus:ring-rose-500">
                         <span>Ingat saya</span>
                     </label>
-                    <a href="{{ route('password.request') }}" class="text-xs font-bold text-rose-600 hover:text-rose-700 transition-colors">
+                    <a href="{{ route('password.request') }}" class="text-xs font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 transition-colors">
                         Lupa Password?
                     </a>
                 </div>
