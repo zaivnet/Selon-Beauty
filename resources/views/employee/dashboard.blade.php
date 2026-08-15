@@ -88,24 +88,34 @@
         </section>
     @else
     <!-- Quick Menu Shortcuts -->
-    <div class="grid grid-cols-2 gap-3">
-        <a href="{{ route('employee.leave-requests.index') }}" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs hover:border-rose-300 transition-all flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold shrink-0">
+    <div class="grid grid-cols-3 gap-2.5">
+        <a href="{{ route('employee.leave-requests.index') }}" class="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs hover:border-indigo-300 transition-all flex flex-col items-center text-center gap-1.5 group">
+            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold group-hover:scale-105 transition-transform">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             </div>
             <div>
-                <h4 class="text-xs font-extrabold text-slate-900">Izin & Cuti</h4>
-                <p class="text-[10px] text-slate-500 font-medium">Pengajuan Cuti</p>
+                <h4 class="text-xs font-extrabold text-slate-900 leading-tight">Izin & Cuti</h4>
+                <p class="text-[9px] text-slate-500 font-semibold">Pengajuan</p>
             </div>
         </a>
 
-        <a href="{{ route('employee.overtime-requests.index') }}" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs hover:border-rose-300 transition-all flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center font-bold shrink-0">
+        <a href="{{ route('employee.overtime-requests.index') }}" class="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs hover:border-amber-300 transition-all flex flex-col items-center text-center gap-1.5 group">
+            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold group-hover:scale-105 transition-transform">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
             <div>
-                <h4 class="text-xs font-extrabold text-slate-900">Lembur</h4>
-                <p class="text-[10px] text-slate-500 font-medium">Pengajuan Lembur</p>
+                <h4 class="text-xs font-extrabold text-slate-900 leading-tight">Lembur</h4>
+                <p class="text-[9px] text-slate-500 font-semibold">Pengajuan</p>
+            </div>
+        </a>
+
+        <a href="{{ route('employee.shift-swaps.index') }}" class="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs hover:border-rose-300 transition-all flex flex-col items-center text-center gap-1.5 group">
+            <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold group-hover:scale-105 transition-transform">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+            </div>
+            <div>
+                <h4 class="text-xs font-extrabold text-slate-900 leading-tight">Tukar Jadwal</h4>
+                <p class="text-[9px] text-slate-500 font-semibold">Shift Swap</p>
             </div>
         </a>
     </div>
