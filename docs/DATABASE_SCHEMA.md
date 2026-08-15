@@ -314,6 +314,42 @@ Kolom:
 
 Unique Index: `['year', 'month']`
 
+## 16. Tabel `shift_swap_requests`
+
+Menyimpan permohonan pertukaran jadwal antar dua karyawan.
+
+Kolom:
+- `id` (bigint, PK)
+- `requester_employee_id` (foreignId -> employees, cascadeOnDelete)
+- `target_employee_id` (foreignId -> employees, cascadeOnDelete)
+- `requester_work_date` (date)
+- `target_work_date` (date)
+- `requester_original_shift_id` (foreignId -> shifts, cascadeOnDelete)
+- `target_original_shift_id` (foreignId -> shifts, cascadeOnDelete)
+- `requester_original_schedule_type` (string, default 'work')
+- `target_original_schedule_type` (string, default 'work')
+- `status` (string, default 'pending_target', index)
+  - `pending_target`: Menunggu persetujuan rekan kerja tujuan
+  - `pending_admin`: Menunggu persetujuan admin / owner
+  - `approved`: Disetujui admin / owner
+  - `rejected_by_target`: Ditolak rekan kerja tujuan
+  - `rejected_by_admin`: Ditolak admin / owner
+  - `cancelled`: Dibatalkan pemohon
+  - `invalidated`: Kadaluarsa / jadwal berubah
+- `requester_reason` (text, nullable)
+- `target_responded_at` (timestamp, nullable)
+- `target_response_reason` (text, nullable)
+- `admin_responded_at` (timestamp, nullable)
+- `admin_responded_by` (foreignId -> users, nullable)
+- `admin_response_reason` (text, nullable)
+- `approved_at` (timestamp, nullable)
+- `timestamps`
+
+Indexes:
+- `['requester_employee_id', 'requester_work_date']`
+- `['target_employee_id', 'target_work_date']`
+- `['status']`
+
 ## Indexes Penting
 
 - employees(status)
@@ -322,6 +358,7 @@ Unique Index: `['year', 'month']`
 - attendance_records(work_date, status)
 - leave_requests(status, start_date, end_date)
 - overtime_requests(status, work_date)
+- shift_swap_requests(status)
 - audit_logs(user_id, created_at)
 
 ## Seed Policy
@@ -334,3 +371,4 @@ Production seed hanya boleh:
 - tidak boleh membuat owner dengan password hardcoded.
 
 Initial owner dibuat melalui proses setup aman atau Artisan command khusus.
+

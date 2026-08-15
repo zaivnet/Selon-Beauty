@@ -188,6 +188,12 @@ Route::middleware(['auth', 'role:superadmin,owner,admin', 'prevent.private.cache
     Route::post('/monthly-recaps/reopen', [AdminMonthlyRecapController::class, 'reopenPeriod'])->middleware('role:superadmin,owner')->name('monthly-recaps.reopen');
     Route::get('/monthly-recaps/{employee}', [AdminMonthlyRecapController::class, 'show'])->name('monthly-recaps.show');
     Route::get('/monthly-recaps/{employee}/print', [AdminMonthlyRecapController::class, 'print'])->name('monthly-recaps.print');
+
+    // Shift Swap Management
+    Route::get('/shift-swaps', [\App\Http\Controllers\Admin\ShiftSwapController::class, 'index'])->name('shift-swaps.index');
+    Route::get('/shift-swaps/{swap}', [\App\Http\Controllers\Admin\ShiftSwapController::class, 'show'])->name('shift-swaps.show');
+    Route::post('/shift-swaps/{swap}/approve', [\App\Http\Controllers\Admin\ShiftSwapController::class, 'approve'])->name('shift-swaps.approve');
+    Route::post('/shift-swaps/{swap}/reject', [\App\Http\Controllers\Admin\ShiftSwapController::class, 'reject'])->name('shift-swaps.reject');
 });
 
 // Employee & Owner Protected Routes (/app/*)
@@ -203,6 +209,13 @@ Route::middleware(['auth', 'role:owner,employee', 'prevent.private.cache'])->pre
     // Employee Core Attendance Engine (Sprint 06 & Sprint 08)
     Route::post('/attendance/check-in', [EmployeeAttendanceController::class, 'checkIn'])->name('attendance.check-in');
     Route::post('/attendance/check-out', [EmployeeAttendanceController::class, 'checkOut'])->name('attendance.check-out');
+
+    // Shift Swap Requests
+    Route::get('/shift-swaps', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'index'])->name('shift-swaps.index');
+    Route::get('/shift-swaps/create', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'create'])->name('shift-swaps.create');
+    Route::post('/shift-swaps', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'store'])->name('shift-swaps.store');
+    Route::post('/shift-swaps/{swap}/respond', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'respond'])->name('shift-swaps.respond');
+    Route::post('/shift-swaps/{swap}/cancel', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'cancel'])->name('shift-swaps.cancel');
 
     // Leave Requests (Sprint 10)
     Route::get('/leave-requests', [EmployeeLeaveRequestController::class, 'index'])->name('leave-requests.index');

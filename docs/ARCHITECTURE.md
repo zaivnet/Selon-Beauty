@@ -327,13 +327,21 @@ Jangan hanya menampilkan "Terjadi kesalahan".
 
 - **Metadata-Only Period State**: Periode bulanan mengelola dua status (`OPEN`, `CLOSED`) pada tabel `attendance_periods` tanpa duplikasi data historis atau pembuatan tabel snapshot payroll nominal.
 - **Centralized Source of Truth**: `AttendancePeriodService` menjadi pusat otoritas status periode (`getOrCreatePeriod`, `isOpen`, `isClosed`, `assertPeriodOpen`).
-- **Comprehensive Mutation Locks**: Saat periode ditutup (`CLOSED`), seluruh mutasi pada tanggal di periode tersebut langsung ditolak dengan `ValidationException`:
-  - Attendance check-in, check-out, koreksi admin, & checkout recovery.
-  - Request lembur (submit, cancel, approve, reject).
-  - Sesi lembur (start, finish, force finish, cancel, & koreksi admin).
-  - Permohonan cuti / izin (termasuk validasi tumpang tindih rentang tanggal multi-hari).
-  - Override jadwal kerja & regular schedule assignment/delete/copy.
-  - Event kalender kerja (libur nasional & hari kerja khusus).
+- **Comprehensive Mutation Locks**: Saat periode ditutup (`CLOSED`), seluruh mutasi pada tanggal di periode meupun rentang tanggal yang bersinggungan langsung ditolak dengan `ValidationException`.
 - **Close Eligibility Validation**: Periode hanya dapat ditutup jika `missing_checkout_count == 0` dan `active_overtime_count == 0`.
 - **Role Authorization Policy**: Penutupan & pembukaan kembali periode khusus untuk `owner` dan `superadmin` dengan alasan minimal 5 karakter wajib. Admin biasa hanya memiliki hak baca.
-- **Immutability & Audit Trail**: Penutupan dan pembukaan periode dicatat secara konsisten di `audit_logs` (`attendance_period.closed`, `attendance_period.reopened`) dan diikutsertakan dalam sistem Backup / Restore aplikasi.
+- **Immutability & Audit Trail**: Penutupan dan pembukaan periode dicatat secara konsisten di `audit_logs` dan diikutsertakan dalam sistem Backup / Restore aplikasi.
+
+## 18. Employee Shift Swap Architecture
+
+- **Two-Party Swap Model**: Pertukaran jadwal dua arah antara Pemohon (Ayu) dan Tujuan (Dia) tanpa perantara multi-employee atau open marketplace.
+- **Flexible Work Dates**: Mendukung penukaran tanggal yang sama maupun tanggal berbeda (`requester_work_date` & `target_work_date`).
+- **`EffectiveScheduleService` Integration**: Resolusi jadwal efektif mendeteksi jadwal kerja aktif (`WORK`) secara authoritative sebelum pengajuan dan sebelum persetujuan akhir.
+- **Applying Swaps via Overrides**: Saat disetujui Admin/Owner, dua data `EmployeeScheduleOverride` berjenis `work` dibuat otomatis dengan alasan `Shift swap #ID`. Master jadwal reguler dan master shift tidak pernah diubah secara destruktif.
+- **Comprehensive Revalidation Guardrails**:
+  - Period Lock check (`AttendancePeriodService::assertPeriodOpen`) menolak swap pada tanggal periode tertutup.
+  - Absence of Attendance/Leave/Overtime conflicts.
+  - Direct rejection jika terdapat `EmployeeScheduleOverride` manual sebelumnya.
+  - Revalidasi perubahan jadwal (*stale schedule*) sebelum persetujuan akhir.
+- **Audit Trail & Real-time Notifications**: Semua transisi status dicatat di `audit_logs` (`shift_swap.requested`, `target_approved`, `target_rejected`, `admin_approved`, `admin_rejected`, `cancelled`) dan notifikasi database real-time dikirimkan ke Pemohon, Tujuan, dan seluruh Admin.
+

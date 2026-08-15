@@ -262,3 +262,19 @@ Minimal satu akun Superadmin yang aktif (`is_active = true`) WAJIB selalu tersed
 4. Syarat kelayakan penutupan periode (`close eligibility`): tidak ada presensi missing checkout (`missing_checkout_count == 0`) dan tidak ada sesi lembur aktif (`active_overtime_count == 0`).
 5. Permohonan cuti multi-hari yang melintasi tanggal periode terkunci wajib ditolak secara keseluruhan untuk mencegah ketidakseragaman data.
 6. Penutupan & pembukaan periode wajib membuat audit log (`attendance_period.closed`, `attendance_period.reopened`) dan diikutsertakan dalam sistem Backup/Restore aplikasi.
+
+## RULE 041 — Employee Shift Swap & Safety Guardrails
+1. Pertukaran jadwal kerja (*shift swap*) hanya berlaku dua arah (dua karyawan aktif dengan `attendance_enabled = true`) untuk shift kerja aktif (`WORK`).
+2. Swap dapat dilakukan pada tanggal jadwal yang sama maupun tanggal jadwal berbeda (`requester_work_date` & `target_work_date`), dengan syarat kedua tanggal berkategori hari kerja aktif (`WORK`) dan belum memasuki masa lalu.
+3. Pertukaran jadwal wajib melalui dua tahap persetujuan: persetujuan karyawan tujuan (`pending_target` &rarr; `pending_admin`) diikuti persetujuan admin/owner (`pending_admin` &rarr; `approved`).
+4. Penerapan swap dilakukan dengan membuat dua data `EmployeeScheduleOverride` berjenis `work` berelasi dengan shift pasangan. Master jadwal reguler dan master shift tidak pernah diubah secara destruktif.
+5. Permintaan swap WAJIB ditolak server-side jika:
+   - Tanggal jadwal berada di periode yang terkunci (`AttendancePeriodService::assertPeriodOpen`).
+   - Karyawan sudah memiliki presensi check-in/out pada tanggal terkait.
+   - Karyawan memiliki izin/cuti disetujui (*approved leave*) yang menutupi tanggal jadwal yang akan diterima.
+   - Terdapat sesi lembur aktif (*active overtime session*) pada tanggal terkait.
+   - Tanggal jadwal sudah memiliki `EmployeeScheduleOverride` manual sebelumnya.
+   - Terdapat permintaan swap aktif lain yang sedang berjalan (*duplicate active swap*).
+   - Jadwal mengalami perubahan sebelum admin memberikan persetujuan (*stale schedule protection* &rarr; status `invalidated`).
+6. Seluruh aksi dan perubahan status swap wajib dicatat di `audit_logs` (`shift_swap.requested`, `target_approved`, `target_rejected`, `admin_approved`, `admin_rejected`, `cancelled`) dan notifikasi database dikirimkan ke pihak terkait.
+

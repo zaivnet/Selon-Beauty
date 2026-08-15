@@ -34,6 +34,7 @@ class BackupService
         'holidays',
         'employee_schedule_overrides',
         'attendance_periods',
+        'shift_swap_requests',
         'backup_records',
     ];
 
