@@ -26,8 +26,7 @@ class EmployeePortalThemeTest extends TestCase
             'is_active' => true,
         ]);
 
-        Employee::create([
-            'user_id' => $this->employeeUser->id,
+        $employee = Employee::create([
             'full_name' => 'Karyawan Test',
             'employee_code' => 'EMP001',
             'gender' => 'female',
@@ -35,12 +34,13 @@ class EmployeePortalThemeTest extends TestCase
             'is_active' => true,
         ]);
 
+        $this->employeeUser->update(['employee_id' => $employee->id]);
         $this->employeeUser->refresh();
     }
 
     public function test_employee_layout_includes_shared_theme_bootstrap_script(): void
     {
-        $response = $this->actingAs($this->employeeUser)
+        $response = $this->actingAs($this->employeeUser->fresh())
             ->get(route('employee.dashboard'));
 
         $response->assertStatus(200);
@@ -53,7 +53,7 @@ class EmployeePortalThemeTest extends TestCase
 
     public function test_employee_dashboard_includes_dark_classes_for_shell_and_cards(): void
     {
-        $response = $this->actingAs($this->employeeUser)
+        $response = $this->actingAs($this->employeeUser->fresh())
             ->get(route('employee.dashboard'));
 
         $response->assertStatus(200);
@@ -67,7 +67,7 @@ class EmployeePortalThemeTest extends TestCase
 
     public function test_employee_profile_includes_theme_switcher_controls(): void
     {
-        $response = $this->actingAs($this->employeeUser)
+        $response = $this->actingAs($this->employeeUser->fresh())
             ->get(route('employee.profile.index'));
 
         $response->assertStatus(200);
