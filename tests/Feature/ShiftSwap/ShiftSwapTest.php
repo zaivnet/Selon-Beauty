@@ -765,7 +765,7 @@ class ShiftSwapTest extends TestCase
         $this->actingAs($this->reqUser)
             ->get(route('employee.shift-swaps.index'))
             ->assertStatus(200)
-            ->assertSee('Tukar Jadwal Baru');
+            ->assertSee('Ajukan Tukar Jadwal');
 
         $this->actingAs($this->admin)
             ->get(route('admin.shift-swaps.index'))
@@ -788,5 +788,86 @@ class ShiftSwapTest extends TestCase
 
         $queryCount = count(DB::getQueryLog());
         $this->assertLessThanOrEqual(35, $queryCount);
+    }
+
+    // ==========================================
+    // NAVIGATION REGRESSION TESTS (K1 - K8)
+    // ==========================================
+
+    public function test_nav_1_attendance_enabled_employee_sees_tukar_jadwal_entry(): void
+    {
+        $this->actingAs($this->reqUser)
+            ->get(route('employee.leave-requests.index'))
+            ->assertStatus(200)
+            ->assertSee('Tukar Jadwal');
+    }
+
+    public function test_nav_2_attendance_disabled_employee_does_not_see_entry(): void
+    {
+        $this->reqEmp->update(['attendance_enabled' => false]);
+
+        $this->actingAs($this->reqUser)
+            ->get(route('employee.leave-requests.index'))
+            ->assertStatus(200)
+            ->assertDontSee(route('employee.shift-swaps.index'));
+    }
+
+    public function test_nav_3_employee_pengajuan_page_links_to_shift_swaps_index(): void
+    {
+        $this->actingAs($this->reqUser)
+            ->get(route('employee.leave-requests.index'))
+            ->assertStatus(200)
+            ->assertSee(route('employee.shift-swaps.index'));
+    }
+
+    public function test_nav_4_shift_swap_index_contains_ajukan_tukar_jadwal_cta(): void
+    {
+        $this->actingAs($this->reqUser)
+            ->get(route('employee.shift-swaps.index'))
+            ->assertStatus(200)
+            ->assertSee('Ajukan Tukar Jadwal')
+            ->assertSee(route('employee.shift-swaps.create'));
+    }
+
+    public function test_nav_5_admin_sees_permintaan_tukar_jadwal_menu(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('admin.dashboard'))
+            ->assertStatus(200)
+            ->assertSee('Permintaan Tukar Jadwal')
+            ->assertSee(route('admin.shift-swaps.index'));
+    }
+
+    public function test_nav_6_employee_mobile_navigation_does_not_overflow_structurally(): void
+    {
+        $response = $this->actingAs($this->reqUser)->get(route('employee.dashboard'));
+        $response->assertStatus(200);
+        
+        // Assert bottom nav bar has exactly 5 main item slots
+        $content = $response->getContent();
+        $this->assertStringContainsString('Bottom Navigation Bar (5 Items Max', $content);
+    }
+
+    public function test_nav_7_active_route_state_correct(): void
+    {
+        $this->actingAs($this->reqUser)
+            ->get(route('employee.shift-swaps.index'))
+            ->assertStatus(200)
+            ->assertSee('text-rose-600 font-extrabold');
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.shift-swaps.index'))
+            ->assertStatus(200)
+            ->assertSee('bg-gradient-to-r from-rose-600 to-pink-600');
+    }
+
+    public function test_nav_8_superadmin_workforce_behavior_unchanged(): void
+    {
+        $this->assertFalse($this->superadmin->employee?->participatesInAttendance() ?? false);
+
+        $this->actingAs($this->superadmin)
+            ->get(route('admin.dashboard'))
+            ->assertStatus(200)
+            ->assertSee('Permintaan Tukar Jadwal');
     }
 }

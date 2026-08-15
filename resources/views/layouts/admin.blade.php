@@ -158,6 +158,15 @@
                     <span x-show="!collapsed" class="truncate">Lembur</span>
                 </a>
 
+                <!-- Tukar Jadwal -->
+                <a href="{{ route('admin.shift-swaps.index') }}" 
+                   :title="collapsed ? 'Permintaan Tukar Jadwal' : ''"
+                   :class="collapsed ? 'justify-center px-0' : 'px-3'"
+                   class="flex items-center gap-3 py-2.5 rounded-xl transition-all relative group {{ request()->routeIs('admin.shift-swaps.*') ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white font-extrabold shadow-md shadow-rose-900/30' : 'text-slate-400 hover:text-white hover:bg-slate-800/80' }}">
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                    <span x-show="!collapsed" class="truncate">Permintaan Tukar Jadwal</span>
+                </a>
+
                 <!-- Laporan -->
                 <a href="{{ route('admin.reports.attendance') }}" 
                    :title="collapsed ? 'Laporan & Export' : ''"

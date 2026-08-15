@@ -4,10 +4,24 @@
 
 @section('content')
 <div class="space-y-4 md:space-y-5" x-data="{ respondModal: false, swapId: null, actionType: '', targetName: '', reqDate: '' }">
-    <nav class="flex gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-xs" aria-label="Navigasi Jadwal">
-        <a href="{{ route('employee.schedules.index') }}" class="flex min-h-[44px] flex-1 items-center justify-center rounded-lg px-3 text-[11px] font-extrabold text-slate-500 hover:text-slate-900">Jadwal Saya</a>
-        <a href="{{ route('employee.shift-swaps.index') }}" aria-current="page" class="flex min-h-[44px] flex-1 items-center justify-center rounded-lg bg-slate-900 px-3 text-[11px] font-extrabold text-white">Tukar Jadwal</a>
-    </nav>
+    <!-- Navigation Tabs -->
+    <div class="flex bg-slate-200/80 p-1 rounded-xl gap-1 text-xs font-bold">
+        <a href="{{ route('employee.leave-requests.index') }}" class="flex-1 text-center py-2 rounded-lg transition-all {{ request()->routeIs('employee.leave-requests.*') ? 'bg-white text-rose-700 shadow-xs' : 'text-slate-600 hover:text-slate-900' }}">
+            Izin / Sakit / Cuti
+        </a>
+        <a href="{{ route('employee.overtime-requests.index') }}" class="flex-1 text-center py-2 rounded-lg transition-all {{ request()->routeIs('employee.overtime-requests.*') ? 'bg-white text-rose-700 shadow-xs' : 'text-slate-600 hover:text-slate-900' }}">
+            Lembur
+        </a>
+        @if(auth()->user()?->role !== 'superadmin' && auth()->user()?->employee?->attendance_enabled !== false)
+            @php($pendingSwapCount = \App\Models\ShiftSwapRequest::where('target_employee_id', auth()->user()?->employee_id)->where('status', 'pending_target')->count())
+            <a href="{{ route('employee.shift-swaps.index') }}" class="flex-1 text-center py-2 rounded-lg transition-all flex items-center justify-center gap-1 {{ request()->routeIs('employee.shift-swaps.*') ? 'bg-white text-rose-700 shadow-xs' : 'text-slate-600 hover:text-slate-900' }}">
+                <span>Tukar Jadwal</span>
+                @if($pendingSwapCount > 0)
+                    <span class="rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-black text-white leading-none">{{ $pendingSwapCount }}</span>
+                @endif
+            </a>
+        @endif
+    </div>
 
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -16,7 +30,7 @@
         </div>
         <a href="{{ route('employee.shift-swaps.create') }}" class="flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 text-xs font-black text-white shadow-xs hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            Tukar Jadwal Baru
+            Ajukan Tukar Jadwal
         </a>
     </div>
 
