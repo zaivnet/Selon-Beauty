@@ -44,7 +44,7 @@ class PwaTest extends TestCase
         $this->assertIsArray($json);
         $this->assertEquals('SELON BEAUTY Attendance', $json['name']);
         $this->assertEquals('SELON BEAUTY', $json['short_name']);
-        $this->assertEquals('/app/dashboard', $json['start_url']);
+        $this->assertEquals('/', $json['start_url']);
         $this->assertEquals('standalone', $json['display']);
         $this->assertEquals('#e11d48', $json['theme_color']);
         $this->assertCount(3, $json['icons']);
@@ -54,7 +54,7 @@ class PwaTest extends TestCase
     {
         $response = $this->get('/sw.js');
         $response->assertOk();
-        $this->assertStringContainsString('selon-beauty-static-v1', $response->getContent());
+        $this->assertStringContainsString('selon-beauty-static-v2', $response->getContent());
         $this->assertStringContainsString('offline.html', $response->getContent());
     }
 

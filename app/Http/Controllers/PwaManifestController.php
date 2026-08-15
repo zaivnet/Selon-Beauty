@@ -18,7 +18,7 @@ class PwaManifestController extends Controller
             'name' => $appName,
             'short_name' => $appShortName,
             'description' => $brandingService->getAppTagline(),
-            'start_url' => '/app/dashboard',
+            'start_url' => '/',
             'scope' => '/',
             'display' => 'standalone',
             'orientation' => 'portrait',

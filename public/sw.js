@@ -1,7 +1,6 @@
-const CACHE_NAME = 'selon-beauty-static-v1';
+const CACHE_NAME = 'selon-beauty-static-v2';
 const PRECACHE_ASSETS = [
     '/offline.html',
-    '/manifest.webmanifest',
     '/icons/icon-192x192.png',
     '/icons/icon-512x512.png',
     '/icons/maskable-icon-512x512.png',
@@ -33,7 +32,7 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// Fetch Event: Network-Only for Private Authenticated Routes & POST; Cache-First for Static Assets
+// Fetch Event: Network-Only for Private Authenticated & Auth Nav Routes; Cache-First for Static Assets
 self.addEventListener('fetch', (event) => {
     const request = event.request;
     const url = new URL(request.url);
@@ -43,12 +42,15 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // 2. Private Authenticated Routes & Sensitive Media -> Network-Only (Never cache private HTML/data)
-    const isPrivate = url.pathname.startsWith('/app') ||
+    // 2. Private Authenticated & Auth Navigation Routes -> Network-Only (Never cache private HTML or session redirects)
+    const isPrivateOrAuthNav = url.pathname === '/' ||
+                      url.pathname === '/login' ||
+                      url.pathname.startsWith('/app') ||
                       url.pathname.startsWith('/admin') ||
                       url.pathname.startsWith('/attendance') ||
                       url.pathname.startsWith('/leave-requests') ||
                       url.pathname.startsWith('/overtime-requests') ||
+                      url.pathname.startsWith('/shift-swaps') ||
                       url.pathname.startsWith('/reports') ||
                       url.pathname.startsWith('/notifications') ||
                       url.pathname.startsWith('/forgot-password') ||
@@ -56,7 +58,7 @@ self.addEventListener('fetch', (event) => {
                       url.pathname.startsWith('/password') ||
                       url.pathname.startsWith('/api');
 
-    if (isPrivate) {
+    if (isPrivateOrAuthNav) {
         event.respondWith(
             fetch(request).catch(() => {
                 // If HTML navigation request and offline, serve offline fallback
@@ -72,7 +74,7 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // 3. Static Assets (CSS, JS, Fonts, Icons, Manifest, Offline Page) -> Cache-First
+    // 3. Static Assets (CSS, JS, Fonts, Icons, Offline Page) -> Cache-First
     event.respondWith(
         caches.match(request).then((cachedResponse) => {
             if (cachedResponse) {

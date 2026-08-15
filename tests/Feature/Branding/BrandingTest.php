@@ -258,6 +258,138 @@ class BrandingTest extends TestCase
         $this->get(route('branding.media', ['type' => 'logo']))->assertNotFound();
     }
 
+    public function test_pwa_manifest_start_url_is_root_path(): void
+    {
+        $response = $this->get(route('pwa.manifest'));
+
+        $response->assertOk();
+        $response->assertJson([
+            'start_url' => '/',
+            'scope' => '/',
+            'display' => 'standalone',
+        ]);
+    }
+
+    public function test_root_route_redirects_guest_to_login(): void
+    {
+        User::create([
+            'name' => 'Superadmin Initial',
+            'email' => 'super@selonbeauty.com',
+            'password' => Hash::make('password123'),
+            'role' => 'superadmin',
+            'is_active' => true,
+        ]);
+
+        $response = $this->get('/');
+
+        $response->assertRedirect(route('login'));
+    }
+
+    public function test_root_route_redirects_employee_to_employee_dashboard(): void
+    {
+        $response = $this->actingAs($this->employeeUser)->get('/');
+
+        $response->assertRedirect(route('employee.dashboard'));
+    }
+
+    public function test_root_route_redirects_admin_to_admin_dashboard(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin Test',
+            'email' => 'admin@selonbeauty.com',
+            'password' => Hash::make('password123'),
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($admin)->get('/');
+
+        $response->assertRedirect(route('admin.dashboard'));
+    }
+
+    public function test_root_route_redirects_owner_to_admin_dashboard(): void
+    {
+        $response = $this->actingAs($this->ownerUser)->get('/');
+
+        $response->assertRedirect(route('admin.dashboard'));
+    }
+
+    public function test_root_route_redirects_superadmin_to_admin_dashboard(): void
+    {
+        $superadmin = User::create([
+            'name' => 'Superadmin Test',
+            'email' => 'superadmin@selonbeauty.com',
+            'password' => Hash::make('password123'),
+            'role' => 'superadmin',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($superadmin)->get('/');
+
+        $response->assertRedirect(route('admin.dashboard'));
+    }
+
+    public function test_login_employee_redirect_behavior_unchanged(): void
+    {
+        $response = $this->post('/login', [
+            'login' => $this->employeeUser->email,
+            'password' => 'password123',
+        ]);
+
+        $response->assertRedirect(route('employee.dashboard'));
+    }
+
+    public function test_login_owner_redirect_behavior_unchanged(): void
+    {
+        $response = $this->post('/login', [
+            'login' => $this->ownerUser->email,
+            'password' => 'password123',
+        ]);
+
+        $response->assertRedirect(route('admin.dashboard'));
+    }
+
+    public function test_login_admin_redirect_behavior_unchanged(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin Test 2',
+            'email' => 'admin2@selonbeauty.com',
+            'password' => Hash::make('password123'),
+            'role' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $response = $this->post('/login', [
+            'login' => $admin->email,
+            'password' => 'password123',
+        ]);
+
+        $response->assertRedirect(route('admin.dashboard'));
+    }
+
+    public function test_service_worker_does_not_cache_private_authenticated_html(): void
+    {
+        $response = $this->get('/sw.js');
+
+        $response->assertOk();
+        $content = $response->getContent();
+
+        $this->assertStringContainsString('selon-beauty-static-v2', $content);
+        $this->assertStringContainsString("url.pathname === '/'", $content);
+        $this->assertStringContainsString("url.pathname === '/login'", $content);
+        $this->assertStringContainsString("url.pathname.startsWith('/app')", $content);
+        $this->assertStringContainsString("url.pathname.startsWith('/admin')", $content);
+        $this->assertStringNotContainsString("'/manifest.webmanifest'", $content);
+    }
+
+    public function test_pwa_employee_behavior_does_not_regress(): void
+    {
+        $this->actingAs($this->employeeUser)
+            ->get(route('employee.dashboard'))
+            ->assertOk()
+            ->assertSee('Home');
+    }
+
     private function validPayload(): array
     {
         return [
