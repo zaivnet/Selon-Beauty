@@ -38,8 +38,8 @@ return new class extends Migration
             $table->timestamp('approved_at')->nullable();
             $table->timestamps();
 
-            $table->index(['requester_employee_id', 'requester_work_date']);
-            $table->index(['target_employee_id', 'target_work_date']);
+            $table->index(['requester_employee_id', 'requester_work_date'], 'ssr_requester_date_idx');
+            $table->index(['target_employee_id', 'target_work_date'], 'ssr_target_date_idx');
         });
     }
 
