@@ -53,7 +53,22 @@
               }
           }
       }"
-      x-init="$watch('collapsed', val => { try { localStorage.setItem('admin_sidebar_collapsed', val) } catch(e){} })"
+      x-init="
+          $watch('collapsed', val => { try { localStorage.setItem('admin_sidebar_collapsed', val) } catch(e){} });
+          const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+          const handleSystemThemeChange = (e) => {
+              if (theme === 'system') {
+                  if (e.matches) {
+                      document.documentElement.classList.add('dark');
+                  } else {
+                      document.documentElement.classList.remove('dark');
+                  }
+              }
+          };
+          if (mediaQuery.addEventListener) {
+              mediaQuery.addEventListener('change', handleSystemThemeChange);
+          }
+      "
       class="bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen antialiased flex flex-col md:flex-row relative transition-colors duration-200">
 
     <!-- Mobile Sidebar Backdrop Overlay -->
@@ -256,9 +271,9 @@
     </aside>
 
     <!-- Main Content Area -->
-    <div class="flex-1 flex flex-col min-w-0">
+    <div class="flex-1 flex flex-col min-w-0 bg-slate-100 dark:bg-slate-950 transition-colors">
         <!-- Topbar Header -->
-        <header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 md:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs transition-colors">
+        <header class="h-16 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-4 md:px-6 flex items-center justify-between sticky top-0 z-30 shadow-xs transition-colors">
 
             <!-- Left Side: Mobile Hamburger, Desktop Toggle & Page Title -->
             <div class="flex items-center gap-2">
@@ -461,7 +476,7 @@
         </header>
 
         <!-- Page Content Area -->
-        <main class="flex-1 p-4 md:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
+        <main class="flex-1 p-4 md:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6 bg-slate-100 dark:bg-slate-950 transition-colors">
             @yield('content')
         </main>
     </div>

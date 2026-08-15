@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+@variant dark (&:where(.dark, .dark *));
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../views/**/*.blade.php';
@@ -24,6 +27,13 @@ body {
     background-color: #f8fafc;
     color: #0f172a;
     -webkit-tap-highlight-color: transparent;
+}
+
+html.dark,
+html.dark body,
+html.dark main {
+    background-color: #020617 !important; /* slate-950 */
+    color: #f8fafc !important;
 }
 
 /* ==========================================================================
