@@ -12,12 +12,17 @@ use Illuminate\Support\Facades\DB;
 
 class EmployeeScheduleService
 {
+    public function __construct(protected ?AttendancePeriodService $periodService = null)
+    {
+        $this->periodService = $periodService ?? new AttendancePeriodService;
+    }
     /**
      * Assign or create a schedule entry for an employee on a specific date.
      */
     public function assignSchedule(array $data, User $actor): EmployeeSchedule
     {
         return DB::transaction(function () use ($data, $actor) {
+            $this->periodService->assertPeriodOpen($data['work_date']);
             $this->ensureAttendanceParticipant((int) $data['employee_id']);
             $scheduleType = $data['schedule_type'] ?? 'work';
 
@@ -70,6 +75,7 @@ class EmployeeScheduleService
     public function updateSchedule(EmployeeSchedule $schedule, array $data, User $actor): EmployeeSchedule
     {
         return DB::transaction(function () use ($schedule, $data, $actor) {
+            $this->periodService->assertPeriodOpen($data['work_date'] ?? $schedule->work_date);
             $this->ensureAttendanceParticipant((int) ($data['employee_id'] ?? $schedule->employee_id));
             $beforeData = $schedule->toArray();
             $scheduleType = $data['schedule_type'] ?? $schedule->schedule_type;
@@ -141,6 +147,7 @@ class EmployeeScheduleService
     public function markOff(int $employeeId, string $workDate, ?string $notes, User $actor): EmployeeSchedule
     {
         return DB::transaction(function () use ($employeeId, $workDate, $notes, $actor) {
+            $this->periodService->assertPeriodOpen($workDate);
             $existing = EmployeeSchedule::where('employee_id', $employeeId)
                 ->whereDate('work_date', $workDate)
                 ->first();
@@ -169,6 +176,7 @@ class EmployeeScheduleService
     public function deleteSchedule(EmployeeSchedule $schedule, User $actor): bool
     {
         return DB::transaction(function () use ($schedule, $actor) {
+            $this->periodService->assertPeriodOpen($schedule->work_date);
             // Check if linked attendance records exist
             $hasAttendance = DB::table('attendance_records')
                 ->where('work_schedule_id', $schedule->id)
@@ -264,6 +272,7 @@ class EmployeeScheduleService
 
         DB::transaction(function () use ($preview, $overwriteConflicts, $actor, &$copied, &$skipped) {
             foreach ($preview['items'] as $item) {
+                $this->periodService->assertPeriodOpen($item['target_date']);
                 $existing = EmployeeSchedule::where('employee_id', $item['employee_id'])
                     ->whereDate('work_date', $item['target_date'])
                     ->first();

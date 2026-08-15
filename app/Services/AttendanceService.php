@@ -23,8 +23,10 @@ class AttendanceService
         protected SelfieService $selfieService,
         protected AttendanceStatusResolver $statusResolver,
         protected ?EffectiveScheduleService $effectiveScheduleService = null,
+        protected ?AttendancePeriodService $periodService = null,
     ) {
         $this->effectiveScheduleService = $effectiveScheduleService ?? new EffectiveScheduleService;
+        $this->periodService = $periodService ?? new AttendancePeriodService;
     }
 
     /**
@@ -151,6 +153,7 @@ class AttendanceService
                 }
 
                 $workDateStr = is_string($schedule->work_date) ? substr($schedule->work_date, 0, 10) : $schedule->work_date->format('Y-m-d');
+                $this->periodService->assertPeriodOpen($workDateStr);
 
                 // Check duplicate check-in for this work date
                 $existingRecord = AttendanceRecord::where('employee_id', $employee->id)
@@ -277,6 +280,7 @@ class AttendanceService
                 $workDateStr = $schedule->work_date instanceof \DateTimeInterface
                     ? $schedule->work_date->format('Y-m-d')
                     : substr((string) $schedule->work_date, 0, 10);
+                $this->periodService->assertPeriodOpen($workDateStr);
                 $record = AttendanceRecord::where('employee_id', $employee->id)
                     ->whereDate('work_date', $workDateStr)
                     ->lockForUpdate()
@@ -466,6 +470,7 @@ class AttendanceService
                 ->findOrFail($record->id);
             $beforeData = $record->getAttributes();
             $workDateStr = is_string($record->work_date) ? substr($record->work_date, 0, 10) : $record->work_date->format('Y-m-d');
+            $this->periodService->assertPeriodOpen($workDateStr);
             $timezone = $this->timezone();
             $checkInAt = $this->parseCorrectionTimestamp($checkInStr, $workDateStr, $timezone);
             $checkOutAt = $this->parseCorrectionTimestamp($checkOutStr, $workDateStr, $timezone);

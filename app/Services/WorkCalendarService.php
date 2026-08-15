@@ -14,11 +14,16 @@ use Illuminate\Support\Facades\DB;
 
 class WorkCalendarService
 {
+    public function __construct(protected ?AttendancePeriodService $periodService = null)
+    {
+        $this->periodService = $periodService ?? new AttendancePeriodService;
+    }
     public function createCalendarDay(array $data, User $actor): Holiday
     {
         $this->ensureManager($actor);
 
         return DB::transaction(function () use ($data, $actor) {
+            $this->periodService->assertPeriodOpen($data['date']);
             if (Holiday::whereDate('date', $data['date'])->lockForUpdate()->exists()) {
                 throw new \InvalidArgumentException('Tanggal tersebut sudah memiliki event kalender kerja.');
             }
@@ -39,6 +44,8 @@ class WorkCalendarService
         $this->ensureManager($actor);
 
         return DB::transaction(function () use ($day, $data, $actor) {
+            $this->periodService->assertPeriodOpen($day->date->format('Y-m-d'));
+            $this->periodService->assertPeriodOpen($data['date']);
             $day = Holiday::lockForUpdate()->findOrFail($day->id);
             if (Holiday::whereDate('date', $data['date'])->where('id', '!=', $day->id)->exists()) {
                 throw new \InvalidArgumentException('Tanggal tersebut sudah memiliki event kalender kerja.');
@@ -65,6 +72,7 @@ class WorkCalendarService
         $this->ensureManager($actor);
         $this->ensureReason($reason);
         DB::transaction(function () use ($day, $reason, $actor) {
+            $this->periodService->assertPeriodOpen($day->date->format('Y-m-d'));
             $day = Holiday::lockForUpdate()->findOrFail($day->id);
             $before = $day->getAttributes();
             $metadata = ['date' => $day->date->format('Y-m-d')];
@@ -79,12 +87,14 @@ class WorkCalendarService
         $this->ensureReason($data['reason']);
 
         return DB::transaction(function () use ($data, $actor, $override) {
+            $this->periodService->assertPeriodOpen($data['date']);
             $employee = Employee::findOrFail($data['employee_id']);
             if (! $employee->isCurrentAttendanceWorkforceMember()) {
                 throw new \InvalidArgumentException('Karyawan tidak terdaftar sebagai peserta sistem kehadiran.');
             }
 
             if ($override) {
+                $this->periodService->assertPeriodOpen($override->date->format('Y-m-d'));
                 $override = EmployeeScheduleOverride::with(['employee.user', 'shift'])->lockForUpdate()->findOrFail($override->id);
                 $conflict = EmployeeScheduleOverride::where('employee_id', $data['employee_id'])
                     ->whereDate('date', $data['date'])->where('id', '!=', $override->id)->exists();
@@ -142,6 +152,7 @@ class WorkCalendarService
         $this->ensureManager($actor);
         $this->ensureReason($reason);
         DB::transaction(function () use ($override, $reason, $actor) {
+            $this->periodService->assertPeriodOpen($override->date->format('Y-m-d'));
             $override = EmployeeScheduleOverride::with(['employee.user', 'shift'])->lockForUpdate()->findOrFail($override->id);
             $before = $override->getAttributes();
             $metadata = ['employee_id' => $override->employee_id, 'date' => $override->date->format('Y-m-d')];

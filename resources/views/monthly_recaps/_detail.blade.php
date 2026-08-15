@@ -44,6 +44,11 @@
             <div class="min-w-0">
                 <div class="flex flex-wrap items-center gap-2">
                     <span class="rounded-lg border px-2.5 py-1 text-[10px] font-black tracking-wide {{ $summary['readiness_status'] === 'READY' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-amber-200 bg-amber-50 text-amber-900' }}">{{ $summary['readiness_label'] }}</span>
+                    @if(isset($attendancePeriod) && $attendancePeriod->isClosed())
+                        <span class="rounded-lg bg-indigo-600 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white">PERIODE TERKUNCI</span>
+                    @else
+                        <span class="rounded-lg bg-emerald-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-800">PERIODE TERBUKA</span>
+                    @endif
                     <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">{{ $period['label'] }}</span>
                 </div>
                 <h2 class="mt-3 truncate text-lg font-black tracking-tight text-slate-950 md:text-2xl">{{ $employee->full_name }}</h2>

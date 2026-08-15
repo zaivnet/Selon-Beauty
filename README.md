@@ -11,6 +11,7 @@ Aplikasi Sistem Presensi, Penjadwalan Kerja, dan Manajemen Karyawan Berbasis Web
 - **Validasi Selfie**: Mengambil foto selfie saat presensi menggunakan kamera bawaan perangkat.
 - **Manajemen Shift & Jadwal Kerja**: Jadwal mingguan, kalender hari libur/hari kerja khusus, override per karyawan dan tanggal, serta permohonan lembur dan izin/cuti.
 - **Rekap Kehadiran Bulanan**: Ringkasan dan detail payroll-ready berbasis menit, status kelengkapan data, CSV, dan print—tanpa menghitung nominal gaji.
+- **Penguncian Periode Kehadiran (Period Lock)**: Konsep penutupan periode bulanan (`OPEN` / `CLOSED`) oleh Owner/Superadmin yang mengunci seluruh mutasi presensi, lembur, cuti, jadwal, override, dan kalender kerja untuk periode yang telah disetujui.
 - **Pusat Perhatian Operasional**: Dashboard exception read-only untuk attendance, approval, overtime aktif, override, koreksi terbaru, dan kesehatan backup sesuai hak akses.
 - **Partisipasi Workforce Eksplisit**: Role aplikasi terpisah dari kewajiban jadwal/absensi melalui `attendance_enabled`, tanpa menghapus histori atau akses administratif.
 - **Sistem Role & Hak Akses (RBAC)**: Mendukung role **Superadmin**, **Owner**, **Admin Operasional**, dan **Employee**.

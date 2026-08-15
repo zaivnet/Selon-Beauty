@@ -33,6 +33,7 @@ class BackupService
         'app_settings',
         'holidays',
         'employee_schedule_overrides',
+        'attendance_periods',
         'backup_records',
     ];
 

@@ -15,9 +15,12 @@ use Illuminate\Validation\ValidationException;
 
 class OvertimeRequestService
 {
-    public function __construct(protected ?EffectiveScheduleService $effectiveScheduleService = null)
-    {
+    public function __construct(
+        protected ?EffectiveScheduleService $effectiveScheduleService = null,
+        protected ?AttendancePeriodService $periodService = null,
+    ) {
         $this->effectiveScheduleService = $effectiveScheduleService ?? new EffectiveScheduleService;
+        $this->periodService = $periodService ?? new AttendancePeriodService;
     }
 
     /**
@@ -32,6 +35,7 @@ class OvertimeRequestService
         }
 
         $workDate = $data['work_date'];
+        $this->periodService->assertPeriodOpen($workDate);
         $requestedMinutes = (int) $data['requested_minutes'];
         $reason = trim($data['reason']);
 
@@ -90,6 +94,7 @@ class OvertimeRequestService
      */
     public function cancelRequest(OvertimeRequest $request, User $user): OvertimeRequest
     {
+        $this->periodService->assertPeriodOpen($request->work_date);
         if ($request->status !== 'pending') {
             throw ValidationException::withMessages([
                 'status' => 'Hanya pengajuan lembur berstatus Menunggu (Pending) yang dapat dibatalkan.',
@@ -117,6 +122,7 @@ class OvertimeRequestService
      */
     public function approveRequest(OvertimeRequest $request, User $reviewer, int $approvedMinutes, ?string $note = null): OvertimeRequest
     {
+        $this->periodService->assertPeriodOpen($request->work_date);
         if ($reviewer->role === 'employee' || ($reviewer->employee_id && $reviewer->employee_id === $request->employee_id)) {
             throw ValidationException::withMessages([
                 'reviewer' => 'Karyawan tidak diperbolehkan menyetujui pengajuan lembur milik sendiri.',
@@ -168,6 +174,7 @@ class OvertimeRequestService
      */
     public function rejectRequest(OvertimeRequest $request, User $reviewer, string $note): OvertimeRequest
     {
+        $this->periodService->assertPeriodOpen($request->work_date);
         if ($reviewer->role === 'employee' || ($reviewer->employee_id && $reviewer->employee_id === $request->employee_id)) {
             throw ValidationException::withMessages([
                 'reviewer' => 'Karyawan tidak diperbolehkan menolak pengajuan lembur milik sendiri.',

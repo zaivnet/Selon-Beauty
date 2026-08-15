@@ -22,8 +22,10 @@ class OvertimeSessionService
         protected AttendanceService $attendanceService,
         protected SelfieService $selfieService,
         protected ?EffectiveScheduleService $effectiveScheduleService = null,
+        protected ?AttendancePeriodService $periodService = null,
     ) {
         $this->effectiveScheduleService = $effectiveScheduleService ?? new EffectiveScheduleService;
+        $this->periodService = $periodService ?? new AttendancePeriodService;
     }
 
     public function start(User $actor, int $requestId, array $evidence): OvertimeSession
@@ -36,6 +38,7 @@ class OvertimeSessionService
                 Employee::whereKey($employee->id)->lockForUpdate()->firstOrFail();
 
                 $request = OvertimeRequest::with('session')->lockForUpdate()->findOrFail($requestId);
+                $this->periodService->assertPeriodOpen($request->work_date);
                 if ($request->employee_id !== $employee->id) {
                     throw ValidationException::withMessages(['overtime' => 'Pengajuan lembur ini bukan milik Anda.']);
                 }
@@ -104,6 +107,7 @@ class OvertimeSessionService
                 $employee = $this->activeEmployee($actor);
                 Employee::whereKey($employee->id)->lockForUpdate()->firstOrFail();
                 $session = OvertimeSession::with('overtimeRequest')->lockForUpdate()->findOrFail($sessionId);
+                $this->periodService->assertPeriodOpen($session->work_date);
 
                 if ($session->employee_id !== $employee->id) {
                     throw ValidationException::withMessages(['overtime' => 'Sesi lembur ini bukan milik Anda.']);
@@ -153,6 +157,7 @@ class OvertimeSessionService
 
         return DB::transaction(function () use ($actor, $session, $finishAt, $reason) {
             $session = OvertimeSession::with(['overtimeRequest', 'employee.user'])->lockForUpdate()->findOrFail($session->id);
+            $this->periodService->assertPeriodOpen($session->work_date);
             if (! $session->isActive() || $session->check_out_at) {
                 throw ValidationException::withMessages(['session' => 'Sesi lembur sudah tidak aktif.']);
             }
@@ -197,6 +202,7 @@ class OvertimeSessionService
 
         return DB::transaction(function () use ($actor, $session, $reason) {
             $session = OvertimeSession::with(['overtimeRequest', 'employee.user'])->lockForUpdate()->findOrFail($session->id);
+            $this->periodService->assertPeriodOpen($session->work_date);
             if (! $session->isActive()) {
                 throw ValidationException::withMessages(['session' => 'Hanya sesi lembur aktif yang dapat dibatalkan.']);
             }
@@ -239,6 +245,7 @@ class OvertimeSessionService
 
         return DB::transaction(function () use ($actor, $session, $checkInAt, $checkOutAt, $reason) {
             $session = OvertimeSession::with(['overtimeRequest', 'employee.user'])->lockForUpdate()->findOrFail($session->id);
+            $this->periodService->assertPeriodOpen($session->work_date);
             if (! $session->isCompleted()) {
                 throw ValidationException::withMessages(['session' => 'Hanya sesi lembur completed yang dapat dikoreksi.']);
             }

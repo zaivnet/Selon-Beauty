@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
+use App\Services\AttendancePeriodService;
 use App\Services\MonthlyAttendanceRecapService;
 use App\Services\MonthlyRecapExportService;
 use Carbon\Carbon;
@@ -15,6 +16,7 @@ class MonthlyRecapController extends Controller
     public function __construct(
         protected MonthlyAttendanceRecapService $recapService,
         protected MonthlyRecapExportService $exportService,
+        protected AttendancePeriodService $periodService,
     ) {}
 
     public function show(Request $request): View
@@ -26,6 +28,7 @@ class MonthlyRecapController extends Controller
         return view('employee.monthly_recaps.show', [
             'recap' => $this->recapService->forEmployee($employee, $year, $month),
             'navigation' => $this->navigation($year, $month),
+            'attendancePeriod' => $this->periodService->getOrCreatePeriod($year, $month),
         ]);
     }
 
@@ -48,6 +51,7 @@ class MonthlyRecapController extends Controller
         return view('monthly_recaps.print', [
             'recap' => $this->recapService->forEmployee($employee, $year, $month),
             'generatedAt' => now(config('app.timezone'))->translatedFormat('d F Y H:i:s T'),
+            'attendancePeriod' => $this->periodService->getOrCreatePeriod($year, $month),
         ]);
     }
 

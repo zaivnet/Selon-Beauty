@@ -22,9 +22,12 @@ use Illuminate\Validation\ValidationException;
 
 class LeaveRequestService
 {
-    public function __construct(protected ?EffectiveScheduleService $effectiveScheduleService = null)
-    {
+    public function __construct(
+        protected ?EffectiveScheduleService $effectiveScheduleService = null,
+        protected ?AttendancePeriodService $periodService = null,
+    ) {
         $this->effectiveScheduleService = $effectiveScheduleService ?? new EffectiveScheduleService;
+        $this->periodService = $periodService ?? new AttendancePeriodService;
     }
 
     /**
@@ -40,6 +43,7 @@ class LeaveRequestService
 
         $startDate = $data['start_date'];
         $endDate = $data['end_date'];
+        $this->assertLeaveRangePeriodOpen($startDate, $endDate);
         $type = strtolower($data['type']);
         $reason = trim($data['reason']);
 
@@ -131,6 +135,7 @@ class LeaveRequestService
      */
     public function cancelRequest(LeaveRequest $request, User $user): LeaveRequest
     {
+        $this->assertLeaveRangePeriodOpen($request->start_date, $request->end_date);
         if ($request->status !== 'pending') {
             throw ValidationException::withMessages([
                 'status' => 'Hanya pengajuan berstatus Menunggu (Pending) yang dapat dibatalkan.',
@@ -159,6 +164,7 @@ class LeaveRequestService
      */
     public function approveRequest(LeaveRequest $request, User $reviewer, ?string $note = null): LeaveRequest
     {
+        $this->assertLeaveRangePeriodOpen($request->start_date, $request->end_date);
         if ($request->status !== 'pending') {
             throw ValidationException::withMessages([
                 'status' => 'Hanya pengajuan berstatus Menunggu (Pending) yang dapat disetujui.',
@@ -192,6 +198,7 @@ class LeaveRequestService
      */
     public function rejectRequest(LeaveRequest $request, User $reviewer, string $note): LeaveRequest
     {
+        $this->assertLeaveRangePeriodOpen($request->start_date, $request->end_date);
         if ($request->status !== 'pending') {
             throw ValidationException::withMessages([
                 'status' => 'Hanya pengajuan berstatus Menunggu (Pending) yang dapat ditolak.',
@@ -224,5 +231,15 @@ class LeaveRequestService
 
             return $request;
         });
+    }
+
+    protected function assertLeaveRangePeriodOpen(mixed $startDate, mixed $endDate): void
+    {
+        $start = Carbon::parse($startDate);
+        $end = Carbon::parse($endDate);
+        for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
+            $formatted = $d->locale('id')->translatedFormat('d F Y');
+            $this->periodService->assertPeriodOpen($d->toDateString(), "Pengajuan/perubahan izin tidak dapat dilakukan karena tanggal {$formatted} berada pada periode yang sudah ditutup.");
+        }
     }
 }

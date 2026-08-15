@@ -21,13 +21,146 @@
         'return_page' => $recaps->currentPage() > 1 ? $recaps->currentPage() : null,
     ]);
     $detailQuery = ['year' => $filters['year'], 'month' => $filters['month'], ...$returnContext];
+    $isManager = in_array(auth()->user()->role, ['superadmin', 'owner'], true);
+    $isClosed = $attendancePeriod->isClosed();
 @endphp
 
-<div class="space-y-5">
+<div class="space-y-5" x-data="{ showCloseModal: false, showReopenModal: false }">
     <nav class="flex gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xs" aria-label="Jenis laporan">
         <a href="{{ route('admin.reports.attendance') }}" class="flex min-h-[44px] shrink-0 items-center rounded-lg px-4 text-xs font-extrabold text-slate-500 transition hover:bg-slate-50 hover:text-slate-800">Laporan Kehadiran</a>
         <a href="{{ route('admin.monthly-recaps.index', $query) }}" aria-current="page" class="flex min-h-[44px] shrink-0 items-center rounded-lg bg-slate-900 px-4 text-xs font-extrabold text-white shadow-sm">Rekap Bulanan</a>
     </nav>
+
+    <!-- Period Closing Status Card -->
+    <section class="overflow-hidden rounded-2xl border {{ $isClosed ? 'border-indigo-200 bg-indigo-50/40' : 'border-slate-200 bg-white' }} p-5 shadow-xs md:p-6">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div class="space-y-1 min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                    @if($isClosed)
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-indigo-600 px-3 py-1 text-xs font-black uppercase tracking-wider text-white">
+                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                            PERIODE TERKUNCI (FINAL)
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-black uppercase tracking-wider text-emerald-800">
+                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
+                            PERIODE TERBUKA
+                        </span>
+                    @endif
+                    <span class="text-xs font-bold text-slate-500">{{ $period['label'] }}</span>
+                </div>
+
+                @if($isClosed)
+                    <p class="mt-2 text-xs font-medium leading-relaxed text-slate-700">
+                        Periode ditutup oleh <strong class="font-bold text-slate-900">{{ $attendancePeriod->closedBy?->name ?? 'Sistem' }}</strong> pada <span class="font-mono text-slate-800">{{ $attendancePeriod->closed_at?->format('d M Y H:i') }} WIB</span>.
+                    </p>
+                    @if($attendancePeriod->close_reason)
+                        <p class="text-xs italic text-slate-600">Alasan: "{{ $attendancePeriod->close_reason }}"</p>
+                    @endif
+                @else
+                    <p class="mt-2 text-xs font-medium leading-relaxed text-slate-600">
+                        Data kehadiran masih dapat disesuaikan. Penutupan periode akan mengunci seluruh perubahan absensi, lembur, dan jadwal pada bulan ini.
+                    </p>
+                @endif
+            </div>
+
+            @if($isManager)
+                <div class="shrink-0">
+                    @if($isClosed)
+                        <button type="button" @click="showReopenModal = true" class="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-indigo-300 bg-white px-5 text-xs font-black text-indigo-700 shadow-xs transition hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:w-auto">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
+                            Buka Kembali Periode
+                        </button>
+                    @else
+                        @if($closeEligibility['is_eligible'])
+                            <button type="button" @click="showCloseModal = true" class="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 text-xs font-black text-white shadow-xs transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 sm:w-auto">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                Tutup Periode
+                            </button>
+                        @else
+                            <button type="button" disabled title="Selesaikan masalah operasional terlebih dahulu" class="flex min-h-[44px] w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-slate-200 px-5 text-xs font-black text-slate-400 opacity-80 sm:w-auto">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                Tutup Periode (Belum Siap)
+                            </button>
+                        @endif
+                    @endif
+                </div>
+            @endif
+        </div>
+
+        @if(! $isClosed && ! $closeEligibility['is_eligible'])
+            <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50/80 p-3.5 text-xs text-amber-900">
+                <div class="flex items-start gap-2.5">
+                    <svg class="mt-0.5 h-4 w-4 shrink-0 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-extrabold text-amber-900">Periode belum dapat ditutup karena masalah berikut:</p>
+                        <ul class="mt-1 list-disc space-y-0.5 pl-4 text-amber-800 font-medium">
+                            @foreach($closeEligibility['issues'] as $issue)
+                                <li>{{ ucfirst($issue) }}</li>
+                            @endforeach
+                        </ul>
+                        <a href="{{ route('admin.operational-exceptions.index') }}" class="mt-2 inline-flex items-center gap-1 font-bold text-amber-900 underline hover:text-amber-950">
+                            Buka Pusat Perhatian / Operational Exceptions &rarr;
+                        </a>
+                    </div>
+                </div>
+            </div>
+        @endif
+    </section>
+
+    <!-- Close Modal -->
+    <div x-show="showCloseModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div @click.away="showCloseModal = false" class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-200 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="text-base font-black text-slate-900">Tutup Periode Kehadiran</h3>
+                <button type="button" @click="showCloseModal = false" class="text-slate-400 hover:text-slate-600">&times;</button>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+                Penutupan periode {{ $period['label'] }} akan mengunci seluruh data presensi, lembur, dan jadwal bulan tersebut dari perubahan biasa.
+            </p>
+            <form action="{{ route('admin.monthly-recaps.close') }}" method="POST" class="space-y-4">
+                @csrf
+                <input type="hidden" name="year" value="{{ $filters['year'] }}">
+                <input type="hidden" name="month" value="{{ $filters['month'] }}">
+                <div>
+                    <label for="close-reason" class="block text-xs font-black text-slate-700 mb-1">Alasan Penutupan Periode <span class="text-rose-600">*</span></label>
+                    <textarea id="close-reason" name="reason" rows="3" required minlength="5" placeholder="Contoh: Rekap Agustus sudah diverifikasi untuk payroll." class="w-full rounded-xl border-slate-300 text-xs focus:border-slate-900 focus:ring-slate-900"></textarea>
+                    <p class="mt-1 text-[10px] text-slate-500">Minimal 5 karakter wajib diisi.</p>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" @click="showCloseModal = false" class="min-h-[44px] rounded-xl border border-slate-200 px-4 text-xs font-bold text-slate-700 hover:bg-slate-50">Batal</button>
+                    <button type="submit" class="min-h-[44px] rounded-xl bg-slate-900 px-5 text-xs font-black text-white hover:bg-slate-800">Ya, Tutup Periode</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reopen Modal -->
+    <div x-show="showReopenModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div @click.away="showReopenModal = false" class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-200 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="text-base font-black text-slate-900">Buka Kembali Periode Kehadiran</h3>
+                <button type="button" @click="showReopenModal = false" class="text-slate-400 hover:text-slate-600">&times;</button>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+                Membuka kembali periode {{ $period['label'] }} akan memperbolehkan perubahan absensi dan koreksi pada bulan tersebut kembali.
+            </p>
+            <form action="{{ route('admin.monthly-recaps.reopen') }}" method="POST" class="space-y-4">
+                @csrf
+                <input type="hidden" name="year" value="{{ $filters['year'] }}">
+                <input type="hidden" name="month" value="{{ $filters['month'] }}">
+                <div>
+                    <label for="reopen-reason" class="block text-xs font-black text-slate-700 mb-1">Alasan Pembukaan Kembali <span class="text-rose-600">*</span></label>
+                    <textarea id="reopen-reason" name="reason" rows="3" required minlength="5" placeholder="Contoh: Ditemukan koreksi absensi yang valid." class="w-full rounded-xl border-slate-300 text-xs focus:border-indigo-600 focus:ring-indigo-600"></textarea>
+                    <p class="mt-1 text-[10px] text-slate-500">Minimal 5 karakter wajib diisi.</p>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" @click="showReopenModal = false" class="min-h-[44px] rounded-xl border border-slate-200 px-4 text-xs font-bold text-slate-700 hover:bg-slate-50">Batal</button>
+                    <button type="submit" class="min-h-[44px] rounded-xl bg-indigo-600 px-5 text-xs font-black text-white hover:bg-indigo-700">Ya, Buka Kembali</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
         <div class="border-b border-slate-100 p-5 md:flex md:items-start md:justify-between md:gap-6 md:p-6">

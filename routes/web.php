@@ -184,6 +184,8 @@ Route::middleware(['auth', 'role:superadmin,owner,admin', 'prevent.private.cache
     Route::get('/monthly-recaps', [AdminMonthlyRecapController::class, 'index'])->name('monthly-recaps.index');
     Route::get('/monthly-recaps/export-summary', [AdminMonthlyRecapController::class, 'summaryCsv'])->name('monthly-recaps.export-summary');
     Route::get('/monthly-recaps/export-detail', [AdminMonthlyRecapController::class, 'detailCsv'])->name('monthly-recaps.export-detail');
+    Route::post('/monthly-recaps/close', [AdminMonthlyRecapController::class, 'closePeriod'])->middleware('role:superadmin,owner')->name('monthly-recaps.close');
+    Route::post('/monthly-recaps/reopen', [AdminMonthlyRecapController::class, 'reopenPeriod'])->middleware('role:superadmin,owner')->name('monthly-recaps.reopen');
     Route::get('/monthly-recaps/{employee}', [AdminMonthlyRecapController::class, 'show'])->name('monthly-recaps.show');
     Route::get('/monthly-recaps/{employee}/print', [AdminMonthlyRecapController::class, 'print'])->name('monthly-recaps.print');
 });

@@ -320,5 +320,20 @@ Jangan hanya menampilkan "Terjadi kesalahan".
 - Session hanya dapat dimulai setelah request approved dan attendance reguler untuk `work_date` tersebut selesai checkout.
 - `actual_minutes` adalah selisih timestamp check-in dan check-out overtime yang authoritative dari server.
 - `credited_minutes = min(actual_minutes, approved_minutes)`; durasi aktual tidak mengubah approval.
-- Session cross-midnight tetap memakai `work_date` request/schedule asal dan tidak dipecah menjadi dua record.
+- Session cross-midnight tetap memakai `work_date` request/schedule asal dan tidak dipecah menjadi two record.
 - Evidence selfie disimpan private pada `storage/app/private/overtime/{employee_id}/{YYYY}/{MM}/` dan hanya disajikan oleh authorized controller.
+
+## 17. Monthly Attendance Closing & Period Lock Architecture
+
+- **Metadata-Only Period State**: Periode bulanan mengelola dua status (`OPEN`, `CLOSED`) pada tabel `attendance_periods` tanpa duplikasi data historis atau pembuatan tabel snapshot payroll nominal.
+- **Centralized Source of Truth**: `AttendancePeriodService` menjadi pusat otoritas status periode (`getOrCreatePeriod`, `isOpen`, `isClosed`, `assertPeriodOpen`).
+- **Comprehensive Mutation Locks**: Saat periode ditutup (`CLOSED`), seluruh mutasi pada tanggal di periode tersebut langsung ditolak dengan `ValidationException`:
+  - Attendance check-in, check-out, koreksi admin, & checkout recovery.
+  - Request lembur (submit, cancel, approve, reject).
+  - Sesi lembur (start, finish, force finish, cancel, & koreksi admin).
+  - Permohonan cuti / izin (termasuk validasi tumpang tindih rentang tanggal multi-hari).
+  - Override jadwal kerja & regular schedule assignment/delete/copy.
+  - Event kalender kerja (libur nasional & hari kerja khusus).
+- **Close Eligibility Validation**: Periode hanya dapat ditutup jika `missing_checkout_count == 0` dan `active_overtime_count == 0`.
+- **Role Authorization Policy**: Penutupan & pembukaan kembali periode khusus untuk `owner` dan `superadmin` dengan alasan minimal 5 karakter wajib. Admin biasa hanya memiliki hak baca.
+- **Immutability & Audit Trail**: Penutupan dan pembukaan periode dicatat secara konsisten di `audit_logs` (`attendance_period.closed`, `attendance_period.reopened`) dan diikutsertakan dalam sistem Backup / Restore aplikasi.

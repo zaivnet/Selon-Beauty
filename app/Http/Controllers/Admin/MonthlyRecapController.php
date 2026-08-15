@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\JobTitle;
+use App\Services\AttendancePeriodService;
 use App\Services\MonthlyAttendanceRecapService;
 use App\Services\MonthlyRecapExportService;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\View\View;
@@ -18,6 +20,7 @@ class MonthlyRecapController extends Controller
     public function __construct(
         protected MonthlyAttendanceRecapService $recapService,
         protected MonthlyRecapExportService $exportService,
+        protected AttendancePeriodService $periodService,
     ) {}
 
     public function index(Request $request): View
@@ -33,23 +36,32 @@ class MonthlyRecapController extends Controller
             ['path' => $request->url(), 'query' => $request->query()],
         );
 
+        $attendancePeriod = $this->periodService->getOrCreatePeriod($year, $month);
+        $closeEligibility = $this->periodService->validateCloseEligibility($year, $month);
+
         return view('admin.monthly_recaps.index', [
             'recapData' => $data,
             'recaps' => $paginator,
             'employees' => Employee::whereNull('deleted_at')->currentAttendanceWorkforce()->orderBy('full_name')->get(),
             'jobTitles' => JobTitle::where('is_active', true)->orderBy('name')->get(),
             'filters' => [...$filters, 'year' => $year, 'month' => $month],
+            'attendancePeriod' => $attendancePeriod,
+            'closeEligibility' => $closeEligibility,
         ]);
     }
 
     public function show(Request $request, Employee $employee): View
     {
         [$year, $month] = $this->period($request);
+        $attendancePeriod = $this->periodService->getOrCreatePeriod($year, $month);
+        $closeEligibility = $this->periodService->validateCloseEligibility($year, $month);
 
         return view('admin.monthly_recaps.show', [
             'recap' => $this->recapService->forEmployee($employee, $year, $month),
             'navigation' => $this->navigation($year, $month),
             'returnFilters' => $this->returnFilters($request),
+            'attendancePeriod' => $attendancePeriod,
+            'closeEligibility' => $closeEligibility,
         ]);
     }
 
@@ -60,6 +72,7 @@ class MonthlyRecapController extends Controller
         return view('monthly_recaps.print', [
             'recap' => $this->recapService->forEmployee($employee, $year, $month),
             'generatedAt' => now(config('app.timezone'))->translatedFormat('d F Y H:i:s T'),
+            'attendancePeriod' => $this->periodService->getOrCreatePeriod($year, $month),
         ]);
     }
 
@@ -77,6 +90,40 @@ class MonthlyRecapController extends Controller
         $data = $this->recapService->generate($year, $month, $this->filters($request));
 
         return $this->exportService->detail($data, sprintf('rekap-kehadiran-%04d-%02d-detail.csv', $year, $month));
+    }
+
+    public function closePeriod(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'year' => ['required', 'integer', 'min:2000', 'max:2100'],
+            'month' => ['required', 'integer', 'min:1', 'max:12'],
+            'reason' => ['required', 'string', 'min:5'],
+        ]);
+
+        try {
+            $this->periodService->closePeriod((int) $validated['year'], (int) $validated['month'], $request->user(), $validated['reason']);
+
+            return redirect()->back()->with('success', 'Periode kehadiran berhasil ditutup.');
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function reopenPeriod(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'year' => ['required', 'integer', 'min:2000', 'max:2100'],
+            'month' => ['required', 'integer', 'min:1', 'max:12'],
+            'reason' => ['required', 'string', 'min:5'],
+        ]);
+
+        try {
+            $this->periodService->reopenPeriod((int) $validated['year'], (int) $validated['month'], $request->user(), $validated['reason']);
+
+            return redirect()->back()->with('success', 'Periode kehadiran berhasil dibuka kembali.');
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
     }
 
     /** @return array{0:int,1:int} */

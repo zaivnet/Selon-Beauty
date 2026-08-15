@@ -254,3 +254,11 @@ Minimal satu akun Superadmin yang aktif (`is_active = true`) WAJIB selalu tersed
 5. Participation tidak dapat dimatikan saat attendance belum checkout atau overtime session masih aktif. Sistem tidak boleh auto-checkout atau auto-cancel.
 6. Disable membutuhkan alasan minimal 5 karakter. Perubahan material membuat audit before/after dan notification; no-op tidak membuat audit maupun notification.
 7. `attendance_enabled` adalah current-state flag dan belum menyimpan periode partisipasi historis. Report historis eksplisit membaca record yang telah tersimpan, sedangkan selector default hanya menampilkan current workforce.
+
+## RULE 040 — Monthly Attendance Closing & Period Lock
+1. Konsep periode absensi mengunci mutasi data kehadiran, lembur, izin/cuti, jadwal, override, dan kalender kerja untuk bulan tertentu.
+2. Status periode hanya `open` dan `closed` yang dikelola secara terpusat oleh `AttendancePeriodService`.
+3. Penutupan (`close`) dan pembukaan kembali (`reopen`) periode khusus reserved untuk role `owner` dan `superadmin` dengan alasan minimal 5 karakter wajib. Admin biasa hanya memiliki akses baca.
+4. Syarat kelayakan penutupan periode (`close eligibility`): tidak ada presensi missing checkout (`missing_checkout_count == 0`) dan tidak ada sesi lembur aktif (`active_overtime_count == 0`).
+5. Permohonan cuti multi-hari yang melintasi tanggal periode terkunci wajib ditolak secara keseluruhan untuk mencegah ketidakseragaman data.
+6. Penutupan & pembukaan periode wajib membuat audit log (`attendance_period.closed`, `attendance_period.reopened`) dan diikutsertakan dalam sistem Backup/Restore aplikasi.

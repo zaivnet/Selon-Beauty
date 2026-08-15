@@ -295,6 +295,25 @@ Contoh:
 
 Jangan menyimpan secret seperti APP_KEY/password API di tabel setting.
 
+## 15. Tabel `attendance_periods`
+
+Menyimpan status penutupan periode absensi bulanan beserta metadata penguncian.
+
+Kolom:
+- `id` (bigint, PK)
+- `year` (unsigned int, N)
+- `month` (unsigned int, N)
+- `status` (string, `open` | `closed`, default `open`)
+- `closed_at` (timestamp, nullable)
+- `closed_by` (foreignId -> users, nullable)
+- `reopened_at` (timestamp, nullable)
+- `reopened_by` (foreignId -> users, nullable)
+- `close_reason` (text, nullable)
+- `reopen_reason` (text, nullable)
+- `timestamps`
+
+Unique Index: `['year', 'month']`
+
 ## Indexes Penting
 
 - employees(status)
