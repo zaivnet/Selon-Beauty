@@ -66,16 +66,26 @@ class EmployeeController extends Controller
         $photoFile = $request->file('profile_photo');
         $createUserAccount = $request->boolean('create_user_account');
         $accountPassword = $request->input('account_password');
-        $requestedRole = $request->input('role', UserRole::EMPLOYEE->value);
-        $validated['attendance_enabled'] = $request->has('attendance_enabled')
-            ? $request->boolean('attendance_enabled')
-            : true;
+
+        $actorRole = $request->user()->role;
+        $requestedRole = ($actorRole === UserRole::ADMIN->value)
+            ? UserRole::EMPLOYEE->value
+            : $request->input('role', UserRole::EMPLOYEE->value);
 
         // Security check for role assignment
         if ($createUserAccount && $requestedRole !== UserRole::EMPLOYEE->value) {
-            if (! UserRole::canAssign($request->user()->role, $requestedRole)) {
+            if (! UserRole::canAssign($actorRole, $requestedRole)) {
                 throw ValidationException::withMessages(['role' => 'Akses ditolak. Anda tidak berwenang menetapkan role tersebut.']);
             }
+        }
+
+        // BACKEND ENFORCEMENT: Role employee/karyawan MUST ALWAYS participate in attendance
+        if ($requestedRole === UserRole::EMPLOYEE->value) {
+            $validated['attendance_enabled'] = true;
+        } else {
+            $validated['attendance_enabled'] = $request->has('attendance_enabled')
+                ? $request->boolean('attendance_enabled')
+                : true;
         }
 
         unset($validated['profile_photo'], $validated['create_user_account'], $validated['account_password'], $validated['role']);
@@ -100,8 +110,13 @@ class EmployeeController extends Controller
         return view('admin.employees.show', compact('employee'));
     }
 
-    public function edit(Request $request, Employee $employee): View
+    public function edit(Request $request, Employee $employee): View|RedirectResponse
     {
+        if (! $this->userRoleService->canActorManageUser($request->user(), $employee->user)) {
+            return redirect()->route('admin.employees.index')
+                ->with('error', 'Akses ditolak. Anda tidak berwenang mengelola data karyawan ini.');
+        }
+
         $jobTitles = JobTitle::orderBy('name')->get();
         $employee->load(['jobTitle', 'user']);
         $assignableRoles = UserRole::getAssignableRoles($request->user()->role);
@@ -111,13 +126,30 @@ class EmployeeController extends Controller
 
     public function update(UpdateEmployeeRequest $request, Employee $employee): RedirectResponse
     {
+        if (! $this->userRoleService->canActorManageUser($request->user(), $employee->user)) {
+            throw ValidationException::withMessages(['role' => 'Akses ditolak. Anda tidak berwenang mengelola data karyawan ini.']);
+        }
+
         $validated = $request->validated();
         $photoFile = $request->file('profile_photo');
-        $requestedRole = $request->input('role');
-        $attendanceEnabled = array_key_exists('attendance_enabled', $validated)
-            ? $request->boolean('attendance_enabled')
-            : $employee->participatesInAttendance();
-        $attendanceReason = $validated['attendance_participation_reason'] ?? null;
+        $actorRole = $request->user()->role;
+
+        $requestedRole = ($actorRole === UserRole::ADMIN->value)
+            ? UserRole::EMPLOYEE->value
+            : $request->input('role');
+
+        $effectiveRole = $requestedRole ?? ($employee->user?->role ?? UserRole::EMPLOYEE->value);
+
+        // BACKEND ENFORCEMENT: Role employee/karyawan MUST ALWAYS participate in attendance
+        if ($effectiveRole === UserRole::EMPLOYEE->value) {
+            $attendanceEnabled = true;
+            $attendanceReason = null;
+        } else {
+            $attendanceEnabled = array_key_exists('attendance_enabled', $validated)
+                ? $request->boolean('attendance_enabled')
+                : $employee->participatesInAttendance();
+            $attendanceReason = $validated['attendance_participation_reason'] ?? null;
+        }
 
         unset($validated['profile_photo'], $validated['role'], $validated['attendance_enabled'], $validated['attendance_participation_reason']);
 
@@ -155,8 +187,12 @@ class EmployeeController extends Controller
             ->with('success', "Data karyawan {$employee->full_name} berhasil diperbarui.");
     }
 
-    public function toggleStatus(Employee $employee): RedirectResponse
+    public function toggleStatus(Request $request, Employee $employee): RedirectResponse
     {
+        if (! $this->userRoleService->canActorManageUser($request->user(), $employee->user)) {
+            return redirect()->back()->with('error', 'Akses ditolak. Anda tidak berwenang mengubah status karyawan ini.');
+        }
+
         try {
             $updated = $this->employeeService->toggleEmployeeStatus($employee);
             $statusLabel = $updated->status === 'active' ? 'diaktifkan kembali' : 'dinonaktifkan';
@@ -170,6 +206,10 @@ class EmployeeController extends Controller
 
     public function resetPassword(Request $request, Employee $employee): RedirectResponse
     {
+        if (! $this->userRoleService->canActorManageUser($request->user(), $employee->user)) {
+            throw ValidationException::withMessages(['role' => 'Akses ditolak. Anda tidak berwenang mengelola akun karyawan ini.']);
+        }
+
         $request->validate([
             'new_password' => ['required', 'string', 'min:6'],
             'role' => ['nullable', 'string', 'in:superadmin,owner,admin,employee'],
@@ -191,8 +231,12 @@ class EmployeeController extends Controller
             ->with('success', "Password akun login untuk {$employee->full_name} berhasil diperbarui.");
     }
 
-    public function destroy(Employee $employee): RedirectResponse
+    public function destroy(Request $request, Employee $employee): RedirectResponse
     {
+        if (! $this->userRoleService->canActorManageUser($request->user(), $employee->user)) {
+            return redirect()->back()->with('error', 'Akses ditolak. Anda tidak berwenang menghapus data karyawan ini.');
+        }
+
         $name = $employee->full_name;
 
         if ($employee->user) {

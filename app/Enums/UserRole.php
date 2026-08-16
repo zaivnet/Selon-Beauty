@@ -41,6 +41,12 @@ enum UserRole: string
             ];
         }
 
+        if ($actorRole === self::ADMIN->value) {
+            return [
+                self::EMPLOYEE->value => self::EMPLOYEE->label(),
+            ];
+        }
+
         return [];
     }
 

@@ -22,6 +22,13 @@ class AttendanceParticipationService
             if ($locked->user?->role === 'superadmin') {
                 return $locked;
             }
+
+            // BACKEND ENFORCEMENT: Role employee/karyawan MUST ALWAYS participate in attendance
+            $effectiveRole = $locked->user?->role ?? \App\Enums\UserRole::EMPLOYEE->value;
+            if ($effectiveRole === \App\Enums\UserRole::EMPLOYEE->value) {
+                $enabled = true;
+            }
+
             if ($locked->participatesInAttendance() === $enabled) {
                 return $locked;
             }

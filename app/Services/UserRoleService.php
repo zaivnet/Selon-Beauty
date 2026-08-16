@@ -25,7 +25,24 @@ class UserRoleService
             return ! in_array($targetUser->role, [UserRole::SUPERADMIN->value, UserRole::OWNER->value], true);
         }
 
+        if ($actor->role === UserRole::ADMIN->value) {
+            // Admin can only manage Employee role target users
+            return $targetUser->role === UserRole::EMPLOYEE->value;
+        }
+
         return false;
+    }
+
+    /**
+     * Check if actor is permitted to manage target employee's user account.
+     */
+    public function canActorManageUser(User $actor, ?User $targetUser): bool
+    {
+        if (! $targetUser) {
+            return true;
+        }
+
+        return $this->canActorManageUserRole($actor, $targetUser);
     }
 
     /**

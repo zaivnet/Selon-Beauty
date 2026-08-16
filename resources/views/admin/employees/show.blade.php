@@ -121,23 +121,28 @@
         <section class="w-full min-w-0 rounded-2xl border {{ $employee->user?->role === 'superadmin' ? 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40' : ($employee->attendance_enabled ? 'border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/50 dark:bg-emerald-950/30' : 'border-amber-200 dark:border-amber-800/60 bg-amber-50/60 dark:bg-amber-950/30') }} p-4 sm:p-5" aria-labelledby="attendance-participation-heading">
             <div class="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div class="min-w-0">
-                    <h3 id="attendance-participation-heading" class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">Sistem Kehadiran</h3>
-                    <p class="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400">Terpisah dari status karyawan dan role aplikasi.</p>
+                    <h3 id="attendance-participation-heading" class="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">Keikutsertaan Absensi</h3>
+                    <p class="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400">Menentukan apakah akun ini wajib mengikuti jadwal, absensi, izin, lembur, dan proses workforce.</p>
                 </div>
                 @if($employee->user?->role === 'superadmin')
                     <span class="inline-flex w-fit items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-extrabold text-slate-700 dark:text-slate-300">
                         <svg class="h-4 w-4 shrink-0 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                         Di Luar Workforce
                     </span>
+                @elseif(($employee->user?->role ?? 'employee') === 'employee')
+                    <span class="inline-flex w-fit items-center gap-2 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-extrabold text-emerald-800 dark:text-emerald-300">
+                        <svg class="h-4 w-4 shrink-0 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        Aktif — Wajib untuk Role Karyawan
+                    </span>
                 @elseif($employee->attendance_enabled)
                     <span class="inline-flex w-fit items-center gap-2 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-extrabold text-emerald-800 dark:text-emerald-300">
                         <svg class="h-4 w-4 shrink-0 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        Ikut Absensi
+                        Aktif — Wajib Mengikuti Jadwal & Absensi
                     </span>
                 @else
                     <span class="inline-flex w-fit items-center gap-2 rounded-xl border border-amber-200 dark:border-amber-800/60 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-extrabold text-amber-900 dark:text-amber-300">
                         <svg class="h-4 w-4 shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-12.728 12.728m0-12.728l12.728 12.728"/></svg>
-                        Tidak Ikut Absensi
+                        Nonaktif — Digunakan Khusus Administrasi
                     </span>
                 @endif
             </div>

@@ -114,11 +114,11 @@
                 <textarea name="notes" id="notes" rows="2" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">{{ old('notes', $employee->notes) }}</textarea>
             </div>
 
-            <!-- Attendance participation is independent from employment and application access. -->
+            <!-- Section: KEIKUTSERTAAN ABSENSI -->
             @if($employee->user?->role === 'superadmin')
             <section class="w-full min-w-0 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 p-4 sm:p-5" aria-labelledby="attendance-system-heading">
                 <input type="hidden" name="attendance_enabled" value="{{ $employee->attendance_enabled ? 1 : 0 }}">
-                <h4 id="attendance-system-heading" class="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">Sistem Kehadiran</h4>
+                <h4 id="attendance-system-heading" class="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">Keikutsertaan Absensi</h4>
                 <div class="mt-3 flex min-w-0 items-start gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3.5">
                     <svg class="mt-0.5 h-5 w-5 shrink-0 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                     <div class="min-w-0">
@@ -129,48 +129,49 @@
             </section>
             @else
             <section class="w-full min-w-0 rounded-2xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/40 dark:bg-rose-950/30 p-4 sm:p-5" aria-labelledby="attendance-system-heading">
-                <div class="flex min-w-0 flex-col gap-2 border-b border-rose-200/80 dark:border-rose-900/60 pb-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div class="min-w-0">
-                        <h4 id="attendance-system-heading" class="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">Sistem Kehadiran</h4>
-                        <p class="mt-1 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">Status ini tidak mengubah jabatan, status karyawan, akun login, atau role aplikasi.</p>
+                <div class="border-b border-rose-200/80 dark:border-rose-900/60 pb-3">
+                    <h4 id="attendance-system-heading" class="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">Keikutsertaan Absensi</h4>
+                    <p class="mt-1 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">Menentukan apakah akun ini wajib mengikuti jadwal, absensi, izin, lembur, dan proses workforce.</p>
+                </div>
+
+                <!-- Mandatory Informative Block (shown when role is Karyawan) -->
+                <div id="attendance-mandatory-section" class="mt-4 space-y-2">
+                    <input type="hidden" name="attendance_enabled" value="1">
+                    <div class="flex min-h-[44px] w-full items-center justify-between gap-3 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-white dark:bg-slate-900 p-3.5">
+                        <div class="flex items-center gap-3">
+                            <span class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 px-2.5 py-1 text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-300">
+                                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> Aktif Wajib
+                            </span>
+                            <span class="text-xs font-extrabold text-slate-900 dark:text-slate-100">Wajib mengikuti jadwal & absensi</span>
+                        </div>
                     </div>
-                    @if($employee->attendance_enabled)
-                        <span class="inline-flex w-fit items-center gap-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 text-[10px] font-extrabold text-emerald-800 dark:text-emerald-300">
-                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true"></span> Ikut Absensi
-                        </span>
-                    @else
-                        <span class="inline-flex w-fit items-center gap-1.5 rounded-lg border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/60 px-2.5 py-1 text-[10px] font-extrabold text-amber-900 dark:text-amber-300">
-                            <span class="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true"></span> Tidak Ikut Absensi
-                        </span>
-                    @endif
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Role Karyawan selalu mengikuti jadwal dan sistem absensi.</p>
                 </div>
 
-                <div class="mt-4 grid grid-cols-1 gap-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 sm:grid-cols-3" aria-label="Konsep data yang saling terpisah">
-                    <span class="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 px-2.5 py-2 text-center">Status Karyawan</span>
-                    <span class="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 px-2.5 py-2 text-center">Role Aplikasi</span>
-                    <span class="rounded-lg border border-rose-200 dark:border-rose-900/60 bg-white dark:bg-slate-900 px-2.5 py-2 text-center text-rose-700 dark:text-rose-400">Sistem Kehadiran</span>
+                <!-- Editable Checkbox Block (shown when role is Admin or Owner) -->
+                <div id="attendance-editable-section" class="mt-4 hidden space-y-3">
+                    <input type="hidden" name="attendance_enabled" value="0">
+                    <label for="attendance_enabled_checkbox" class="flex min-h-[44px] w-full min-w-0 cursor-pointer items-start gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3.5 transition-colors hover:border-rose-300 dark:hover:border-rose-700 focus-within:border-rose-400 focus-within:ring-2 focus-within:ring-rose-200">
+                        <input type="checkbox" name="attendance_enabled" id="attendance_enabled_checkbox" value="1" {{ old('attendance_enabled', $employee->attendance_enabled) ? 'checked' : '' }} class="mt-0.5 h-5 w-5 shrink-0 rounded border-slate-300 dark:border-slate-700 text-rose-600 focus:ring-2 focus:ring-rose-500 focus:ring-offset-2">
+                        <span class="min-w-0">
+                            <span class="block text-xs font-extrabold leading-5 text-slate-900 dark:text-slate-100">Wajib mengikuti jadwal & absensi</span>
+                            <span class="mt-1 block text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">Nonaktifkan hanya untuk akun Owner/Admin yang digunakan khusus untuk administrasi.</span>
+                        </span>
+                    </label>
+
+                    <div>
+                        <label for="attendance_participation_reason" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Alasan Perubahan</label>
+                        <textarea name="attendance_participation_reason" id="attendance_participation_reason" rows="2" placeholder="Contoh: Owner hanya menggunakan akun untuk administrasi." class="mt-1 w-full min-w-0 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 px-3.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-slate-400 dark:placeholder-slate-500">{{ old('attendance_participation_reason') }}</textarea>
+                        <p class="mt-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">Wajib saat menonaktifkan sistem kehadiran (minimal 5 karakter).</p>
+                        @error('attendance_participation_reason')
+                            <p class="mt-1 text-xs font-semibold text-rose-600 dark:text-rose-400">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
 
-                <input type="hidden" name="attendance_enabled" value="0">
-                <label for="attendance_enabled" class="mt-4 flex min-h-[44px] w-full min-w-0 cursor-pointer items-start gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3.5 transition-colors hover:border-rose-300 dark:hover:border-rose-700 focus-within:border-rose-400 focus-within:ring-2 focus-within:ring-rose-200">
-                    <input type="checkbox" name="attendance_enabled" id="attendance_enabled" value="1" {{ old('attendance_enabled', $employee->attendance_enabled) ? 'checked' : '' }} class="mt-0.5 h-5 w-5 shrink-0 rounded border-slate-300 dark:border-slate-700 text-rose-600 focus:ring-2 focus:ring-rose-500 focus:ring-offset-2">
-                    <span class="min-w-0">
-                        <span class="block text-xs font-extrabold leading-5 text-slate-900 dark:text-slate-100">Wajib dijadwalkan dan melakukan absensi</span>
-                        <span class="mt-1 block text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">Nonaktifkan jika akun ini hanya digunakan untuk administrasi aplikasi dan tidak perlu mengikuti jadwal, absensi, izin, atau lembur.</span>
-                    </span>
-                </label>
                 @error('attendance_enabled')
                     <p class="mt-2 text-xs font-semibold text-rose-600 dark:text-rose-400">{{ $message }}</p>
                 @enderror
-
-                <div class="mt-4">
-                    <label for="attendance_participation_reason" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Alasan Perubahan</label>
-                    <textarea name="attendance_participation_reason" id="attendance_participation_reason" rows="3" placeholder="Contoh: Owner hanya menggunakan akun untuk administrasi." class="mt-1 w-full min-w-0 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-slate-400 dark:placeholder-slate-500">{{ old('attendance_participation_reason') }}</textarea>
-                    <p class="mt-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">Wajib saat menonaktifkan sistem kehadiran (minimal 5 karakter), dan disarankan saat mengaktifkan kembali untuk melengkapi riwayat audit.</p>
-                    @error('attendance_participation_reason')
-                        <p class="mt-1 text-xs font-semibold text-rose-600 dark:text-rose-400">{{ $message }}</p>
-                    @enderror
-                </div>
             </section>
             @endif
 
@@ -198,7 +199,7 @@
 
                     <div>
                         <label for="role" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Role Aplikasi (Hak Akses) *</label>
-                        @if(count($assignableRoles) > 0 && $employee->user)
+                        @if(count($assignableRoles) > 1 && $employee->user)
                             <select name="role" id="role" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
                                 @foreach($assignableRoles as $rVal => $rLabel)
                                     <option value="{{ $rVal }}" {{ old('role', $employee->user->role) === $rVal ? 'selected' : '' }}>{{ $rLabel }}</option>
@@ -206,9 +207,9 @@
                             </select>
                         @elseif($employee->user)
                             <input type="text" readonly value="{{ \App\Enums\UserRole::tryFrom($employee->user->role)?->label() ?? ucfirst($employee->user->role) }}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800">
-                            <input type="hidden" name="role" value="{{ $employee->user->role }}">
+                            <input type="hidden" name="role" id="role" value="{{ $employee->user->role }}">
                         @else
-                            @if(count($assignableRoles) > 0)
+                            @if(count($assignableRoles) > 1)
                                 <select name="role" id="role" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
                                     @foreach($assignableRoles as $rVal => $rLabel)
                                         <option value="{{ $rVal }}" {{ old('role', 'employee') === $rVal ? 'selected' : '' }}>{{ $rLabel }}</option>
@@ -216,7 +217,7 @@
                                 </select>
                             @else
                                 <input type="text" readonly value="Karyawan" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800">
-                                <input type="hidden" name="role" value="employee">
+                                <input type="hidden" name="role" id="role" value="employee">
                             @endif
                         @endif
                         <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
@@ -253,7 +254,7 @@
             <form action="{{ route('admin.employees.reset-password', $employee) }}" method="POST" class="flex flex-col sm:flex-row items-center gap-3">
                 @csrf
                 <input type="password" name="new_password" required placeholder="Password baru (min 6 karakter)" class="w-full sm:flex-1 px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500">
-                @if(count($assignableRoles) > 0)
+                @if(count($assignableRoles) > 1)
                     <select name="role" class="w-full sm:w-auto px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-bold">
                         @foreach($assignableRoles as $rVal => $rLabel)
                             <option value="{{ $rVal }}" {{ old('role', $employee->user?->role ?? 'employee') === $rVal ? 'selected' : '' }}>{{ $rLabel }}</option>
@@ -269,4 +270,30 @@
     </div>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const roleSelect = document.getElementById('role');
+    const editableAttendanceSection = document.getElementById('attendance-editable-section');
+    const mandatoryAttendanceSection = document.getElementById('attendance-mandatory-section');
+    const attendanceCheckbox = document.getElementById('attendance_enabled_checkbox');
+
+    function toggleAttendanceUI() {
+        const selectedRole = roleSelect ? roleSelect.value : '{{ $employee->user?->role ?? "employee" }}';
+        if (selectedRole === 'employee') {
+            if (editableAttendanceSection) editableAttendanceSection.classList.add('hidden');
+            if (mandatoryAttendanceSection) mandatoryAttendanceSection.classList.remove('hidden');
+            if (attendanceCheckbox) attendanceCheckbox.checked = true;
+        } else {
+            if (editableAttendanceSection) editableAttendanceSection.classList.remove('hidden');
+            if (mandatoryAttendanceSection) mandatoryAttendanceSection.classList.add('hidden');
+        }
+    }
+
+    if (roleSelect && roleSelect.tagName === 'SELECT') {
+        roleSelect.addEventListener('change', toggleAttendanceUI);
+    }
+    toggleAttendanceUI();
+});
+</script>
 @endsection
