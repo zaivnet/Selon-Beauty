@@ -52,11 +52,11 @@ class AttendanceParticipationTest extends TestCase
     public function test_defaults_role_independence_and_superadmin_workforce_safety(): void
     {
         $default = Employee::create(['employee_code' => 'PART-DEF', 'full_name' => 'Default On', 'status' => 'active']);
-        $ownerOff = $this->employee('PART-OWN-OFF', 'Owner Off', 'owner', false);
-        $ownerOn = $this->employee('PART-OWN-ON', 'Owner On', 'owner', true);
-        $adminOff = $this->employee('PART-ADM-OFF', 'Admin Off', 'admin', false);
-        $adminOn = $this->employee('PART-ADM-ON', 'Admin On', 'admin', true);
-        $employeeOff = $this->employee('PART-EMP-OFF', 'Employee Off', 'employee', false);
+        $ownerOff = $this->employee('PART-OWNER-OFF', 'Owner Off', 'owner', false);
+        $ownerOn = $this->employee('PART-OWNER-ON', 'Owner On', 'owner', true);
+        $adminOff = $this->employee('PART-ADMIN-OFF', 'Admin Off', 'admin', false);
+        $adminOn = $this->employee('PART-ADMIN-ON', 'Admin On', 'admin', true);
+        $employeeOff = $this->employee('PART-ADMIN-OFF2', 'Admin Non Workforce', 'admin', false);
         $employeeOn = $this->employee('PART-EMP-ON', 'Employee On', 'employee', true);
         $superadmin = $this->employee('PART-SUPER', 'Superadmin Outside', 'superadmin', true);
 
@@ -82,7 +82,7 @@ class AttendanceParticipationTest extends TestCase
         $ownerOn = $this->employee('PART-S2', 'Owner Operasional', 'owner', true);
         $adminOff = $this->employee('PART-S3', 'Admin Administratif', 'admin', false);
         $adminOn = $this->employee('PART-S4', 'Admin Operasional', 'admin', true);
-        $employeeOff = $this->employee('PART-S5', 'Employee Non Workforce', 'employee', false);
+        $employeeOff = $this->employee('PART-S5', 'Admin Non Workforce', 'admin', false);
         $employeeOn = $this->employee('PART-S6', 'Employee Workforce', 'employee', true);
         $superadmin = $this->employee('PART-S7', 'Superadmin Hidden', 'superadmin', true);
 
@@ -103,7 +103,7 @@ class AttendanceParticipationTest extends TestCase
 
     public function test_disabled_employee_effective_schedule_is_explicit_and_existing_schedule_returns_after_reenable(): void
     {
-        $employee = $this->employee('PART-EFF', 'Effective Disabled', 'employee', false);
+        $employee = $this->employee('PART-EFF', 'Effective Disabled', 'admin', false);
         $schedule = $this->schedule($employee, '2026-08-14');
         $service = app(EffectiveScheduleService::class);
 
@@ -121,7 +121,7 @@ class AttendanceParticipationTest extends TestCase
 
     public function test_disabled_employee_is_rejected_by_new_attendance_leave_and_overtime_actions(): void
     {
-        $employee = $this->employee('PART-BLOCK', 'Blocked Workforce', 'employee', false);
+        $employee = $this->employee('PART-BLOCK', 'Blocked Workforce', 'admin', false);
         $message = 'Akun Anda tidak terdaftar sebagai peserta sistem kehadiran.';
 
         try {
@@ -161,7 +161,7 @@ class AttendanceParticipationTest extends TestCase
 
     public function test_schedule_and_override_creation_are_rejected_for_disabled_employee(): void
     {
-        $employee = $this->employee('PART-ASSIGN', 'Disabled Assignment', 'employee', false);
+        $employee = $this->employee('PART-ASSIGN', 'Disabled Assignment', 'admin', false);
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Karyawan tidak terdaftar sebagai peserta sistem kehadiran.');
@@ -171,9 +171,9 @@ class AttendanceParticipationTest extends TestCase
         ], $this->actor);
     }
 
-    public function test_override_creation_is_rejected_for_disabled_employee(): void
+    public function test_cannot_create_schedule_override_for_disabled_employee(): void
     {
-        $employee = $this->employee('PART-OVR', 'Disabled Override', 'employee', false);
+        $employee = $this->employee('PART-OVR', 'Disabled Override', 'admin', false);
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Karyawan tidak terdaftar sebagai peserta sistem kehadiran.');
@@ -185,7 +185,7 @@ class AttendanceParticipationTest extends TestCase
 
     public function test_participation_change_requires_reason_audits_notifies_and_ignores_noop(): void
     {
-        $employee = $this->employee('PART-CHANGE', 'Change Participation', 'employee', true);
+        $employee = $this->employee('PART-CHANGE', 'Change Participation', 'admin', true);
         $service = app(AttendanceParticipationService::class);
 
         try {
@@ -218,7 +218,7 @@ class AttendanceParticipationTest extends TestCase
 
     public function test_cannot_disable_with_open_attendance_or_active_overtime(): void
     {
-        $employee = $this->employee('PART-ACTIVE', 'Active Workforce', 'employee', true);
+        $employee = $this->employee('PART-ACTIVE', 'Active Workforce', 'admin', true);
         AttendanceRecord::create([
             'employee_id' => $employee->id, 'work_date' => '2026-08-14', 'status' => 'present',
             'check_in_at' => '2026-08-14 08:00:00',
@@ -309,11 +309,11 @@ class AttendanceParticipationTest extends TestCase
         $employee = $this->employee('PART-UI', 'UI Disabled', 'employee', false);
 
         $this->actingAs($this->actor)->get(route('admin.employees.create'))
-            ->assertOk()->assertSee('attendance_enabled', false)->assertSee('Sistem Kehadiran');
+            ->assertOk()->assertSee('attendance_enabled', false)->assertSee('Keikutsertaan Absensi');
         $this->actingAs($this->actor)->get(route('admin.employees.edit', $employee))
             ->assertOk()->assertSee('attendance_participation_reason', false)->assertSee('min-h-[44px]', false);
         $this->actingAs($this->actor)->get(route('admin.employees.show', $employee))
-            ->assertOk()->assertSee('Tidak Ikut Absensi');
+            ->assertOk()->assertSee('Keikutsertaan Absensi');
         $this->actingAs($employee->user)->get(route('employee.dashboard'))
             ->assertOk()->assertSee('Akun ini tidak diwajibkan mengikuti sistem kehadiran.')
             ->assertDontSee('Absen Masuk')->assertDontSee('Izin & Cuti');
