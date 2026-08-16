@@ -123,6 +123,10 @@ Route::middleware(['auth', 'role:superadmin,owner,admin', 'prevent.private.cache
 
         // Audit Logs (Superadmin + Owner Only)
         Route::get('/audit-logs', [\App\Http\Controllers\Admin\AuditLogController::class, 'index'])->name('audit-logs.index');
+
+        // Outlet Management (Superadmin + Owner Only)
+        Route::resource('outlets', \App\Http\Controllers\Admin\OutletController::class)->except(['show']);
+        Route::post('/outlets/{outlet}/toggle-status', [\App\Http\Controllers\Admin\OutletController::class, 'toggleStatus'])->name('outlets.toggle-status');
     });
 
     // Backup System (Superadmin + Owner for Manage; Restore Superadmin Only)

@@ -29,14 +29,20 @@ class AttendanceController extends Controller
             'status' => $selectedStatus,
         ];
 
-        $metrics = $this->monitoringService->getSummaryMetrics($selectedDate);
-        $attendanceItems = $this->monitoringService->getAttendanceMonitoringList($filters);
+        $actor = $request->user();
+        $metrics = $this->monitoringService->getSummaryMetrics($selectedDate, $actor);
+        $attendanceItems = $this->monitoringService->getAttendanceMonitoringList($filters, null, $actor);
 
-        $employees = Employee::whereNull('deleted_at')
+        $employeesQuery = Employee::whereNull('deleted_at')
             ->where('status', 'active')
-            ->currentAttendanceWorkforce()
-            ->orderBy('full_name', 'asc')
-            ->get();
+            ->currentAttendanceWorkforce();
+
+        if ($actor->role === 'admin') {
+            $adminOutletId = $actor->outlet_id ?? $actor->employee?->outlet_id;
+            $employeesQuery->where('outlet_id', $adminOutletId);
+        }
+
+        $employees = $employeesQuery->orderBy('full_name', 'asc')->get();
 
         return view('admin.attendance.index', [
             'metrics' => $metrics,

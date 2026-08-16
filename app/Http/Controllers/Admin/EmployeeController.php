@@ -8,8 +8,10 @@ use App\Http\Requests\Admin\StoreEmployeeRequest;
 use App\Http\Requests\Admin\UpdateEmployeeRequest;
 use App\Models\Employee;
 use App\Models\JobTitle;
+use App\Models\Outlet;
 use App\Services\AttendanceParticipationService;
 use App\Services\EmployeeService;
+use App\Services\OutletScopeService;
 use App\Services\UserRoleService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
@@ -23,15 +25,19 @@ class EmployeeController extends Controller
     public function __construct(
         protected EmployeeService $employeeService,
         protected AttendanceParticipationService $attendanceParticipationService,
-        protected UserRoleService $userRoleService
+        protected UserRoleService $userRoleService,
+        protected OutletScopeService $outletScopeService
     ) {}
 
     public function index(Request $request): View
     {
+        $this->outletScopeService->ensureAdminHasOutlet($request->user());
+
         $search = trim($request->input('search', ''));
         $status = $request->input('status', '');
 
-        $query = Employee::with(['jobTitle', 'user']);
+        $query = Employee::with(['jobTitle', 'user', 'outlet']);
+        $query = $this->outletScopeService->scopeEmployeesFor($request->user(), $query);
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
@@ -53,11 +59,17 @@ class EmployeeController extends Controller
 
     public function create(Request $request): View
     {
+        $this->outletScopeService->ensureAdminHasOutlet($request->user());
+
         $suggestedCode = $this->employeeService->generateNextEmployeeCode();
         $jobTitles = JobTitle::where('is_active', true)->orderBy('name')->get();
+        $outlets = Outlet::where('is_active', true)->orderBy('name')->get();
         $assignableRoles = UserRole::getAssignableRoles($request->user()->role);
+        $adminOutlet = $this->outletScopeService->isGlobalScope($request->user())
+            ? null
+            : Outlet::find($this->outletScopeService->getAdminOutletId($request->user()));
 
-        return view('admin.employees.create', compact('suggestedCode', 'jobTitles', 'assignableRoles'));
+        return view('admin.employees.create', compact('suggestedCode', 'jobTitles', 'outlets', 'assignableRoles', 'adminOutlet'));
     }
 
     public function store(StoreEmployeeRequest $request): RedirectResponse
@@ -71,6 +83,13 @@ class EmployeeController extends Controller
         $requestedRole = ($actorRole === UserRole::ADMIN->value)
             ? UserRole::EMPLOYEE->value
             : $request->input('role', UserRole::EMPLOYEE->value);
+
+        if ($actorRole === UserRole::ADMIN->value) {
+            $validated['outlet_id'] = $this->outletScopeService->getAdminOutletId($request->user());
+        } elseif (empty($validated['outlet_id'])) {
+            $defaultOutlet = Outlet::where('code', 'PUSAT')->first() ?? Outlet::first();
+            $validated['outlet_id'] = $defaultOutlet?->id;
+        }
 
         // Security check for role assignment
         if ($createUserAccount && $requestedRole !== UserRole::EMPLOYEE->value) {
@@ -103,36 +122,48 @@ class EmployeeController extends Controller
             ->with('success', "Karyawan {$employee->full_name} ({$employee->employee_code}) berhasil ditambahkan.");
     }
 
-    public function show(Employee $employee): View
+    public function show(Request $request, Employee $employee): View
     {
-        $employee->load(['jobTitle', 'user']);
+        if (! $this->outletScopeService->canManageEmployee($request->user(), $employee)) {
+            abort(403, 'Akses ditolak. Karyawan ini tidak berada di outlet penugasan Anda.');
+        }
+
+        $employee->load(['jobTitle', 'user', 'outlet']);
 
         return view('admin.employees.show', compact('employee'));
     }
 
     public function edit(Request $request, Employee $employee): View|RedirectResponse
     {
-        if (! $this->userRoleService->canActorManageUser($request->user(), $employee->user)) {
+        if (! $this->outletScopeService->canManageEmployee($request->user(), $employee) || ! $this->userRoleService->canActorManageUser($request->user(), $employee->user)) {
             return redirect()->route('admin.employees.index')
                 ->with('error', 'Akses ditolak. Anda tidak berwenang mengelola data karyawan ini.');
         }
 
         $jobTitles = JobTitle::orderBy('name')->get();
-        $employee->load(['jobTitle', 'user']);
+        $outlets = Outlet::where('is_active', true)->orderBy('name')->get();
+        $employee->load(['jobTitle', 'user', 'outlet']);
         $assignableRoles = UserRole::getAssignableRoles($request->user()->role);
+        $adminOutlet = $this->outletScopeService->isGlobalScope($request->user())
+            ? null
+            : Outlet::find($this->outletScopeService->getAdminOutletId($request->user()));
 
-        return view('admin.employees.edit', compact('employee', 'jobTitles', 'assignableRoles'));
+        return view('admin.employees.edit', compact('employee', 'jobTitles', 'outlets', 'assignableRoles', 'adminOutlet'));
     }
 
     public function update(UpdateEmployeeRequest $request, Employee $employee): RedirectResponse
     {
-        if (! $this->userRoleService->canActorManageUser($request->user(), $employee->user)) {
+        if (! $this->outletScopeService->canManageEmployee($request->user(), $employee) || ! $this->userRoleService->canActorManageUser($request->user(), $employee->user)) {
             throw ValidationException::withMessages(['role' => 'Akses ditolak. Anda tidak berwenang mengelola data karyawan ini.']);
         }
 
         $validated = $request->validated();
         $photoFile = $request->file('profile_photo');
         $actorRole = $request->user()->role;
+
+        if ($actorRole === UserRole::ADMIN->value) {
+            unset($validated['outlet_id']);
+        }
 
         $requestedRole = ($actorRole === UserRole::ADMIN->value)
             ? UserRole::EMPLOYEE->value
@@ -189,7 +220,7 @@ class EmployeeController extends Controller
 
     public function toggleStatus(Request $request, Employee $employee): RedirectResponse
     {
-        if (! $this->userRoleService->canActorManageUser($request->user(), $employee->user)) {
+        if (! $this->outletScopeService->canManageEmployee($request->user(), $employee) || ! $this->userRoleService->canActorManageUser($request->user(), $employee->user)) {
             return redirect()->back()->with('error', 'Akses ditolak. Anda tidak berwenang mengubah status karyawan ini.');
         }
 
@@ -206,7 +237,7 @@ class EmployeeController extends Controller
 
     public function resetPassword(Request $request, Employee $employee): RedirectResponse
     {
-        if (! $this->userRoleService->canActorManageUser($request->user(), $employee->user)) {
+        if (! $this->outletScopeService->canManageEmployee($request->user(), $employee) || ! $this->userRoleService->canActorManageUser($request->user(), $employee->user)) {
             throw ValidationException::withMessages(['role' => 'Akses ditolak. Anda tidak berwenang mengelola akun karyawan ini.']);
         }
 
@@ -233,7 +264,7 @@ class EmployeeController extends Controller
 
     public function destroy(Request $request, Employee $employee): RedirectResponse
     {
-        if (! $this->userRoleService->canActorManageUser($request->user(), $employee->user)) {
+        if (! $this->outletScopeService->canManageEmployee($request->user(), $employee) || ! $this->userRoleService->canActorManageUser($request->user(), $employee->user)) {
             return redirect()->back()->with('error', 'Akses ditolak. Anda tidak berwenang menghapus data karyawan ini.');
         }
 

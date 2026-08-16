@@ -17,6 +17,7 @@ class AttendanceRecord extends Model
         'work_schedule_id',
         'work_date',
         'attendance_location_id',
+        'outlet_id',
         'status',
         'check_in_at',
         'check_in_latitude',
@@ -80,6 +81,11 @@ class AttendanceRecord extends Model
     public function location(): BelongsTo
     {
         return $this->belongsTo(AttendanceLocation::class, 'attendance_location_id');
+    }
+
+    public function outlet(): BelongsTo
+    {
+        return $this->belongsTo(Outlet::class, 'outlet_id');
     }
 
     public function correctedBy(): BelongsTo

@@ -58,6 +58,7 @@ class EmployeeService
                 $password = $accountPassword ?: 'password123';
                 User::create([
                     'employee_id' => $employee->id,
+                    'outlet_id' => $employee->outlet_id,
                     'name' => $employee->full_name,
                     'email' => $employee->email,
                     'phone' => $employee->phone,
@@ -98,6 +99,7 @@ class EmployeeService
                     'name' => $employee->full_name,
                     'email' => $employee->email,
                     'phone' => $employee->phone,
+                    'outlet_id' => $employee->user->role === 'admin' ? ($data['outlet_id'] ?? $employee->outlet_id) : $employee->user->outlet_id,
                     'is_active' => $employee->status === 'active',
                 ]);
             }
@@ -117,6 +119,7 @@ class EmployeeService
             // Create user account if none exists
             $user = User::create([
                 'employee_id' => $employee->id,
+                'outlet_id' => $employee->outlet_id,
                 'name' => $employee->full_name,
                 'email' => $employee->email,
                 'phone' => $employee->phone,

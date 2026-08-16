@@ -23,17 +23,23 @@ class AttendanceMonitoringService
     /**
      * Get KPI summary metrics for a given date in business timezone (Asia/Jakarta).
      */
-    public function getSummaryMetrics(?string $dateStr = null): array
+    public function getSummaryMetrics(?string $dateStr = null, ?\App\Models\User $actor = null): array
     {
         $targetDate = $dateStr ?: Carbon::now(config('app.timezone'))->toDateString();
 
-        $items = $this->getAttendanceMonitoringList(['date' => $targetDate]);
+        $items = $this->getAttendanceMonitoringList(['date' => $targetDate], null, $actor);
         $collection = collect($items);
 
-        $totalEmployees = Employee::whereNull('deleted_at')
+        $employeesQuery = Employee::whereNull('deleted_at')
             ->where('status', 'active')
-            ->currentAttendanceWorkforce()
-            ->count();
+            ->currentAttendanceWorkforce();
+
+        if ($actor && $actor->role === 'admin') {
+            $adminOutletId = $actor->outlet_id ?? $actor->employee?->outlet_id;
+            $employeesQuery->where('employees.outlet_id', $adminOutletId);
+        }
+
+        $totalEmployees = $employeesQuery->count();
 
         $presentToday = $collection->filter(fn ($i) => in_array($i['status_key'], ['present', 'late'], true))->count();
         $lateToday = $collection->filter(fn ($i) => $i['status_key'] === 'late')->count();
@@ -55,17 +61,22 @@ class AttendanceMonitoringService
     /**
      * Get real-time filterable attendance monitoring items for a specific date.
      */
-    public function getAttendanceMonitoringList(array $filters = [], ?Carbon $nowServerTime = null): array
+    public function getAttendanceMonitoringList(array $filters = [], ?Carbon $nowServerTime = null, ?\App\Models\User $actor = null): array
     {
         $targetDate = $filters['date'] ?? Carbon::now(config('app.timezone'))->toDateString();
         $filterEmployeeId = ! empty($filters['employee_id']) ? (int) $filters['employee_id'] : null;
         $filterStatus = ! empty($filters['status']) ? strtolower($filters['status']) : null;
 
         // Fetch active employees with their job titles
-        $employeesQuery = Employee::with(['jobTitle'])
+        $employeesQuery = Employee::with(['jobTitle', 'outlet'])
             ->whereNull('deleted_at')
             ->where('status', 'active')
             ->currentAttendanceWorkforce();
+
+        if ($actor && $actor->role === 'admin') {
+            $adminOutletId = $actor->outlet_id ?? $actor->employee?->outlet_id;
+            $employeesQuery->where('employees.outlet_id', $adminOutletId);
+        }
 
         if ($filterEmployeeId) {
             $employeesQuery->where('id', $filterEmployeeId);

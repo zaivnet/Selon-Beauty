@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\JobTitle;
 use App\Services\OperationalExceptionService;
+use App\Services\OutletScopeService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -14,7 +15,10 @@ use Illuminate\View\View;
 
 class OperationalExceptionController extends Controller
 {
-    public function __construct(protected OperationalExceptionService $exceptionService) {}
+    public function __construct(
+        protected OperationalExceptionService $exceptionService,
+        protected OutletScopeService $outletScopeService,
+    ) {}
 
     public function index(Request $request): View
     {
@@ -37,9 +41,17 @@ class OperationalExceptionController extends Controller
             ...$filters,
             'include_backup_health' => in_array($request->user()->role, ['owner', 'superadmin'], true),
         ], $now);
+
+        $allItems = collect($data['items']);
+        if ($request->user()->role === 'admin') {
+            $adminOutletId = $this->outletScopeService->getAdminOutletId($request->user());
+            $allItems = $allItems->filter(function ($item) use ($adminOutletId) {
+                return isset($item['employee']) ? ((int) $item['employee']->outlet_id === (int) $adminOutletId) : true;
+            });
+        }
+
         $page = max(1, $request->integer('page', 1));
         $perPage = 30;
-        $allItems = collect($data['items']);
         $items = new LengthAwarePaginator(
             $allItems->forPage($page, $perPage)->values(),
             $allItems->count(),
@@ -48,12 +60,15 @@ class OperationalExceptionController extends Controller
             ['path' => $request->url(), 'query' => $request->query()],
         );
 
+        $employeesQuery = Employee::whereNull('deleted_at')->where('status', 'active')->currentAttendanceWorkforce();
+        $employeesQuery = $this->outletScopeService->scopeEmployeesFor($request->user(), $employeesQuery);
+
         return view('admin.operational_exceptions.index', [
             'exceptions' => $data,
             'items' => $items,
             'filters' => ['date' => $date, ...$filters],
             'categories' => $this->exceptionService->categories(),
-            'employees' => Employee::whereNull('deleted_at')->where('status', 'active')->currentAttendanceWorkforce()->orderBy('full_name')->get(),
+            'employees' => $employeesQuery->orderBy('full_name')->get(),
             'jobTitles' => JobTitle::where('is_active', true)->orderBy('name')->get(),
         ]);
     }

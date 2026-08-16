@@ -84,6 +84,7 @@
                         <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/60">
                             <th class="p-3">Kode</th>
                             <th class="p-3">Nama Karyawan</th>
+                            <th class="p-3">Outlet</th>
                             <th class="p-3">Jabatan</th>
                             <th class="p-3">Kontak</th>
                             <th class="p-3">Status</th>
@@ -104,6 +105,11 @@
                                         @endif
                                     </div>
                                     <span>{{ $emp->full_name }}</span>
+                                </td>
+                                <td class="p-3 whitespace-nowrap">
+                                    <span class="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 font-bold text-[11px] rounded-md">
+                                        {{ $emp->outlet?->name ?? 'SELON PUSAT' }}
+                                    </span>
                                 </td>
                                 <td class="p-3 text-slate-600 dark:text-slate-300 font-semibold">{{ $emp->jobTitle?->name ?: '-' }}</td>
                                 <td class="p-3 text-slate-500 dark:text-slate-400">

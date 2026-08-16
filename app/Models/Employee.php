@@ -24,6 +24,7 @@ class Employee extends Model
         'phone',
         'email',
         'job_title_id',
+        'outlet_id',
         'join_date',
         'status',
         'attendance_enabled',
@@ -63,6 +64,11 @@ class Employee extends Model
     public function jobTitle(): BelongsTo
     {
         return $this->belongsTo(JobTitle::class, 'job_title_id');
+    }
+
+    public function outlet(): BelongsTo
+    {
+        return $this->belongsTo(Outlet::class, 'outlet_id');
     }
 
     public function user(): HasOne

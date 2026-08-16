@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\LeaveRequest;
 use App\Services\LeaveRequestService;
+use App\Services\OutletScopeService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,7 +14,10 @@ use Illuminate\Support\Facades\Auth;
 
 class LeaveRequestController extends Controller
 {
-    public function __construct(protected LeaveRequestService $leaveService) {}
+    public function __construct(
+        protected LeaveRequestService $leaveService,
+        protected OutletScopeService $outletScopeService
+    ) {}
 
     public function index(Request $request): View
     {
@@ -25,6 +29,8 @@ class LeaveRequestController extends Controller
 
         $query = LeaveRequest::with(['employee.jobTitle', 'reviewer'])
             ->orderBy('created_at', 'desc');
+
+        $query = $this->outletScopeService->scopeQueryFor($request->user(), $query);
 
         if ($statusFilter && $statusFilter !== 'all') {
             $query->where('status', $statusFilter);
@@ -48,11 +54,12 @@ class LeaveRequestController extends Controller
 
         $requests = $query->paginate(15)->withQueryString();
 
-        $employees = Employee::whereNull('deleted_at')
+        $employeesQuery = Employee::whereNull('deleted_at')
             ->where('status', 'active')
-            ->currentAttendanceWorkforce()
-            ->orderBy('full_name', 'asc')
-            ->get();
+            ->currentAttendanceWorkforce();
+        $employeesQuery = $this->outletScopeService->scopeEmployeesFor($request->user(), $employeesQuery);
+
+        $employees = $employeesQuery->orderBy('full_name', 'asc')->get();
 
         $filters = [
             'status' => $statusFilter,

@@ -40,6 +40,11 @@ class ReportService
         // 1. Fetch Employees
         $employeesQuery = Employee::with(['jobTitle', 'user'])->whereNull('deleted_at');
 
+        if (! empty($filters['actor']) && $filters['actor']->role === 'admin') {
+            $adminOutletId = $filters['actor']->outlet_id ?? $filters['actor']->employee?->outlet_id;
+            $employeesQuery->where('employees.outlet_id', $adminOutletId);
+        }
+
         if ($employeeIdFilter) {
             $employeesQuery->where('id', $employeeIdFilter);
         } else {

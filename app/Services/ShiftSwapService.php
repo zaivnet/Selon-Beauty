@@ -290,6 +290,11 @@ class ShiftSwapService
             throw ValidationException::withMessages(['target_employee_id' => 'Anda tidak dapat mengajukan tukar jadwal dengan diri sendiri.']);
         }
 
+        // 1b. Same Outlet Check
+        if ($requester->outlet_id !== null && $target->outlet_id !== null && (int) $requester->outlet_id !== (int) $target->outlet_id) {
+            throw ValidationException::withMessages(['target_employee_id' => 'Pertukaran jadwal hanya dapat dilakukan dengan karyawan pada outlet yang sama.']);
+        }
+
         // 2. Active Employee & Attendance Enabled Check
         if ($requester->status !== 'active' || ! $requester->participatesInAttendance()) {
             throw ValidationException::withMessages(['requester' => 'Karyawan pemohon tidak aktif atau tidak terdaftar sebagai peserta presensi.']);

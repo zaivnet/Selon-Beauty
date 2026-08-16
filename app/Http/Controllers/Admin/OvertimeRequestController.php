@@ -8,6 +8,7 @@ use App\Models\Employee;
 use App\Models\EmployeeSchedule;
 use App\Models\OvertimeRequest;
 use App\Models\OvertimeSession;
+use App\Services\OutletScopeService;
 use App\Services\OvertimeRequestService;
 use App\Services\OvertimeSessionService;
 use Illuminate\Contracts\View\View;
@@ -20,6 +21,7 @@ class OvertimeRequestController extends Controller
     public function __construct(
         protected OvertimeRequestService $overtimeService,
         protected OvertimeSessionService $sessionService,
+        protected OutletScopeService $outletScopeService,
     ) {}
 
     public function index(Request $request): View
@@ -31,6 +33,8 @@ class OvertimeRequestController extends Controller
 
         $query = OvertimeRequest::with(['employee.jobTitle', 'reviewer', 'session'])
             ->orderBy('created_at', 'desc');
+
+        $query = $this->outletScopeService->scopeQueryFor($request->user(), $query);
 
         if ($statusFilter && $statusFilter !== 'all') {
             $query->where('status', $statusFilter);
@@ -70,11 +74,12 @@ class OvertimeRequestController extends Controller
             ->get()
             ->keyBy(fn ($s) => $s->employee_id.'_'.$s->work_date->format('Y-m-d'));
 
-        $employees = Employee::whereNull('deleted_at')
+        $employeesQuery = Employee::whereNull('deleted_at')
             ->where('status', 'active')
-            ->currentAttendanceWorkforce()
-            ->orderBy('full_name', 'asc')
-            ->get();
+            ->currentAttendanceWorkforce();
+        $employeesQuery = $this->outletScopeService->scopeEmployeesFor($request->user(), $employeesQuery);
+
+        $employees = $employeesQuery->orderBy('full_name', 'asc')->get();
 
         $filters = [
             'status' => $statusFilter,

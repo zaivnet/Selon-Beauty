@@ -47,6 +47,7 @@ class UpdateEmployeeRequest extends FormRequest
                 Rule::unique('users', 'phone')->ignore($userId),
             ],
             'job_title_id' => ['nullable', 'exists:job_titles,id'],
+            'outlet_id' => ['nullable', 'exists:outlets,id'],
             'join_date' => ['nullable', 'date'],
             'status' => ['required', 'in:active,inactive'],
             'attendance_enabled' => ['sometimes', 'boolean'],

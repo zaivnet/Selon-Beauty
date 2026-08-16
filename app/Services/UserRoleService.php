@@ -109,6 +109,9 @@ class UserRoleService
 
         DB::transaction(function () use ($actor, $targetUser, $oldRole, $newRole) {
             $targetUser->role = $newRole;
+            if ($newRole === 'admin' && ! $targetUser->outlet_id && $targetUser->employee?->outlet_id) {
+                $targetUser->outlet_id = $targetUser->employee->outlet_id;
+            }
             $targetUser->remember_token = Str::random(60);
             $targetUser->save();
 

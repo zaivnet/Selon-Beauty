@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\JobTitle;
+use App\Services\OutletScopeService;
 use App\Services\ReportService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -13,7 +14,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportController extends Controller
 {
-    public function __construct(protected ReportService $reportService) {}
+    public function __construct(
+        protected ReportService $reportService,
+        protected OutletScopeService $outletScopeService,
+    ) {}
 
     public function attendance(Request $request): View
     {
@@ -29,6 +33,7 @@ class ReportController extends Controller
             'employee_id' => $employeeId,
             'status' => $status,
             'job_title_id' => $jobTitleId,
+            'actor' => $request->user(),
         ];
 
         $reportData = $this->reportService->generateAttendanceReport($filters);
@@ -45,11 +50,12 @@ class ReportController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        $employees = Employee::whereNull('deleted_at')
+        $employeesQuery = Employee::whereNull('deleted_at')
             ->where('status', 'active')
-            ->currentAttendanceWorkforce()
-            ->orderBy('full_name', 'asc')
-            ->get();
+            ->currentAttendanceWorkforce();
+        $employeesQuery = $this->outletScopeService->scopeEmployeesFor($request->user(), $employeesQuery);
+
+        $employees = $employeesQuery->orderBy('full_name', 'asc')->get();
 
         $jobTitles = JobTitle::where('is_active', true)->orderBy('name', 'asc')->get();
 
@@ -76,6 +82,7 @@ class ReportController extends Controller
             'employee_id' => $employeeId,
             'status' => $status,
             'job_title_id' => $jobTitleId,
+            'actor' => $request->user(),
         ];
 
         $reportData = $this->reportService->generateAttendanceReport($filters);
@@ -100,6 +107,7 @@ class ReportController extends Controller
             'employee_id' => $employeeId,
             'status' => $status,
             'job_title_id' => $jobTitleId,
+            'actor' => $request->user(),
         ];
 
         $reportData = $this->reportService->generateAttendanceReport($filters);

@@ -80,11 +80,11 @@ class AttendanceService
     }
 
     /**
-     * Validate GPS geofence position against active AttendanceLocation server-side.
+     * Validate GPS geofence position against employee outlet / active AttendanceLocation server-side.
      *
      * @return array{location: AttendanceLocation, distance: float}
      */
-    public function validateGeofence(float $latitude, float $longitude, float $accuracy): array
+    public function validateGeofence(float $latitude, float $longitude, float $accuracy, ?Employee $employee = null): array
     {
         if ($latitude < -90.0 || $latitude > 90.0) {
             throw new \InvalidArgumentException('Nilai Latitude GPS tidak valid.');
@@ -98,7 +98,29 @@ class AttendanceService
             throw new \InvalidArgumentException('Nilai Akurasi GPS tidak valid.');
         }
 
-        $activeLocation = AttendanceLocation::where('is_active', true)->first();
+        $activeLocation = null;
+        if ($employee) {
+            $employee->loadMissing('outlet');
+            if ($employee->outlet && $employee->outlet->is_active) {
+                $outlet = $employee->outlet;
+                $activeLocation = new AttendanceLocation([
+                    'name' => $outlet->name,
+                    'address' => $outlet->address,
+                    'latitude' => $outlet->latitude,
+                    'longitude' => $outlet->longitude,
+                    'radius_meters' => $outlet->radius_meters,
+                    'max_accuracy_meters' => $outlet->max_accuracy_meters,
+                    'is_active' => $outlet->is_active,
+                ]);
+                $activeLocation->id = $outlet->id;
+                $activeLocation->exists = true;
+            }
+        }
+
+        if (! $activeLocation) {
+            $activeLocation = AttendanceLocation::where('is_active', true)->first();
+        }
+
         if (! $activeLocation) {
             throw new \InvalidArgumentException('Lokasi absensi toko belum dikonfigurasi atau tidak aktif.');
         }
@@ -200,7 +222,7 @@ class AttendanceService
                 $lng = (float) $rawLng;
                 $acc = (float) $rawAcc;
 
-                $geofenceResult = $this->validateGeofence($lat, $lng, $acc);
+                $geofenceResult = $this->validateGeofence($lat, $lng, $acc, $employee);
                 $location = $geofenceResult['location'];
                 $distance = $geofenceResult['distance'];
 
@@ -224,6 +246,7 @@ class AttendanceService
                     'work_schedule_id' => $schedule->exists ? $schedule->id : null,
                     'work_date' => $workDateStr,
                     'attendance_location_id' => $location->id,
+                    'outlet_id' => $employee->outlet_id,
                     'status' => $status,
                     'check_in_at' => $serverNow,
                     'check_in_latitude' => $lat,

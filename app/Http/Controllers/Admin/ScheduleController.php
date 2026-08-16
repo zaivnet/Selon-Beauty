@@ -12,6 +12,7 @@ use App\Models\Holiday;
 use App\Models\Shift;
 use App\Services\EffectiveScheduleService;
 use App\Services\EmployeeScheduleService;
+use App\Services\OutletScopeService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,6 +23,7 @@ class ScheduleController extends Controller
     public function __construct(
         protected EmployeeScheduleService $scheduleService,
         protected EffectiveScheduleService $effectiveScheduleService,
+        protected OutletScopeService $outletScopeService,
     ) {}
 
     public function index(Request $request): View
@@ -48,10 +50,11 @@ class ScheduleController extends Controller
             $currentDay->addDay();
         }
 
-        $employees = Employee::where('status', 'active')
-            ->currentAttendanceWorkforce()
-            ->orderBy('full_name')
-            ->get();
+        $employeesQuery = Employee::where('status', 'active')
+            ->currentAttendanceWorkforce();
+        $employeesQuery = $this->outletScopeService->scopeEmployeesFor($request->user(), $employeesQuery);
+
+        $employees = $employeesQuery->orderBy('full_name')->get();
 
         $shifts = Shift::orderBy('name')->get();
         $activeShifts = $shifts->where('is_active', true);

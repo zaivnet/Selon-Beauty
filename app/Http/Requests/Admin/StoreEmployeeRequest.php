@@ -28,6 +28,7 @@ class StoreEmployeeRequest extends FormRequest
             'email' => ['nullable', 'email', 'max:190', 'unique:employees,email', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:30', 'unique:employees,phone', 'unique:users,phone'],
             'job_title_id' => ['nullable', 'exists:job_titles,id'],
+            'outlet_id' => ['nullable', 'exists:outlets,id'],
             'join_date' => ['nullable', 'date'],
             'status' => ['required', 'in:active,inactive'],
             'attendance_enabled' => ['nullable', 'boolean'],
