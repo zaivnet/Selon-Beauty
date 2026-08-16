@@ -160,6 +160,12 @@ class ShiftSwapService
             }
 
             if ($action === 'approve') {
+                if (! $swap->requester || ! $swap->target) {
+                    throw ValidationException::withMessages([
+                        'shift_swap' => 'Data karyawan pada permintaan tukar jadwal ini tidak ditemukan.',
+                    ]);
+                }
+
                 // Rule P: Stale Schedule Check
                 $reqEffective = $this->effectiveService->resolve($swap->requester, $swap->requester_work_date->format('Y-m-d'));
                 $targetEffective = $this->effectiveService->resolve($swap->target, $swap->target_work_date->format('Y-m-d'));

@@ -934,4 +934,100 @@ class ShiftSwapTest extends TestCase
         $this->assertStringNotContainsString('@click.away="respondModal = false"', $content);
         $this->assertStringNotContainsString(':action="', $content);
     }
+
+    // ==========================================
+    // ADMIN PREVIEW HOTFIX REGRESSION TESTS
+    // ==========================================
+
+    public function test_preview_1_admin_can_open_preview_of_pending_shift_swap(): void
+    {
+        $swap = $this->swapService->submitRequest($this->reqEmp, [
+            'target_employee_id' => $this->targetEmp->id,
+            'requester_work_date' => $this->futureDate,
+            'reason' => 'Pratinjau pending swap',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.shift-swaps.show', $swap))
+            ->assertStatus(200)
+            ->assertSee('Detail Tukar Jadwal')
+            ->assertSee($this->reqEmp->full_name)
+            ->assertSee($this->targetEmp->full_name);
+    }
+
+    public function test_preview_2_admin_can_open_preview_of_approved_shift_swap(): void
+    {
+        $swap = $this->swapService->submitRequest($this->reqEmp, [
+            'target_employee_id' => $this->targetEmp->id,
+            'requester_work_date' => $this->futureDate,
+            'reason' => 'Pratinjau approved swap',
+        ]);
+        $swap = $this->swapService->respondByTarget($swap, $this->targetUser, 'accept');
+        $approvedSwap = $this->swapService->respondByAdmin($swap, $this->admin, 'approve');
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.shift-swaps.show', $approvedSwap))
+            ->assertStatus(200)
+            ->assertSee('Disetujui')
+            ->assertSee($this->reqEmp->full_name)
+            ->assertSee($this->targetEmp->full_name);
+    }
+
+    public function test_preview_3_preview_resolves_effective_schedules_for_both_employees(): void
+    {
+        $swap = $this->swapService->submitRequest($this->reqEmp, [
+            'target_employee_id' => $this->targetEmp->id,
+            'requester_work_date' => $this->futureDate,
+            'reason' => 'Effective schedule resolution check',
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->get(route('admin.shift-swaps.show', $swap));
+
+        $response->assertStatus(200);
+        $response->assertViewHas('reqCurrentEffective');
+        $response->assertViewHas('targetCurrentEffective');
+
+        $reqEffective = $response->viewData('reqCurrentEffective');
+        $targetEffective = $response->viewData('targetCurrentEffective');
+
+        $this->assertNotNull($reqEffective);
+        $this->assertInstanceOf(Employee::class, $reqEffective['employee']);
+        $this->assertEquals($this->reqEmp->id, $reqEffective['employee']->id);
+
+        $this->assertNotNull($targetEffective);
+        $this->assertInstanceOf(Employee::class, $targetEffective['employee']);
+        $this->assertEquals($this->targetEmp->id, $targetEffective['employee']->id);
+    }
+
+    public function test_preview_4_preview_does_not_throw_500_when_employee_is_soft_deleted(): void
+    {
+        $swap = $this->swapService->submitRequest($this->reqEmp, [
+            'target_employee_id' => $this->targetEmp->id,
+            'requester_work_date' => $this->futureDate,
+            'reason' => 'Soft delete preview test',
+        ]);
+
+        // Soft delete target employee
+        $this->targetEmp->delete();
+
+        $response = $this->actingAs($this->admin)
+            ->get(route('admin.shift-swaps.show', $swap));
+
+        $response->assertStatus(200);
+        $response->assertSee('(Dihapus)');
+    }
+
+    public function test_preview_5_authorization_restricts_employee_from_accessing_admin_preview(): void
+    {
+        $swap = $this->swapService->submitRequest($this->reqEmp, [
+            'target_employee_id' => $this->targetEmp->id,
+            'requester_work_date' => $this->futureDate,
+            'reason' => 'Authorization preview test',
+        ]);
+
+        $this->actingAs($this->reqUser)
+            ->get(route('admin.shift-swaps.show', $swap))
+            ->assertStatus(302);
+    }
 }

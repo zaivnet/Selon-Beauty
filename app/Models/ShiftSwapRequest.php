@@ -53,12 +53,12 @@ class ShiftSwapRequest extends Model
 
     public function requester(): BelongsTo
     {
-        return $this->belongsTo(Employee::class, 'requester_employee_id');
+        return $this->belongsTo(Employee::class, 'requester_employee_id')->withTrashed();
     }
 
     public function target(): BelongsTo
     {
-        return $this->belongsTo(Employee::class, 'target_employee_id');
+        return $this->belongsTo(Employee::class, 'target_employee_id')->withTrashed();
     }
 
     public function requesterShift(): BelongsTo

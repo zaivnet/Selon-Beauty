@@ -33,8 +33,13 @@
                 <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                     <div>
                         <span class="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500">Pemohon (Ayu)</span>
-                        <h4 class="text-base font-black text-slate-900 dark:text-slate-100">{{ $swap->requester?->full_name }}</h4>
-                        <p class="text-xs text-slate-500 dark:text-slate-400">{{ $swap->requester?->employee_code }} · {{ $swap->requester?->jobTitle?->name ?? 'Karyawan' }}</p>
+                        <h4 class="text-base font-black text-slate-900 dark:text-slate-100">
+                            {{ $swap->requester?->full_name ?? 'Karyawan tidak ditemukan' }}
+                            @if($swap->requester?->trashed())
+                                <span class="ml-1 text-xs font-bold text-rose-600 dark:text-rose-400">(Dihapus)</span>
+                            @endif
+                        </h4>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">{{ $swap->requester?->employee_code ?? '—' }} · {{ $swap->requester?->jobTitle?->name ?? 'Karyawan' }}</p>
                     </div>
                     <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $swap->requester_work_date->translatedFormat('d F Y') }}</span>
                 </div>
@@ -56,8 +61,13 @@
                 <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                     <div>
                         <span class="text-[10px] font-black uppercase text-indigo-600 dark:text-indigo-400">Rekan Tujuan (Dia)</span>
-                        <h4 class="text-base font-black text-slate-900 dark:text-slate-100">{{ $swap->target?->full_name }}</h4>
-                        <p class="text-xs text-slate-500 dark:text-slate-400">{{ $swap->target?->employee_code }} · {{ $swap->target?->jobTitle?->name ?? 'Karyawan' }}</p>
+                        <h4 class="text-base font-black text-slate-900 dark:text-slate-100">
+                            {{ $swap->target?->full_name ?? 'Karyawan tidak ditemukan' }}
+                            @if($swap->target?->trashed())
+                                <span class="ml-1 text-xs font-bold text-rose-600 dark:text-rose-400">(Dihapus)</span>
+                            @endif
+                        </h4>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">{{ $swap->target?->employee_code ?? '—' }} · {{ $swap->target?->jobTitle?->name ?? 'Karyawan' }}</p>
                     </div>
                     <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ $swap->target_work_date->translatedFormat('d F Y') }}</span>
                 </div>

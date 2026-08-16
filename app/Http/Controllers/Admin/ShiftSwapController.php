@@ -64,8 +64,12 @@ class ShiftSwapController extends Controller
     {
         $swap->load(['requester', 'target', 'requesterShift', 'targetShift', 'adminUser']);
 
-        $reqCurrentEffective = $this->effectiveService->resolve($swap->requester, $swap->requester_work_date->format('Y-m-d'));
-        $targetCurrentEffective = $this->effectiveService->resolve($swap->target, $swap->target_work_date->format('Y-m-d'));
+        $reqCurrentEffective = $swap->requester
+            ? $this->effectiveService->resolve($swap->requester, $swap->requester_work_date->format('Y-m-d'))
+            : null;
+        $targetCurrentEffective = $swap->target
+            ? $this->effectiveService->resolve($swap->target, $swap->target_work_date->format('Y-m-d'))
+            : null;
 
         return view('admin.shift_swaps.show', [
             'swap' => $swap,

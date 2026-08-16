@@ -85,8 +85,18 @@
                         @foreach($swaps as $swap)
                             <tr class="transition hover:bg-slate-50/80 dark:hover:bg-slate-800/50">
                                 <td class="px-4 py-3 font-mono text-slate-500 dark:text-slate-400">{{ $swap->created_at->format('d/m/Y H:i') }}</td>
-                                <td class="px-3 py-3 font-bold text-slate-900 dark:text-slate-100">{{ $swap->requester?->full_name }}</td>
-                                <td class="px-3 py-3 font-bold text-slate-900 dark:text-slate-100">{{ $swap->target?->full_name }}</td>
+                                <td class="px-3 py-3 font-bold text-slate-900 dark:text-slate-100">
+                                    {{ $swap->requester?->full_name ?? 'Karyawan tidak ditemukan' }}
+                                    @if($swap->requester?->trashed())
+                                        <span class="text-[10px] font-semibold text-rose-600 dark:text-rose-400">(Dihapus)</span>
+                                    @endif
+                                </td>
+                                <td class="px-3 py-3 font-bold text-slate-900 dark:text-slate-100">
+                                    {{ $swap->target?->full_name ?? 'Karyawan tidak ditemukan' }}
+                                    @if($swap->target?->trashed())
+                                        <span class="text-[10px] font-semibold text-rose-600 dark:text-rose-400">(Dihapus)</span>
+                                    @endif
+                                </td>
                                 <td class="px-3 py-3 font-mono font-bold text-slate-800 dark:text-slate-200">{{ $swap->requester_work_date->format('d/m/Y') }}</td>
                                 <td class="px-3 py-3">
                                     <div class="text-[11px] leading-tight">
