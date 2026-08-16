@@ -112,7 +112,13 @@ class EmployeeRoleAttendanceRulesTest extends TestCase
 
     public function test_admin_actor_cannot_manage_non_karyawan_users(): void
     {
-        $ownerEmp = Employee::factory()->create();
+        $ownerEmp = Employee::create([
+            'employee_code' => 'OWN-MANAGE-01',
+            'full_name' => 'Target Owner Employee',
+            'email' => 'target.owner@example.com',
+            'status' => 'active',
+            'attendance_enabled' => true,
+        ]);
         $this->owner->employee_id = $ownerEmp->id;
         $this->owner->save();
         $ownerEmp->refresh();
@@ -133,7 +139,13 @@ class EmployeeRoleAttendanceRulesTest extends TestCase
 
     public function test_owner_actor_cannot_manage_superadmin_or_owner_users(): void
     {
-        $superadminEmp = Employee::factory()->create();
+        $superadminEmp = Employee::create([
+            'employee_code' => 'SUP-MANAGE-01',
+            'full_name' => 'Target Superadmin Employee',
+            'email' => 'target.superadmin@example.com',
+            'status' => 'active',
+            'attendance_enabled' => false,
+        ]);
         $this->superadmin->employee_id = $superadminEmp->id;
         $this->superadmin->save();
         $superadminEmp->refresh();
@@ -150,8 +162,12 @@ class EmployeeRoleAttendanceRulesTest extends TestCase
 
     public function test_updating_employee_role_to_karyawan_forces_attendance_enabled(): void
     {
-        // Owner user with attendance_enabled = false
-        $adminEmp = Employee::factory()->create([
+        // Admin user with attendance_enabled = false
+        $adminEmp = Employee::create([
+            'employee_code' => 'ADM-UPDATE-01',
+            'full_name' => 'Target Admin To Employee',
+            'email' => 'target.admin.update@example.com',
+            'status' => 'active',
             'attendance_enabled' => false,
         ]);
         $adminUser = User::factory()->create([
