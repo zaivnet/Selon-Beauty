@@ -4,7 +4,7 @@
 @section('page-title', 'Detail Profile Karyawan')
 
 @section('content')
-<div class="max-w-3xl mx-auto space-y-6">
+<div class="max-w-3xl mx-auto space-y-6" x-data="{ showTransferModal: false }">
 
     <!-- Flash Alerts -->
     @if(session('success'))
@@ -18,11 +18,17 @@
         </div>
     @endif
 
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-3">
         <a href="{{ route('admin.employees.index') }}" class="text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 flex items-center gap-1">
             &larr; Kembali ke Daftar Karyawan
         </a>
         <div class="flex items-center gap-2">
+            @if($canTransfer)
+                <button type="button" @click="showTransferModal = true" class="px-3.5 py-1.5 bg-rose-600 dark:bg-rose-500 text-white font-extrabold text-xs rounded-lg hover:bg-rose-700 dark:hover:bg-rose-600 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                    <span>Pindah Outlet</span>
+                </button>
+            @endif
             <a href="{{ route('admin.employees.edit', $employee) }}" class="px-3.5 py-1.5 bg-blue-600 text-white font-bold text-xs rounded-lg hover:bg-blue-700 transition-colors">
                 Edit Data
             </a>
@@ -210,7 +216,104 @@
             </form>
         </div>
 
+    <!-- Riwayat Outlet History Card -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-4 transition-colors">
+        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Riwayat Outlet Karyawan</h3>
+            </div>
+            <span class="text-xs font-bold text-slate-400 dark:text-slate-500">{{ $employee->outletTransfers->count() }} Perubahan</span>
+        </div>
+
+        @if($employee->outletTransfers->isEmpty())
+            <p class="text-xs text-slate-500 dark:text-slate-400 italic py-2">Belum ada riwayat pemindahan outlet untuk karyawan ini.</p>
+        @else
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/40">
+                            <th class="p-2.5">Tanggal Efektif</th>
+                            <th class="p-2.5">Perubahan Outlet</th>
+                            <th class="p-2.5">Dipindahkan Oleh</th>
+                            <th class="p-2.5">Catatan</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        @foreach($employee->outletTransfers as $transfer)
+                            <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
+                                <td class="p-2.5 font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                                    {{ $transfer->effective_date->locale('id')->isoFormat('D MMMM YYYY') }}
+                                </td>
+                                <td class="p-2.5 whitespace-nowrap">
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
+                                        <span class="text-slate-500 dark:text-slate-400">{{ $transfer->fromOutlet?->name ?? 'Outlet Hapus' }}</span>
+                                        <svg class="w-3 h-3 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                        <span class="text-rose-600 dark:text-rose-400">{{ $transfer->toOutlet?->name ?? 'Outlet Hapus' }}</span>
+                                    </span>
+                                </td>
+                                <td class="p-2.5 text-slate-600 dark:text-slate-400 font-medium whitespace-nowrap">
+                                    {{ $transfer->transferredBy?->name ?? 'Sistem' }}
+                                </td>
+                                <td class="p-2.5 text-slate-500 dark:text-slate-400">
+                                    {{ $transfer->notes ?: '-' }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
     </div>
+
+    <!-- Pindah Outlet Modal -->
+    @if($canTransfer)
+        <div x-show="showTransferModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div @click.away="showTransferModal = false" class="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-xl border border-slate-200 dark:border-slate-800 space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <h3 class="text-base font-black text-slate-900 dark:text-slate-100">Pindah Outlet Karyawan</h3>
+                    <button type="button" @click="showTransferModal = false" class="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 text-xl font-bold">&times;</button>
+                </div>
+
+                <div class="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl text-xs text-amber-900 dark:text-amber-300 space-y-1">
+                    <p class="font-extrabold">Informasi Pemindahan:</p>
+                    <p class="font-medium">Anda akan memindahkan <span class="font-bold underline">{{ $employee->full_name }}</span> dari <span class="font-bold underline">{{ $employee->outlet?->name ?? 'Outlet Saat Ini' }}</span>.</p>
+                    <p class="text-[11px] text-amber-800 dark:text-amber-400">Data absensi sebelumnya tetap tercatat di outlet lama. Absensi selanjutnya akan menggunakan geofence outlet baru.</p>
+                </div>
+
+                <form action="{{ route('admin.employees.transfer', $employee) }}" method="POST" class="space-y-4">
+                    @csrf
+
+                    <div>
+                        <label for="destination_outlet_id" class="block text-xs font-black text-slate-700 dark:text-slate-300 mb-1">Outlet Tujuan <span class="text-rose-600 dark:text-rose-400">*</span></label>
+                        <select name="destination_outlet_id" id="destination_outlet_id" required class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-bold p-2.5 focus:border-rose-500 focus:ring-rose-500">
+                            <option value="">-- Pilih Outlet Tujuan --</option>
+                            @foreach($availableOutlets as $outlet)
+                                <option value="{{ $outlet->id }}">{{ $outlet->name }} ({{ $outlet->code }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-black text-slate-700 dark:text-slate-300 mb-1">Tanggal Efektif</label>
+                        <input type="text" readonly value="Hari Ini ({{ \Carbon\Carbon::now(config('app.timezone'))->locale('id')->isoFormat('D MMMM YYYY') }})" class="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold p-2.5 cursor-not-allowed">
+                    </div>
+
+                    <div>
+                        <label for="transfer_notes" class="block text-xs font-black text-slate-700 dark:text-slate-300 mb-1">Catatan / Alasan Pemindahan (Opsional)</label>
+                        <textarea name="notes" id="transfer_notes" rows="3" placeholder="Contoh: Rotasi operasional outlet..." class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs p-2.5 focus:border-rose-500 focus:ring-rose-500"></textarea>
+                    </div>
+
+                    <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <button type="button" @click="showTransferModal = false" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">Batal</button>
+                        <button type="submit" class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-xs font-black text-white shadow-xs transition-colors cursor-pointer">Ya, Pindahkan Outlet</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
 
 </div>
 @endsection

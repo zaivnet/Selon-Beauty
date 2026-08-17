@@ -26,7 +26,8 @@ class EmployeeController extends Controller
         protected EmployeeService $employeeService,
         protected AttendanceParticipationService $attendanceParticipationService,
         protected UserRoleService $userRoleService,
-        protected OutletScopeService $outletScopeService
+        protected OutletScopeService $outletScopeService,
+        protected \App\Services\EmployeeTransferService $transferService,
     ) {}
 
     public function index(Request $request): View
@@ -125,13 +126,23 @@ class EmployeeController extends Controller
 
     public function show(Request $request, Employee $employee): View
     {
-        if (! $this->outletScopeService->canManageEmployee($request->user(), $employee)) {
-            abort(403, 'Akses ditolak. Karyawan ini tidak berada di outlet penugasan Anda.');
-        }
+        $this->outletScopeService->ensureCanManageEmployee($request->user(), $employee);
 
-        $employee->load(['jobTitle', 'user', 'outlet']);
+        $employee->load([
+            'jobTitle',
+            'user',
+            'outlet',
+            'outletTransfers.fromOutlet',
+            'outletTransfers.toOutlet',
+            'outletTransfers.transferredBy',
+        ]);
 
-        return view('admin.employees.show', compact('employee'));
+        $canTransfer = $this->outletScopeService->isGlobalScope($request->user());
+        $availableOutlets = $canTransfer
+            ? Outlet::where('is_active', true)->where('id', '!=', $employee->outlet_id)->orderBy('name')->get()
+            : collect();
+
+        return view('admin.employees.show', compact('employee', 'canTransfer', 'availableOutlets'));
     }
 
     public function edit(Request $request, Employee $employee): View|RedirectResponse
@@ -285,5 +296,30 @@ class EmployeeController extends Controller
 
         return redirect()->route('admin.employees.index')
             ->with('success', "Data karyawan {$name} berhasil dihapus (soft delete).");
+    }
+
+    public function transfer(Request $request, Employee $employee): RedirectResponse
+    {
+        $this->outletScopeService->ensureCanManageEmployee($request->user(), $employee);
+
+        $validated = $request->validate([
+            'destination_outlet_id' => ['required', 'integer', 'exists:outlets,id'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+        ], [
+            'destination_outlet_id.required' => 'Pilih outlet tujuan transfer.',
+            'destination_outlet_id.exists' => 'Outlet tujuan tidak valid.',
+        ]);
+
+        $destinationOutlet = Outlet::findOrFail((int) $validated['destination_outlet_id']);
+
+        $this->transferService->transferOutlet(
+            $employee,
+            $destinationOutlet,
+            $request->user(),
+            $validated['notes'] ?? null
+        );
+
+        return redirect()->back()
+            ->with('success', "Karyawan {$employee->full_name} berhasil dipindahkan ke outlet {$destinationOutlet->name}.");
     }
 }

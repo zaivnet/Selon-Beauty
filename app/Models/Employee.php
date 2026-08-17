@@ -92,4 +92,11 @@ class Employee extends Model
     {
         return $this->hasMany(OvertimeSession::class);
     }
+
+    public function outletTransfers(): HasMany
+    {
+        return $this->hasMany(EmployeeOutletTransfer::class, 'employee_id')
+            ->orderBy('effective_date', 'desc')
+            ->orderBy('id', 'desc');
+    }
 }

@@ -101,6 +101,7 @@ Route::middleware(['auth', 'role:superadmin,owner,admin', 'prevent.private.cache
     // Employee Management (Sprint 02)
     Route::resource('employees', EmployeeController::class);
     Route::post('/employees/{employee}/toggle-status', [EmployeeController::class, 'toggleStatus'])->name('employees.toggle-status');
+    Route::post('/employees/{employee}/transfer', [EmployeeController::class, 'transfer'])->name('employees.transfer');
 
     // Superadmin Administrative Reset Password (Sprint 18.6)
     Route::post('/employees/{employee}/reset-password', [\App\Http\Controllers\Admin\AdminPasswordResetController::class, 'reset'])
