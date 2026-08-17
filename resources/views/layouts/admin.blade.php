@@ -215,13 +215,13 @@
                 </a>
 
                 @if(in_array(Auth::user()->role, ['owner', 'superadmin'], true))
-                    <!-- Master Outlet -->
+                    <!-- Outlet -->
                     <a href="{{ route('admin.outlets.index') }}"
-                       :title="collapsed ? 'Master Outlet & Cabang' : ''"
+                       :title="collapsed ? 'Outlet & Cabang' : ''"
                        :class="collapsed ? 'justify-center px-0' : 'px-3'"
                        class="flex items-center gap-3 py-2.5 rounded-xl transition-all relative group {{ request()->routeIs('admin.outlets.*') ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 font-extrabold border-l-4 border-rose-500' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-900' }}">
                         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h4m-4 0V11a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002-2v-2a2 2 0 012-2h2a2 2 0 002 2"/></svg>
-                        <span x-show="!collapsed" class="truncate">Master Outlet</span>
+                        <span x-show="!collapsed" class="truncate">Outlet</span>
                     </a>
 
                     <a href="{{ route('admin.audit-logs.index') }}"

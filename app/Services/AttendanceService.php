@@ -98,32 +98,36 @@ class AttendanceService
             throw new \InvalidArgumentException('Nilai Akurasi GPS tidak valid.');
         }
 
-        $activeLocation = null;
-        if ($employee) {
-            $employee->loadMissing('outlet');
-            if ($employee->outlet && $employee->outlet->is_active) {
-                $outlet = $employee->outlet;
-                $activeLocation = new AttendanceLocation([
-                    'name' => $outlet->name,
-                    'address' => $outlet->address,
-                    'latitude' => $outlet->latitude,
-                    'longitude' => $outlet->longitude,
-                    'radius_meters' => $outlet->radius_meters,
-                    'max_accuracy_meters' => $outlet->max_accuracy_meters,
-                    'is_active' => $outlet->is_active,
-                ]);
-                $activeLocation->id = $outlet->id;
-                $activeLocation->exists = true;
-            }
+        if (! $employee) {
+            throw new \InvalidArgumentException('Karyawan wajib ditentukan untuk validasi presensi lokasi.');
         }
 
-        if (! $activeLocation) {
-            $activeLocation = AttendanceLocation::where('is_active', true)->first();
+        $employee->loadMissing('outlet');
+        $outlet = $employee->outlet;
+
+        if (! $employee->outlet_id || ! $outlet) {
+            throw new \InvalidArgumentException('Lokasi outlet Anda belum dikonfigurasi. Hubungi Admin/Owner.');
         }
 
-        if (! $activeLocation) {
-            throw new \InvalidArgumentException('Lokasi absensi toko belum dikonfigurasi atau tidak aktif.');
+        if (! $outlet->is_active) {
+            throw new \InvalidArgumentException('Outlet tempat Anda bertugas saat ini sedang tidak aktif. Hubungi Admin/Owner.');
         }
+
+        if ($outlet->latitude === null || $outlet->longitude === null || $outlet->latitude < -90.0 || $outlet->latitude > 90.0 || $outlet->longitude < -180.0 || $outlet->longitude > 180.0) {
+            throw new \InvalidArgumentException('Koordinat lokasi outlet Anda belum dikonfigurasi dengan benar. Hubungi Admin/Owner.');
+        }
+
+        $activeLocation = new AttendanceLocation([
+            'name' => $outlet->name,
+            'address' => $outlet->address,
+            'latitude' => $outlet->latitude,
+            'longitude' => $outlet->longitude,
+            'radius_meters' => $outlet->radius_meters,
+            'max_accuracy_meters' => $outlet->max_accuracy_meters,
+            'is_active' => $outlet->is_active,
+        ]);
+        $activeLocation->id = $outlet->id;
+        $activeLocation->exists = true;
 
         // Accuracy Check
         if (! $this->geofenceService->isAccuracyAcceptable($accuracy, $activeLocation)) {
@@ -241,11 +245,15 @@ class AttendanceService
                     $status = 'present';
                 }
 
+                $legacyLocationId = AttendanceLocation::where('id', $location->id)->exists()
+                    ? $location->id
+                    : AttendanceLocation::where('is_active', true)->value('id');
+
                 $record = AttendanceRecord::create([
                     'employee_id' => $employee->id,
                     'work_schedule_id' => $schedule->exists ? $schedule->id : null,
                     'work_date' => $workDateStr,
-                    'attendance_location_id' => $location->id,
+                    'attendance_location_id' => $legacyLocationId,
                     'outlet_id' => $employee->outlet_id,
                     'status' => $status,
                     'check_in_at' => $serverNow,
@@ -339,7 +347,7 @@ class AttendanceService
                     $lng = (float) $rawLng;
                     $acc = (float) $rawAcc;
 
-                    $geofenceResult = $this->validateGeofence($lat, $lng, $acc);
+                    $geofenceResult = $this->validateGeofence($lat, $lng, $acc, $record->employee);
                     $outLat = $lat;
                     $outLng = $lng;
                     $outAcc = $acc;
@@ -351,9 +359,10 @@ class AttendanceService
                         $lng = (float) $rawLng;
                         $acc = (float) $rawAcc;
 
-                        $activeLocation = AttendanceLocation::where('is_active', true)->first();
-                        if ($activeLocation) {
-                            $outDist = $this->geofenceService->calculateDistanceMeters($lat, $lng, (float) $activeLocation->latitude, (float) $activeLocation->longitude);
+                        $record->loadMissing('employee.outlet');
+                        $outlet = $record->employee?->outlet;
+                        if ($outlet && $outlet->is_active && $outlet->latitude !== null && $outlet->longitude !== null) {
+                            $outDist = $this->geofenceService->calculateDistanceMeters($lat, $lng, (float) $outlet->latitude, (float) $outlet->longitude);
                         }
                         $outLat = $lat;
                         $outLng = $lng;

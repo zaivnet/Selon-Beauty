@@ -17,6 +17,21 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    protected static function booted(): void
+    {
+        static::creating(function (User $user) {
+            if ($user->outlet_id === null && ! array_key_exists('outlet_id', $user->getAttributes())) {
+                try {
+                    $defaultId = Outlet::where('code', 'PUSAT')->value('id') ?? Outlet::value('id');
+                    if ($defaultId) {
+                        $user->outlet_id = $defaultId;
+                    }
+                } catch (\Throwable $e) {
+                }
+            }
+        });
+    }
+
     /**
      * Get the attributes that should be cast.
      *

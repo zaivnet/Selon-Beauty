@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AttendanceLocation;
+use App\Models\Outlet;
 
 class GeofenceService
 {
@@ -28,7 +29,7 @@ class GeofenceService
     /**
      * Determine if an employee's coordinates fall within the location's allowed radius.
      */
-    public function isWithinRadius(float $employeeLat, float $employeeLon, AttendanceLocation $location): bool
+    public function isWithinRadius(float $employeeLat, float $employeeLon, object $location): bool
     {
         if (! $location->is_active) {
             return false;
@@ -37,19 +38,19 @@ class GeofenceService
         $distance = $this->calculateDistanceMeters(
             $employeeLat,
             $employeeLon,
-            $location->latitude,
-            $location->longitude
+            (float) $location->latitude,
+            (float) $location->longitude
         );
 
-        return $distance <= $location->radius_meters;
+        return $distance <= (float) $location->radius_meters;
     }
 
     /**
      * Determine if GPS accuracy is within the allowed maximum limit for the location.
      */
-    public function isAccuracyAcceptable(float $gpsAccuracyMeters, AttendanceLocation $location): bool
+    public function isAccuracyAcceptable(float $gpsAccuracyMeters, object $location): bool
     {
-        return $gpsAccuracyMeters <= $location->max_accuracy_meters;
+        return $gpsAccuracyMeters <= (float) $location->max_accuracy_meters;
     }
 
     /**
@@ -63,7 +64,7 @@ class GeofenceService
      *     error_message: string|null
      * }
      */
-    public function evaluateGeofence(float $employeeLat, float $employeeLon, float $gpsAccuracyMeters, AttendanceLocation $location): array
+    public function evaluateGeofence(float $employeeLat, float $employeeLon, float $gpsAccuracyMeters, object $location): array
     {
         if (! $location->is_active) {
             return [
@@ -78,12 +79,12 @@ class GeofenceService
         $distance = $this->calculateDistanceMeters(
             $employeeLat,
             $employeeLon,
-            $location->latitude,
-            $location->longitude
+            (float) $location->latitude,
+            (float) $location->longitude
         );
 
-        $isWithinRadius = $distance <= $location->radius_meters;
-        $isAccuracyValid = $gpsAccuracyMeters <= $location->max_accuracy_meters;
+        $isWithinRadius = $distance <= (float) $location->radius_meters;
+        $isAccuracyValid = $gpsAccuracyMeters <= (float) $location->max_accuracy_meters;
 
         $errorMessage = null;
         if (! $isAccuracyValid) {

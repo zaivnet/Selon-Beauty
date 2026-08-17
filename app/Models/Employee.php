@@ -14,6 +14,18 @@ class Employee extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected static function booted(): void
+    {
+        static::creating(function (Employee $employee) {
+            if ($employee->outlet_id === null && ! array_key_exists('outlet_id', $employee->getAttributes())) {
+                $defaultId = Outlet::where('code', 'PUSAT')->value('id') ?? Outlet::value('id');
+                if ($defaultId) {
+                    $employee->outlet_id = $defaultId;
+                }
+            }
+        });
+    }
+
     protected $attributes = [
         'attendance_enabled' => true,
     ];

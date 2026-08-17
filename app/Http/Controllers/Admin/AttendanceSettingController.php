@@ -12,16 +12,8 @@ use Illuminate\View\View;
 
 class AttendanceSettingController extends Controller
 {
-    public function __construct(protected GeofenceService $geofenceService) {}
-
     public function index(Request $request): View
     {
-        $locations = AttendanceLocation::orderBy('is_active', 'desc')
-            ->orderBy('name')
-            ->get();
-
-        $activeLocation = $locations->firstWhere('is_active', true);
-
         // Fetch settings from app_settings
         $settingsRaw = DB::table('app_settings')->get()->keyBy('key');
 
@@ -31,20 +23,7 @@ class AttendanceSettingController extends Controller
             'require_selfie' => ($settingsRaw->get('attendance_require_selfie')?->value ?? '1') === '1',
         ];
 
-        // Calculation test helper parameters if submitted via GET
-        $testResult = null;
-        if ($request->filled(['test_lat', 'test_lon']) && $activeLocation) {
-            $testLat = (float) $request->input('test_lat');
-            $testLon = (float) $request->input('test_lon');
-            $testAccuracy = (float) $request->input('test_accuracy', 10.0);
-
-            $testResult = $this->geofenceService->evaluateGeofence($testLat, $testLon, $testAccuracy, $activeLocation);
-            $testResult['test_lat'] = $testLat;
-            $testResult['test_lon'] = $testLon;
-            $testResult['test_accuracy'] = $testAccuracy;
-        }
-
-        return view('admin.settings.attendance', compact('locations', 'activeLocation', 'settings', 'testResult'));
+        return view('admin.settings.attendance', compact('settings'));
     }
 
     public function update(Request $request): RedirectResponse

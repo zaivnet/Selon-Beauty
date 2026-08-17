@@ -8,10 +8,14 @@ use App\Services\OutletScopeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
+use App\Services\GeofenceService;
+
 class OutletController extends Controller
 {
-    public function __construct(protected OutletScopeService $outletScopeService)
-    {
+    public function __construct(
+        protected OutletScopeService $outletScopeService,
+        protected GeofenceService $geofenceService,
+    ) {
     }
 
     public function index(Request $request)
@@ -26,7 +30,23 @@ class OutletController extends Controller
             ->orderBy('name', 'asc')
             ->get();
 
-        return view('admin.outlets.index', compact('outlets'));
+        $testResult = null;
+        if ($request->filled(['test_outlet_id', 'test_lat', 'test_lon'])) {
+            $selectedOutlet = $outlets->firstWhere('id', (int) $request->input('test_outlet_id'));
+            if ($selectedOutlet) {
+                $testLat = (float) $request->input('test_lat');
+                $testLon = (float) $request->input('test_lon');
+                $testAccuracy = (float) $request->input('test_accuracy', 15.0);
+
+                $testResult = $this->geofenceService->evaluateGeofence($testLat, $testLon, $testAccuracy, $selectedOutlet);
+                $testResult['outlet'] = $selectedOutlet;
+                $testResult['test_lat'] = $testLat;
+                $testResult['test_lon'] = $testLon;
+                $testResult['test_accuracy'] = $testAccuracy;
+            }
+        }
+
+        return view('admin.outlets.index', compact('outlets', 'testResult'));
     }
 
     public function create(Request $request)

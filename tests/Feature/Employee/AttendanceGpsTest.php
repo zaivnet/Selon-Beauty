@@ -222,6 +222,9 @@ class AttendanceGpsTest extends TestCase
     public function test_inactive_attendance_location_rejected(): void
     {
         $this->activeLocation->update(['is_active' => false]);
+        if ($this->employee1->outlet) {
+            $this->employee1->outlet->update(['is_active' => false]);
+        }
 
         $today = date('Y-m-d');
         EmployeeSchedule::create([

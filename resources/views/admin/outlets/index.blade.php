@@ -7,7 +7,7 @@
     <!-- Header Page -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Master Outlet & Cabang</h1>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Outlet & Cabang SELON BEAUTY</h1>
             <p class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">Kelola seluruh lokasi outlet fisik, penugasan admin, dan koordinat geofence absensi.</p>
         </div>
         <div>
@@ -30,6 +30,74 @@
         <div class="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/50 text-rose-800 dark:text-rose-300 text-xs sm:text-sm font-semibold flex items-center gap-3">
             <svg class="w-5 h-5 shrink-0 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <span>{{ session('error') }}</span>
+        </div>
+    @endif
+
+    <!-- Simulator Evaluasi Geofence Outlet -->
+    @if($outlets->isNotEmpty())
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-6 space-y-4">
+            <div>
+                <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                    <span>Simulator Evaluasi Geofence Per-Outlet</span>
+                </h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Uji perhitungan jarak Haversine koordinat karyawan terhadap outlet yang dipilih secara instan.</p>
+            </div>
+
+            <form action="{{ route('admin.outlets.index') }}" method="GET" class="space-y-4 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase">Pilih Outlet</label>
+                        <select name="test_outlet_id" required class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-semibold">
+                            @foreach($outlets as $o)
+                                <option value="{{ $o->id }}" {{ request('test_outlet_id') == $o->id ? 'selected' : '' }}>{{ $o->name }} ({{ $o->code }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase">Lat Karyawan</label>
+                        <input type="number" step="any" name="test_lat" value="{{ request('test_lat', $outlets->first()?->latitude ?? -6.2) }}" required class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-mono bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase">Lon Karyawan</label>
+                        <input type="number" step="any" name="test_lon" value="{{ request('test_lon', $outlets->first()?->longitude ?? 106.8) }}" required class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-mono bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase">Akurasi GPS (m)</label>
+                        <input type="number" step="any" name="test_accuracy" value="{{ request('test_accuracy', 15) }}" required class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+                    </div>
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit" class="px-5 py-2 bg-slate-900 dark:bg-rose-600 hover:bg-slate-800 dark:hover:bg-rose-700 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer">
+                        Hitung Jarak & Uji Status Geofence
+                    </button>
+                </div>
+            </form>
+
+            @if(isset($testResult) && $testResult)
+                <div class="p-4 rounded-xl border {{ $testResult['is_valid'] ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 text-emerald-900 dark:text-emerald-300' : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/60 text-rose-900 dark:text-rose-300' }} text-xs space-y-2">
+                    <div class="flex items-center justify-between font-bold">
+                        <span>Hasil Evaluasi Terhadap {{ $testResult['outlet']->name }} ({{ $testResult['outlet']->code }}):</span>
+                        @if($testResult['is_valid'])
+                            <span class="px-3 py-1 bg-emerald-600 text-white font-black rounded-full text-[10px]">✓ DALAM RADIUS (VALID)</span>
+                        @else
+                            <span class="px-3 py-1 bg-rose-600 text-white font-black rounded-full text-[10px]">✕ DI LUAR RADIUS (DITOLAK)</span>
+                        @endif
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] pt-1">
+                        <div>Jarak Terhitung: <strong class="font-mono font-bold text-slate-900 dark:text-white">{{ $testResult['distance_meters'] }} m</strong></div>
+                        <div>Radius Terizin: <strong class="font-bold text-slate-900 dark:text-white">{{ $testResult['outlet']->radius_meters }} m</strong></div>
+                        <div>Akurasi Terdeteksi: <strong class="font-bold text-slate-900 dark:text-white">{{ $testResult['test_accuracy'] }} m</strong></div>
+                        <div>Maks Akurasi Outlet: <strong class="font-bold text-slate-900 dark:text-white">{{ $testResult['outlet']->max_accuracy_meters }} m</strong></div>
+                    </div>
+                    @if($testResult['error_message'])
+                        <p class="font-bold text-rose-700 dark:text-rose-400 pt-2 border-t border-rose-200/60 dark:border-rose-800/60">
+                            Detail Evaluasi: {{ $testResult['error_message'] }}
+                        </p>
+                    @endif
+                </div>
+            @endif
         </div>
     @endif
 

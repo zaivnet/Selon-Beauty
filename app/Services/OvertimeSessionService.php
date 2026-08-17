@@ -67,7 +67,7 @@ class OvertimeSessionService
                     throw ValidationException::withMessages(['overtime' => 'Selesaikan absensi kerja reguler terlebih dahulu.']);
                 }
 
-                $gps = $this->validatedGps($evidence, 'mulai lembur');
+                $gps = $this->validatedGps($evidence, 'mulai lembur', $employee);
                 $newSelfiePath = $this->storeSelfie($evidence, $employee->id, 'check_in');
                 $now = Carbon::now(config('app.timezone'));
 
@@ -116,7 +116,7 @@ class OvertimeSessionService
                     throw ValidationException::withMessages(['overtime' => 'Sesi lembur ini sudah selesai atau tidak aktif.']);
                 }
 
-                $gps = $this->validatedGps($evidence, 'selesai lembur');
+                $gps = $this->validatedGps($evidence, 'selesai lembur', $employee);
                 $newSelfiePath = $this->storeSelfie($evidence, $employee->id, 'check_out');
                 $now = Carbon::now(config('app.timezone'));
                 $actualMinutes = max(0, (int) floor($session->check_in_at->diffInMinutes($now, false)));
@@ -367,7 +367,7 @@ class OvertimeSessionService
     }
 
     /** @return array{latitude: float, longitude: float, accuracy: float, distance: float} */
-    protected function validatedGps(array $evidence, string $action): array
+    protected function validatedGps(array $evidence, string $action, ?Employee $employee = null): array
     {
         $latitude = $evidence['latitude'] ?? null;
         $longitude = $evidence['longitude'] ?? null;
@@ -376,7 +376,7 @@ class OvertimeSessionService
             throw ValidationException::withMessages(['gps' => "Data GPS wajib disertakan untuk {$action}."]);
         }
 
-        $result = $this->attendanceService->validateGeofence((float) $latitude, (float) $longitude, (float) $accuracy);
+        $result = $this->attendanceService->validateGeofence((float) $latitude, (float) $longitude, (float) $accuracy, $employee);
 
         return [
             'latitude' => (float) $latitude,
