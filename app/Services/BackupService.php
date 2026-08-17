@@ -36,6 +36,7 @@ class BackupService
         'attendance_periods',
         'outlets',
         'employee_outlet_transfers',
+        'shift_swap_requests',
         'backup_records',
     ];
 

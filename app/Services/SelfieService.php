@@ -40,7 +40,7 @@ class SelfieService
     public function processAndStore(mixed $input, int $employeeId, string $type = 'check_in', string $category = 'attendance'): string
     {
         if (empty($input)) {
-            throw new \InvalidArgumentException('Foto selfie wajib diambil untuk melakukan absensi.');
+            throw new \InvalidArgumentException('Foto selfie wajib diambil sebelum melakukan absensi.');
         }
 
         $binaryData = null;

@@ -122,6 +122,7 @@ class SelfieAttendanceTest extends TestCase
 
     public function test_selfie_required_for_check_in(): void
     {
+        AppSetting::set('attendance_require_selfie', true, 'boolean');
         $today = date('Y-m-d');
         EmployeeSchedule::create([
             'employee_id' => $this->employee1->id,
@@ -134,10 +135,68 @@ class SelfieAttendanceTest extends TestCase
         $response = $this->actingAs($this->user1)->post('/app/attendance/check-in', $this->validGps);
 
         $response->assertRedirect();
-        $response->assertSessionHas('error');
+        $response->assertSessionHas('error', 'Foto selfie wajib diambil sebelum melakukan absensi.');
         $this->assertDatabaseMissing('attendance_records', [
             'employee_id' => $this->employee1->id,
         ]);
+    }
+
+    public function test_manipulated_json_check_in_without_required_selfie_is_rejected_server_side(): void
+    {
+        AppSetting::set('attendance_require_selfie', true, 'boolean');
+        EmployeeSchedule::create([
+            'employee_id' => $this->employee1->id,
+            'work_date' => date('Y-m-d'),
+            'shift_id' => $this->shiftNormal->id,
+            'schedule_type' => 'work',
+        ]);
+
+        $this->actingAs($this->user1)
+            ->postJson('/app/attendance/check-in', $this->validGps)
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'Foto selfie wajib diambil sebelum melakukan absensi.');
+
+        $this->assertDatabaseCount('attendance_records', 0);
+    }
+
+    public function test_selfie_required_for_check_out_and_rejection_keeps_attendance_open(): void
+    {
+        AppSetting::set('attendance_require_selfie', true, 'boolean');
+        EmployeeSchedule::create([
+            'employee_id' => $this->employee1->id,
+            'work_date' => date('Y-m-d'),
+            'shift_id' => $this->shiftNormal->id,
+            'schedule_type' => 'work',
+        ]);
+        $this->actingAs($this->user1)->post('/app/attendance/check-in', array_merge($this->validGps, [
+            'selfie' => UploadedFile::fake()->image('check-in.jpg'),
+        ]));
+        $record = AttendanceRecord::where('employee_id', $this->employee1->id)->firstOrFail();
+
+        Carbon::setTestNow(Carbon::today('Asia/Jakarta')->setTime(16, 0));
+        $this->actingAs($this->user1)->post('/app/attendance/check-out', $this->validGps)
+            ->assertSessionHas('error', 'Foto selfie wajib diambil sebelum melakukan absensi.');
+
+        $this->assertNull($record->fresh()->check_out_at);
+        $this->assertNull($record->fresh()->check_out_selfie_path);
+    }
+
+    public function test_malformed_base64_selfie_is_rejected_without_creating_attendance(): void
+    {
+        AppSetting::set('attendance_require_selfie', true, 'boolean');
+        EmployeeSchedule::create([
+            'employee_id' => $this->employee1->id,
+            'work_date' => date('Y-m-d'),
+            'shift_id' => $this->shiftNormal->id,
+            'schedule_type' => 'work',
+        ]);
+
+        $this->actingAs($this->user1)->post('/app/attendance/check-in', array_merge($this->validGps, [
+            'selfie_base64' => 'data:image/jpeg;base64,not-valid-base64***',
+        ]))->assertSessionHas('error');
+
+        $this->assertDatabaseCount('attendance_records', 0);
+        $this->assertSame([], Storage::disk('local')->allFiles());
     }
 
     public function test_invalid_selfie_mime_rejected(): void
@@ -351,6 +410,12 @@ class SelfieAttendanceTest extends TestCase
 
         $record = AttendanceRecord::where('employee_id', $this->employee1->id)->firstOrFail();
         $this->assertNull($record->check_in_selfie_path);
+
+        Carbon::setTestNow(Carbon::today('Asia/Jakarta')->setTime(16, 0));
+        $this->actingAs($this->user1)->post('/app/attendance/check-out', $this->validGps);
+        $record->refresh();
+        $this->assertNotNull($record->check_out_at);
+        $this->assertNull($record->check_out_selfie_path);
     }
 
     public function test_gps_still_required_when_selfie_valid(): void
