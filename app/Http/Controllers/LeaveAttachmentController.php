@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\LeaveRequest;
+use App\Services\OutletScopeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -10,16 +11,24 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class LeaveAttachmentController extends Controller
 {
+    public function __construct(protected OutletScopeService $outletScopeService) {}
+
     public function show(Request $request, LeaveRequest $leaveRequest): StreamedResponse
     {
         $user = Auth::user();
 
-        // Authorization check: Owner, Admin, or the owning Employee
-        $isAuthorized = in_array($user->role, ['superadmin', 'owner', 'admin'], true)
-            || ($user->role === 'employee' && $user->employee_id === $leaveRequest->employee_id);
+        if (! $user) {
+            abort(401, 'Unauthenticated.');
+        }
 
-        if (! $isAuthorized) {
-            abort(403, 'Akses ditolak. Anda tidak berhak melihat lampiran ini.');
+        // Authorization check: Superadmin/Owner, Admin (scoped), or the owning Employee
+        if ($user->role === 'admin') {
+            $this->outletScopeService->ensureCanManageLeave($user, $leaveRequest);
+        } elseif (! $this->outletScopeService->isGlobalScope($user)) {
+            $isOwnRecord = $user->employee_id && $leaveRequest->employee_id === $user->employee_id;
+            if (! $isOwnRecord) {
+                abort(403, 'Akses ditolak. Anda tidak berhak melihat lampiran ini.');
+            }
         }
 
         $path = $leaveRequest->attachment_path;

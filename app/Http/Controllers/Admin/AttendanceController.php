@@ -7,6 +7,7 @@ use App\Models\AttendanceRecord;
 use App\Models\Employee;
 use App\Services\AttendanceMonitoringService;
 use App\Services\AttendanceService;
+use App\Services\OutletScopeService;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -14,7 +15,10 @@ use Illuminate\Http\Request;
 
 class AttendanceController extends Controller
 {
-    public function __construct(protected AttendanceMonitoringService $monitoringService) {}
+    public function __construct(
+        protected AttendanceMonitoringService $monitoringService,
+        protected OutletScopeService $outletScopeService,
+    ) {}
 
     public function index(Request $request): View
     {
@@ -36,11 +40,7 @@ class AttendanceController extends Controller
         $employeesQuery = Employee::whereNull('deleted_at')
             ->where('status', 'active')
             ->currentAttendanceWorkforce();
-
-        if ($actor->role === 'admin') {
-            $adminOutletId = $actor->outlet_id ?? $actor->employee?->outlet_id;
-            $employeesQuery->where('outlet_id', $adminOutletId);
-        }
+        $employeesQuery = $this->outletScopeService->scopeEmployeesFor($actor, $employeesQuery);
 
         $employees = $employeesQuery->orderBy('full_name', 'asc')->get();
 
@@ -55,6 +55,8 @@ class AttendanceController extends Controller
 
     public function show(Request $request, AttendanceRecord $attendance): View|JsonResponse
     {
+        $this->outletScopeService->ensureCanManageAttendance($request->user(), $attendance);
+
         $attendance->load([
             'employee.jobTitle',
             'schedule.shift',
@@ -80,6 +82,7 @@ class AttendanceController extends Controller
 
     public function correct(Request $request, AttendanceRecord $attendance, AttendanceService $attendanceService)
     {
+        $this->outletScopeService->ensureCanManageAttendance($request->user(), $attendance);
         $request->validate([
             'reason' => 'required|string|min:5',
             'check_in_at' => 'nullable|string',

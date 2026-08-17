@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AttendanceRecord;
+use App\Services\OutletScopeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -10,6 +11,8 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class AttendanceSelfieController extends Controller
 {
+    public function __construct(protected OutletScopeService $outletScopeService) {}
+
     /**
      * Serve private attendance selfie image to authorized users.
      */
@@ -27,13 +30,16 @@ class AttendanceSelfieController extends Controller
         }
 
         // Authorization check:
-        // Owner/Admin: allowed to view any employee's selfie.
+        // Superadmin/Owner: allowed to view any employee's selfie.
+        // Admin: allowed ONLY IF employee belongs to Admin's outlet.
         // Employee: allowed ONLY IF record belongs to their employee_id.
-        $isOwnerOrAdmin = in_array($user->role, ['superadmin', 'owner', 'admin'], true);
-        $isOwnRecord = $user->employee && $record->employee_id === $user->employee->id;
-
-        if (! $isOwnerOrAdmin && ! $isOwnRecord) {
-            abort(403, 'Anda tidak memiliki hak akses untuk melihat foto selfie ini.');
+        if ($user->role === 'admin') {
+            $this->outletScopeService->ensureCanManageAttendance($user, $record);
+        } elseif (! $this->outletScopeService->isGlobalScope($user)) {
+            $isOwnRecord = $user->employee && $record->employee_id === $user->employee->id;
+            if (! $isOwnRecord) {
+                abort(403, 'Anda tidak memiliki hak akses untuk melihat foto selfie ini.');
+            }
         }
 
         $selfiePath = ($type === 'check_in') ? $record->check_in_selfie_path : $record->check_out_selfie_path;

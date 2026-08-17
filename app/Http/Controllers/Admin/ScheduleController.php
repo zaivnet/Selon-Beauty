@@ -94,7 +94,7 @@ class ScheduleController extends Controller
         // Copy week preview data if requested
         $copyPreview = null;
         if ($request->boolean('show_copy_preview')) {
-            $copyPreview = $this->scheduleService->previewCopyPreviousWeek($startDate->format('Y-m-d'));
+            $copyPreview = $this->scheduleService->previewCopyPreviousWeek($startDate->format('Y-m-d'), $request->user());
         }
 
         return view('admin.schedules.index', compact(

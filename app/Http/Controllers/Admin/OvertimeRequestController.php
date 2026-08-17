@@ -99,6 +99,8 @@ class OvertimeRequestController extends Controller
 
     public function approve(Request $request, OvertimeRequest $overtimeRequest): RedirectResponse
     {
+        $user = Auth::user();
+        $this->outletScopeService->ensureCanManageOvertime($user, $overtimeRequest);
         $validated = $request->validate([
             'approved_minutes' => ['required', 'integer', 'min:0'],
             'reviewer_note' => ['nullable', 'string', 'max:1000'],
@@ -107,7 +109,6 @@ class OvertimeRequestController extends Controller
             'approved_minutes.min' => 'Durasi lembur disetujui tidak boleh negatif.',
         ]);
 
-        $user = Auth::user();
         $this->overtimeService->approveRequest(
             $overtimeRequest,
             $user,
@@ -121,13 +122,14 @@ class OvertimeRequestController extends Controller
 
     public function reject(Request $request, OvertimeRequest $overtimeRequest): RedirectResponse
     {
+        $user = Auth::user();
+        $this->outletScopeService->ensureCanManageOvertime($user, $overtimeRequest);
         $request->validate([
             'reviewer_note' => ['required', 'string', 'min:3', 'max:1000'],
         ], [
             'reviewer_note.required' => 'Alasan penolakan wajib diisi.',
         ]);
 
-        $user = Auth::user();
         $this->overtimeService->rejectRequest($overtimeRequest, $user, $request->input('reviewer_note'));
 
         return redirect()->back()
@@ -136,6 +138,7 @@ class OvertimeRequestController extends Controller
 
     public function forceFinish(Request $request, OvertimeSession $overtimeSession): RedirectResponse
     {
+        $this->outletScopeService->ensureCanManageOvertimeSession($request->user(), $overtimeSession);
         $validated = $request->validate([
             'finish_at' => ['required', 'date'],
             'reason' => ['required', 'string', 'min:5', 'max:2000'],
@@ -147,6 +150,7 @@ class OvertimeRequestController extends Controller
 
     public function cancelSession(Request $request, OvertimeSession $overtimeSession): RedirectResponse
     {
+        $this->outletScopeService->ensureCanManageOvertimeSession($request->user(), $overtimeSession);
         $validated = $request->validate([
             'reason' => ['required', 'string', 'min:5', 'max:2000'],
         ]);
@@ -157,6 +161,7 @@ class OvertimeRequestController extends Controller
 
     public function correctSession(Request $request, OvertimeSession $overtimeSession): RedirectResponse
     {
+        $this->outletScopeService->ensureCanManageOvertimeSession($request->user(), $overtimeSession);
         $validated = $request->validate([
             'check_in_at' => ['required', 'date'],
             'check_out_at' => ['required', 'date'],

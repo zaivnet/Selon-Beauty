@@ -165,7 +165,7 @@ class AttendanceMonitoringService
     /**
      * Get past week trend data for admin dashboard chart.
      */
-    public function getPastWeekTrendData(): array
+    public function getPastWeekTrendData(?\App\Models\User $actor = null): array
     {
         $today = Carbon::now(config('app.timezone'));
         $dates = [];
@@ -173,7 +173,7 @@ class AttendanceMonitoringService
 
         for ($i = 6; $i >= 0; $i--) {
             $date = (clone $today)->subDays($i)->toDateString();
-            $metrics = $this->getSummaryMetrics($date);
+            $metrics = $this->getSummaryMetrics($date, $actor);
             $totalPresent = $metrics['present_today'];
             if ($totalPresent > 0) {
                 $hasData = true;

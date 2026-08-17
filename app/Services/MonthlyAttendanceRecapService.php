@@ -35,6 +35,10 @@ class MonthlyAttendanceRecapService
         $dates = collect(CarbonPeriod::create($start, $end))->map(fn (Carbon $date) => $date->copy());
 
         $employeesQuery = Employee::with(['jobTitle', 'user'])->whereNull('deleted_at');
+        if (! empty($filters['actor'])) {
+            $outletScopeService = new OutletScopeService;
+            $employeesQuery = $outletScopeService->scopeEmployeesFor($filters['actor'], $employeesQuery);
+        }
         if (! empty($filters['employee_id'])) {
             $employeesQuery->whereKey((int) $filters['employee_id']);
         } else {

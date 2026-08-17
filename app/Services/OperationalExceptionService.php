@@ -38,7 +38,10 @@ class OperationalExceptionService
         protected AttendanceStatusResolver $statusResolver,
         protected EffectiveScheduleService $effectiveScheduleService,
         protected MonthlyAttendanceRecapService $monthlyRecapService,
-    ) {}
+        protected ?OutletScopeService $outletScopeService = null,
+    ) {
+        $this->outletScopeService = $outletScopeService ?? new OutletScopeService;
+    }
 
     /** @return array<string, mixed> */
     public function generate(?string $date = null, array $filters = [], ?Carbon $now = null): array
@@ -53,6 +56,9 @@ class OperationalExceptionService
         $lookbackStart = $target->copy()->subDays(max(1, (int) config('operations.review_lookback_days', 31)));
 
         $employeesQuery = Employee::with('jobTitle')->whereNull('deleted_at')->where('status', 'active')->currentAttendanceWorkforce();
+        if (! empty($filters['actor'])) {
+            $employeesQuery = $this->outletScopeService->scopeEmployeesFor($filters['actor'], $employeesQuery);
+        }
         if (! empty($filters['employee_id'])) {
             $employeesQuery->whereKey((int) $filters['employee_id']);
         }

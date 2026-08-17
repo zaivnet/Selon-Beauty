@@ -12,15 +12,22 @@ use Illuminate\Support\Facades\DB;
 
 class EmployeeScheduleService
 {
-    public function __construct(protected ?AttendancePeriodService $periodService = null)
-    {
+    public function __construct(
+        protected ?AttendancePeriodService $periodService = null,
+        protected ?OutletScopeService $outletScopeService = null,
+    ) {
         $this->periodService = $periodService ?? new AttendancePeriodService;
+        $this->outletScopeService = $outletScopeService ?? new OutletScopeService;
     }
+
     /**
      * Assign or create a schedule entry for an employee on a specific date.
      */
     public function assignSchedule(array $data, User $actor): EmployeeSchedule
     {
+        $employee = Employee::findOrFail($data['employee_id']);
+        $this->outletScopeService->ensureCanManageEmployee($actor, $employee);
+
         return DB::transaction(function () use ($data, $actor) {
             $this->periodService->assertPeriodOpen($data['work_date']);
             $this->ensureAttendanceParticipant((int) $data['employee_id']);
@@ -74,6 +81,12 @@ class EmployeeScheduleService
      */
     public function updateSchedule(EmployeeSchedule $schedule, array $data, User $actor): EmployeeSchedule
     {
+        $this->outletScopeService->ensureCanManageEmployee($actor, $schedule->employee);
+        if (isset($data['employee_id']) && (int) $data['employee_id'] !== (int) $schedule->employee_id) {
+            $targetEmployee = Employee::findOrFail($data['employee_id']);
+            $this->outletScopeService->ensureCanManageEmployee($actor, $targetEmployee);
+        }
+
         return DB::transaction(function () use ($schedule, $data, $actor) {
             $this->periodService->assertPeriodOpen($data['work_date'] ?? $schedule->work_date);
             $this->ensureAttendanceParticipant((int) ($data['employee_id'] ?? $schedule->employee_id));
@@ -146,6 +159,9 @@ class EmployeeScheduleService
      */
     public function markOff(int $employeeId, string $workDate, ?string $notes, User $actor): EmployeeSchedule
     {
+        $employee = Employee::findOrFail($employeeId);
+        $this->outletScopeService->ensureCanManageEmployee($actor, $employee);
+
         return DB::transaction(function () use ($employeeId, $workDate, $notes, $actor) {
             $this->periodService->assertPeriodOpen($workDate);
             $existing = EmployeeSchedule::where('employee_id', $employeeId)
@@ -175,6 +191,8 @@ class EmployeeScheduleService
      */
     public function deleteSchedule(EmployeeSchedule $schedule, User $actor): bool
     {
+        $this->outletScopeService->ensureCanManageEmployee($actor, $schedule->employee);
+
         return DB::transaction(function () use ($schedule, $actor) {
             $this->periodService->assertPeriodOpen($schedule->work_date);
             // Check if linked attendance records exist
@@ -208,7 +226,7 @@ class EmployeeScheduleService
     /**
      * Preview copying previous week's schedule to the target week.
      */
-    public function previewCopyPreviousWeek(string $targetWeekStartDate): array
+    public function previewCopyPreviousWeek(string $targetWeekStartDate, ?User $actor = null): array
     {
         $targetStart = Carbon::parse($targetWeekStartDate)->startOfWeek();
         $targetEnd = (clone $targetStart)->endOfWeek();
@@ -216,10 +234,16 @@ class EmployeeScheduleService
         $prevStart = (clone $targetStart)->subWeek();
         $prevEnd = (clone $prevStart)->endOfWeek();
 
-        $prevSchedules = EmployeeSchedule::with(['employee', 'shift'])
-            ->whereHas('employee', fn ($query) => $query->currentAttendanceWorkforce())
-            ->whereBetween('work_date', [$prevStart->format('Y-m-d'), $prevEnd->format('Y-m-d')])
-            ->get();
+        $prevSchedulesQuery = EmployeeSchedule::with(['employee', 'shift'])
+            ->whereHas('employee', function ($query) use ($actor) {
+                $query->currentAttendanceWorkforce();
+                if ($actor) {
+                    $this->outletScopeService->scopeEmployeesFor($actor, $query);
+                }
+            })
+            ->whereBetween('work_date', [$prevStart->format('Y-m-d'), $prevEnd->format('Y-m-d')]);
+
+        $prevSchedules = $prevSchedulesQuery->get();
 
         $existingTargetSchedules = EmployeeSchedule::whereBetween('work_date', [$targetStart->format('Y-m-d'), $targetEnd->format('Y-m-d')])
             ->get()
@@ -266,7 +290,7 @@ class EmployeeScheduleService
      */
     public function executeCopyPreviousWeek(string $targetWeekStartDate, bool $overwriteConflicts, User $actor): array
     {
-        $preview = $this->previewCopyPreviousWeek($targetWeekStartDate);
+        $preview = $this->previewCopyPreviousWeek($targetWeekStartDate, $actor);
         $copied = 0;
         $skipped = 0;
 

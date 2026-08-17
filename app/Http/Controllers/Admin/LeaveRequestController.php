@@ -79,6 +79,7 @@ class LeaveRequestController extends Controller
     public function approve(Request $request, LeaveRequest $leaveRequest): RedirectResponse
     {
         $user = Auth::user();
+        $this->outletScopeService->ensureCanManageLeave($user, $leaveRequest);
         $this->leaveService->approveRequest($leaveRequest, $user, $request->input('reviewer_note'));
 
         return redirect()->back()
@@ -87,13 +88,14 @@ class LeaveRequestController extends Controller
 
     public function reject(Request $request, LeaveRequest $leaveRequest): RedirectResponse
     {
+        $user = Auth::user();
+        $this->outletScopeService->ensureCanManageLeave($user, $leaveRequest);
         $request->validate([
             'reviewer_note' => ['required', 'string', 'min:3', 'max:1000'],
         ], [
             'reviewer_note.required' => 'Alasan penolakan wajib diisi.',
         ]);
 
-        $user = Auth::user();
         $this->leaveService->rejectRequest($leaveRequest, $user, $request->input('reviewer_note'));
 
         return redirect()->back()

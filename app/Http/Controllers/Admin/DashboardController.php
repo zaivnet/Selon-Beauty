@@ -19,17 +19,19 @@ class DashboardController extends Controller
 
     public function index(Request $request): View
     {
+        $actor = $request->user();
         $now = Carbon::now(config('app.timezone'));
         $todayStr = $now->toDateString();
-        $includeBackupHealth = in_array($request->user()->role, ['owner', 'superadmin'], true);
+        $includeBackupHealth = in_array($actor->role, ['owner', 'superadmin'], true);
 
         $exceptions = $this->exceptionService->generate($todayStr, [
             'include_backup_health' => $includeBackupHealth,
+            'actor' => $actor,
         ], $now);
 
-        $metrics = $this->monitoringService->getSummaryMetrics($todayStr);
-        $attendanceItems = $this->monitoringService->getAttendanceMonitoringList(['date' => $todayStr], $now);
-        $trendData = $this->monitoringService->getPastWeekTrendData();
+        $metrics = $this->monitoringService->getSummaryMetrics($todayStr, $actor);
+        $attendanceItems = $this->monitoringService->getAttendanceMonitoringList(['date' => $todayStr], $now, $actor);
+        $trendData = $this->monitoringService->getPastWeekTrendData($actor);
         $shifts = Shift::orderBy('name', 'asc')->get();
 
         return view('admin.dashboard', [

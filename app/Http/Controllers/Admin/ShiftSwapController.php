@@ -81,8 +81,10 @@ class ShiftSwapController extends Controller
         ]);
     }
 
-    public function show(ShiftSwapRequest $swap): View
+    public function show(Request $request, ShiftSwapRequest $swap): View
     {
+        $this->outletScopeService->ensureCanManageShiftSwap($request->user(), $swap);
+
         $swap->load(['requester', 'target', 'requesterShift', 'targetShift', 'adminUser']);
 
         $reqCurrentEffective = $swap->requester
@@ -101,6 +103,8 @@ class ShiftSwapController extends Controller
 
     public function approve(Request $request, ShiftSwapRequest $swap): RedirectResponse
     {
+        $this->outletScopeService->ensureCanManageShiftSwap($request->user(), $swap);
+
         $validated = $request->validate([
             'reason' => ['nullable', 'string'],
         ]);
@@ -117,6 +121,8 @@ class ShiftSwapController extends Controller
 
     public function reject(Request $request, ShiftSwapRequest $swap): RedirectResponse
     {
+        $this->outletScopeService->ensureCanManageShiftSwap($request->user(), $swap);
+
         $validated = $request->validate([
             'reason' => ['required', 'string', 'min:5'],
         ]);

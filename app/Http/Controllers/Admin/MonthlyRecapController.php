@@ -8,6 +8,7 @@ use App\Models\JobTitle;
 use App\Services\AttendancePeriodService;
 use App\Services\MonthlyAttendanceRecapService;
 use App\Services\MonthlyRecapExportService;
+use App\Services\OutletScopeService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,6 +22,7 @@ class MonthlyRecapController extends Controller
         protected MonthlyAttendanceRecapService $recapService,
         protected MonthlyRecapExportService $exportService,
         protected AttendancePeriodService $periodService,
+        protected OutletScopeService $outletScopeService,
     ) {}
 
     public function index(Request $request): View
@@ -39,10 +41,14 @@ class MonthlyRecapController extends Controller
         $attendancePeriod = $this->periodService->getOrCreatePeriod($year, $month);
         $closeEligibility = $this->periodService->validateCloseEligibility($year, $month);
 
+        $employeesQuery = Employee::whereNull('deleted_at')->currentAttendanceWorkforce();
+        $employeesQuery = $this->outletScopeService->scopeEmployeesFor($request->user(), $employeesQuery);
+        $employees = $employeesQuery->orderBy('full_name')->get();
+
         return view('admin.monthly_recaps.index', [
             'recapData' => $data,
             'recaps' => $paginator,
-            'employees' => Employee::whereNull('deleted_at')->currentAttendanceWorkforce()->orderBy('full_name')->get(),
+            'employees' => $employees,
             'jobTitles' => JobTitle::where('is_active', true)->orderBy('name')->get(),
             'filters' => [...$filters, 'year' => $year, 'month' => $month],
             'attendancePeriod' => $attendancePeriod,
@@ -52,6 +58,8 @@ class MonthlyRecapController extends Controller
 
     public function show(Request $request, Employee $employee): View
     {
+        $this->outletScopeService->ensureCanManageEmployee($request->user(), $employee);
+
         [$year, $month] = $this->period($request);
         $attendancePeriod = $this->periodService->getOrCreatePeriod($year, $month);
         $closeEligibility = $this->periodService->validateCloseEligibility($year, $month);
@@ -67,6 +75,8 @@ class MonthlyRecapController extends Controller
 
     public function print(Request $request, Employee $employee): View
     {
+        $this->outletScopeService->ensureCanManageEmployee($request->user(), $employee);
+
         [$year, $month] = $this->period($request);
 
         return view('monthly_recaps.print', [
@@ -138,7 +148,7 @@ class MonthlyRecapController extends Controller
         return [(int) ($validated['year'] ?? $now->year), (int) ($validated['month'] ?? $now->month)];
     }
 
-    /** @return array<string, int|null> */
+    /** @return array<string, mixed> */
     protected function filters(Request $request): array
     {
         $validated = $request->validate([
@@ -146,7 +156,11 @@ class MonthlyRecapController extends Controller
             'job_title_id' => ['nullable', 'integer', 'exists:job_titles,id'],
         ]);
 
-        return ['employee_id' => $validated['employee_id'] ?? null, 'job_title_id' => $validated['job_title_id'] ?? null];
+        return [
+            'employee_id' => $validated['employee_id'] ?? null,
+            'job_title_id' => $validated['job_title_id'] ?? null,
+            'actor' => $request->user(),
+        ];
     }
 
     /** @return array<string, int|null> */

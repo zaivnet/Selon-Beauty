@@ -40,6 +40,7 @@ class OperationalExceptionController extends Controller
         $data = $this->exceptionService->generate($date, [
             ...$filters,
             'include_backup_health' => in_array($request->user()->role, ['owner', 'superadmin'], true),
+            'actor' => $request->user(),
         ], $now);
 
         $allItems = collect($data['items']);
