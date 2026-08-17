@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Models\AppSetting;
-use App\Models\AttendanceLocation;
 use App\Models\AttendanceRecord;
 use App\Models\LeaveRequest;
 use App\Models\OvertimeRequest;
@@ -25,7 +24,8 @@ class DashboardController extends Controller
     public function index(Request $request): View
     {
         $user = Auth::user();
-        $employee = $user->employee;
+        $employee = $user->employee ? $user->employee->loadMissing('outlet') : null;
+        $outlet = $employee?->outlet;
 
         $now = Carbon::now('Asia/Jakarta');
         $todayStr = $now->toDateString();
@@ -34,7 +34,6 @@ class DashboardController extends Controller
         $todaySchedule = null;
         $todayAttendance = null;
         $todayLeave = null;
-        $activeLocation = null;
         $todayOvertime = null;
         $correctedAttendance = null;
         $todayEffective = null;
@@ -48,7 +47,6 @@ class DashboardController extends Controller
             $todayEffective = $this->effectiveScheduleService->resolve($employee, $todayStr);
 
             if ($employee->participatesInAttendance()) {
-                $activeLocation = AttendanceLocation::where('is_active', true)->first();
                 $todayLeave = LeaveRequest::where('employee_id', $employee->id)
                     ->whereDate('start_date', '<=', $todayStr)
                     ->whereDate('end_date', '>=', $todayStr)
@@ -60,7 +58,8 @@ class DashboardController extends Controller
                     $attendanceWorkDate = $todaySchedule->work_date instanceof \DateTimeInterface
                         ? $todaySchedule->work_date->format('Y-m-d')
                         : substr((string) $todaySchedule->work_date, 0, 10);
-                    $todayAttendance = AttendanceRecord::where('employee_id', $employee->id)
+                    $todayAttendance = AttendanceRecord::with('outlet')
+                        ->where('employee_id', $employee->id)
                         ->whereDate('work_date', $attendanceWorkDate)
                         ->first();
                 }
@@ -79,12 +78,12 @@ class DashboardController extends Controller
         return view('employee.dashboard', [
             'user' => $user,
             'employee' => $employee,
+            'outlet' => $outlet,
             'today' => $todayFormatted,
             'todaySchedule' => $todaySchedule,
             'todayEffective' => $todayEffective,
             'todayAttendance' => $todayAttendance,
             'todayLeave' => $todayLeave,
-            'activeLocation' => $activeLocation,
             'requireSelfie' => (bool) AppSetting::get('attendance_require_selfie', true),
             'todayOvertime' => $todayOvertime,
             'correctedAttendance' => $correctedAttendance,

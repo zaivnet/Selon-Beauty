@@ -216,7 +216,7 @@
                                 <span class="text-emerald-800 dark:text-emerald-300 font-extrabold">Tepat Waktu</span>
                             @endif
                         </p>
-                        <p class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5">📍 {{ $todayAttendance->location?->name ?? 'SELON BEAUTY' }} (±{{ round($todayAttendance->check_in_accuracy_meters) }}m)</p>
+                        <p class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5">📍 {{ $todayAttendance->outlet?->name ?? $todayAttendance->location?->name ?? $outlet?->name ?? 'Outlet' }} (±{{ round($todayAttendance->check_in_accuracy_meters) }}m)</p>
                     </div>
                 </div>
 
@@ -239,7 +239,7 @@
                             <p class="text-[11px] text-indigo-700 dark:text-indigo-400 mt-0.5 font-medium">
                                 Worked Time: <span class="font-bold text-slate-900 dark:text-slate-100 font-mono">{{ floor($todayAttendance->worked_minutes / 60) }}j {{ $todayAttendance->worked_minutes % 60 }}m</span>
                             </p>
-                            <p class="text-[10px] text-indigo-600 dark:text-indigo-400 mt-0.5">📍 {{ $todayAttendance->location?->name ?? 'SELON BEAUTY' }} (±{{ round($todayAttendance->check_out_accuracy_meters) }}m)</p>
+                            <p class="text-[10px] text-indigo-600 dark:text-indigo-400 mt-0.5">📍 {{ $todayAttendance->outlet?->name ?? $todayAttendance->location?->name ?? $outlet?->name ?? 'Outlet' }} (±{{ round($todayAttendance->check_out_accuracy_meters) }}m)</p>
                         </div>
                     </div>
                 @endif
@@ -318,7 +318,7 @@
                     <div>
                         <h5 class="text-xs font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                             <svg class="w-4 h-4 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                            <span>SELON BEAUTY</span>
+                            <span>{{ $outlet?->name ?? 'Lokasi Belum Dikonfigurasi' }}</span>
                         </h5>
                         <p id="gps-status-text" class="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 font-medium">Mendeteksi lokasi perangkat...</p>
                     </div>
@@ -861,24 +861,25 @@ function detectGPSLocation() {
             if (checkoutLng) checkoutLng.value = lng;
             if (checkoutAcc) checkoutAcc.value = acc;
 
-            // Fetch active location metadata from DOM/view context
-            @if(isset($activeLocation) && $activeLocation)
-                const storeLat = {{ $activeLocation->latitude }};
-                const storeLng = {{ $activeLocation->longitude }};
-                const maxRadius = {{ $activeLocation->radius_meters }};
-                const maxAccuracy = {{ $activeLocation->max_accuracy_meters }};
+            // Fetch outlet location metadata from Employee outlet context
+            @if(isset($outlet) && $outlet && $outlet->latitude !== null && $outlet->longitude !== null)
+                const storeLat = {{ (float) $outlet->latitude }};
+                const storeLng = {{ (float) $outlet->longitude }};
+                const maxRadius = {{ (int) $outlet->radius_meters }};
+                const maxAccuracy = {{ (int) $outlet->max_accuracy_meters }};
+                const targetOutletName = @json($outlet->name);
 
                 const distance = calculateHaversineMeters(lat, lng, storeLat, storeLng);
 
                 if (acc > maxAccuracy) {
                     updateGpsUIState('low_accuracy', `Lokasi ditemukan tetapi akurasinya belum cukup baik (±${Math.round(acc)}m, Maks ±${maxAccuracy}m).`, distance, acc);
                 } else if (distance > maxRadius) {
-                    updateGpsUIState('outside_radius', `Anda berada di luar area absensi ${appName} (Jarak: ${distance}m, Maks: ${maxRadius}m).`, distance, acc);
+                    updateGpsUIState('outside_radius', `Anda berada di luar area absensi ${targetOutletName} (Jarak: ${distance}m, Maks: ${maxRadius}m).`, distance, acc);
                 } else {
-                    updateGpsUIState('ready', `✓ Lokasi terverifikasi dalam area absensi ${appName}.`, distance, acc);
+                    updateGpsUIState('ready', `✓ Lokasi terverifikasi dalam area absensi ${targetOutletName}.`, distance, acc);
                 }
             @else
-                updateGpsUIState('ready', '✓ Koordinat lokasi berhasil terdeteksi.', 0, acc);
+                updateGpsUIState('outside_radius', 'Lokasi outlet Anda belum dikonfigurasi. Hubungi Admin/Owner.', 0, acc);
             @endif
         },
         function(error) {

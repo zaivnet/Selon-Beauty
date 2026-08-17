@@ -325,4 +325,128 @@ class OutletSingleSourceOfTruthTest extends TestCase
             'value' => '0',
         ]);
     }
+
+    /** 12. Comprehensive 12-point Employee Attendance location data flow isolation test */
+    public function test_employee_dashboard_and_attendance_dataflow_isolation_for_two_outlets(): void
+    {
+        $empA = Employee::create([
+            'employee_code' => 'EMP-DASH-A',
+            'full_name' => 'Ade Zaiv',
+            'status' => 'active',
+            'attendance_enabled' => true,
+            'outlet_id' => $this->outletA->id, // Selon Beauty (lat -6.2000000, lon 106.8166660, radius 50)
+        ]);
+        $userA = User::factory()->create(['employee_id' => $empA->id, 'role' => 'employee', 'is_active' => true]);
+
+        $empB = Employee::create([
+            'employee_code' => 'EMP-DASH-B',
+            'full_name' => 'Dulhaq',
+            'status' => 'active',
+            'attendance_enabled' => true,
+            'outlet_id' => $this->outletB->id, // Kopi Selon 1 (lat -6.9147440, lon 107.6098100, radius 200)
+        ]);
+        $userB = User::factory()->create(['employee_id' => $empB->id, 'role' => 'employee', 'is_active' => true]);
+
+        // 1 & 3: Employee A dashboard renders Outlet A name & coordinates
+        $responseA = $this->actingAs($userA)->get(route('employee.dashboard'));
+        $responseA->assertOk();
+        $responseA->assertSee('Selon Beauty Outlet Jakarta');
+        $responseA->assertSee('-6.2');
+        $responseA->assertSee('106.816666');
+
+        // 2, 4, 5: Employee B dashboard renders Outlet B name & coordinates, NOT Outlet A coordinates
+        $responseB = $this->actingAs($userB)->get(route('employee.dashboard'));
+        $responseB->assertOk();
+        $responseB->assertSee('Selon Beauty Outlet Bandung');
+        $responseB->assertSee('-6.914744');
+        $responseB->assertSee('107.60981');
+        $responseB->assertDontSee('-6.2000000');
+
+        // 6 & 7: Geofence evaluation using Haversine
+        $attendanceService = app(AttendanceService::class);
+
+        // Emp A at Outlet A coords -> inside radius
+        $resA = $attendanceService->validateGeofence(-6.2000050, 106.8166660, 10.0, $empA);
+        $this->assertEquals($this->outletA->id, $resA['location']->id);
+        $this->assertLessThanOrEqual(50, $resA['distance']);
+
+        // Emp B at Outlet A coords -> outside Outlet B radius (evaluates against Outlet B)
+        try {
+            $attendanceService->validateGeofence(-6.2000000, 106.8166660, 10.0, $empB);
+            $this->fail('Expected InvalidArgumentException for Emp B at Outlet A location');
+        } catch (\InvalidArgumentException $e) {
+            $this->assertStringContainsString('Selon Beauty Outlet Bandung', $e->getMessage());
+            $this->assertStringContainsString('luar area absensi', $e->getMessage());
+        }
+
+        // 8, 9, 10: Check-in rejection at wrong location & acceptance at correct location
+        $shiftFlex = Shift::create([
+            'name' => 'Shift Flex Dual',
+            'code' => 'FLEXDUAL',
+            'start_time' => '00:00:00',
+            'end_time' => '23:59:00',
+            'check_in_open_minutes_before' => 1440,
+            'check_in_close_minutes_after' => 1440,
+            'check_out_open_minutes_before' => 1440,
+            'check_out_close_minutes_after' => 1440,
+        ]);
+        EmployeeSchedule::create([
+            'employee_id' => $empB->id,
+            'work_date' => now('Asia/Jakarta')->toDateString(),
+            'shift_id' => $shiftFlex->id,
+            'schedule_type' => 'work',
+        ]);
+
+        DB::table('app_settings')->updateOrInsert(
+            ['key' => 'attendance_require_selfie'],
+            ['value' => '0', 'type' => 'boolean', 'is_public' => true]
+        );
+
+        // Check-in request for Emp B at Outlet A location -> REJECTED
+        $checkInWrongResp = $this->actingAs($userB)->post(route('employee.attendance.check-in'), [
+            'latitude' => -6.2000000,
+            'longitude' => 106.8166660,
+            'accuracy' => 10.0,
+        ]);
+        $checkInWrongResp->assertSessionHas('error');
+
+        // Check-in request for Emp B at Outlet B location -> ACCEPTED
+        $checkInRightResp = $this->actingAs($userB)->post(route('employee.attendance.check-in'), [
+            'latitude' => -6.9147440,
+            'longitude' => 107.6098100,
+            'accuracy' => 10.0,
+        ]);
+        $checkInRightResp->assertSessionHas('success');
+
+        // 11. Check-out uses Employee B outlet
+        $checkOutResp = $this->actingAs($userB)->post(route('employee.attendance.check-out'), [
+            'latitude' => -6.9147440,
+            'longitude' => 107.6098100,
+            'accuracy' => 10.0,
+        ]);
+        $checkOutResp->assertSessionHas('success');
+
+        // 12. Overtime geofence uses Employee B outlet
+        $overtimeSessionService = app(\App\Services\OvertimeSessionService::class);
+        $overtimeRequest = \App\Models\OvertimeRequest::create([
+            'employee_id' => $empB->id,
+            'work_date' => now('Asia/Jakarta')->toDateString(),
+            'requested_minutes' => 60,
+            'approved_minutes' => 60,
+            'status' => 'approved',
+            'reason' => 'Testing Overtime Geofence',
+        ]);
+
+        // Attempt starting overtime at Outlet A coordinates -> REJECTED
+        try {
+            $overtimeSessionService->start($userB, $overtimeRequest->id, [
+                'latitude' => -6.2000000,
+                'longitude' => 106.8166660,
+                'accuracy' => 10.0,
+            ]);
+            $this->fail('Expected Exception for overtime start at Outlet A coordinates');
+        } catch (\InvalidArgumentException|\Illuminate\Validation\ValidationException $e) {
+            $this->assertTrue(true);
+        }
+    }
 }
