@@ -374,7 +374,7 @@ class BrandingTest extends TestCase
         $response->assertOk();
         $content = $response->getContent();
 
-        $this->assertStringContainsString('selon-beauty-static-v2', $content);
+        $this->assertStringContainsString('selon-beauty-static-v3', $content);
         $this->assertStringContainsString("url.pathname === '/'", $content);
         $this->assertStringContainsString("url.pathname === '/login'", $content);
         $this->assertStringContainsString("url.pathname.startsWith('/app')", $content);

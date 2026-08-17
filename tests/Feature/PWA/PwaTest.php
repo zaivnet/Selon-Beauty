@@ -54,7 +54,7 @@ class PwaTest extends TestCase
     {
         $response = $this->get('/sw.js');
         $response->assertOk();
-        $this->assertStringContainsString('selon-beauty-static-v2', $response->getContent());
+        $this->assertStringContainsString('selon-beauty-static-v3', $response->getContent());
         $this->assertStringContainsString('offline.html', $response->getContent());
     }
 

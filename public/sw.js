@@ -1,4 +1,4 @@
-const CACHE_NAME = 'selon-beauty-static-v2';
+const CACHE_NAME = 'selon-beauty-static-v3';
 const PRECACHE_ASSETS = [
     '/offline.html',
     '/icons/icon-192x192.png',
@@ -17,13 +17,13 @@ self.addEventListener('install', (event) => {
     );
 });
 
-// Activate Event: Clean up old caches
+// Activate Event: Clean up old application caches safely
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
+                    if (cacheName.startsWith('selon-beauty-') && cacheName !== CACHE_NAME) {
                         return caches.delete(cacheName);
                     }
                 })
@@ -37,22 +37,31 @@ self.addEventListener('fetch', (event) => {
     const request = event.request;
     const url = new URL(request.url);
 
-    // 1. Non-GET requests (POST, PUT, DELETE) -> Network-Only (Never cache)
+    // 1. Non-GET requests (POST, PUT, PATCH, DELETE) -> Network-Only (Never cache mutations)
     if (request.method !== 'GET') {
         return;
     }
 
-    // 2. Private Authenticated & Auth Navigation Routes -> Network-Only (Never cache private HTML or session redirects)
+    // 2. Private Authenticated Routes, Auth Flows, Private Evidence & Dynamic Media -> Network-Only (Never cache private HTML or session data)
     const isPrivateOrAuthNav = url.pathname === '/' ||
                       url.pathname === '/login' ||
+                      url.pathname === '/logout' ||
                       url.pathname.startsWith('/app') ||
                       url.pathname.startsWith('/admin') ||
+                      url.pathname.startsWith('/employee') ||
                       url.pathname.startsWith('/attendance') ||
                       url.pathname.startsWith('/leave-requests') ||
                       url.pathname.startsWith('/overtime-requests') ||
+                      url.pathname.startsWith('/overtime-sessions') ||
                       url.pathname.startsWith('/shift-swaps') ||
                       url.pathname.startsWith('/reports') ||
+                      url.pathname.startsWith('/monthly-recaps') ||
                       url.pathname.startsWith('/notifications') ||
+                      url.pathname.startsWith('/profile') ||
+                      url.pathname.startsWith('/settings') ||
+                      url.pathname.startsWith('/selfie') ||
+                      url.pathname.startsWith('/attachments') ||
+                      url.pathname.startsWith('/storage') ||
                       url.pathname.startsWith('/forgot-password') ||
                       url.pathname.startsWith('/reset-password') ||
                       url.pathname.startsWith('/password') ||
@@ -61,7 +70,7 @@ self.addEventListener('fetch', (event) => {
     if (isPrivateOrAuthNav) {
         event.respondWith(
             fetch(request).catch(() => {
-                // If HTML navigation request and offline, serve offline fallback
+                // If HTML navigation request and offline, serve generic offline fallback page
                 if (request.headers.get('accept')?.includes('text/html')) {
                     return caches.match('/offline.html');
                 }
@@ -74,7 +83,7 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // 3. Static Assets (CSS, JS, Fonts, Icons, Offline Page) -> Cache-First
+    // 3. Static Assets (Build CSS/JS, Fonts, Icons, Favicon, Offline Page) -> Cache-First
     event.respondWith(
         caches.match(request).then((cachedResponse) => {
             if (cachedResponse) {
@@ -82,7 +91,7 @@ self.addEventListener('fetch', (event) => {
             }
             return fetch(request).then((networkResponse) => {
                 if (networkResponse && networkResponse.status === 200 &&
-                    (url.pathname.startsWith('/build/') || url.pathname.startsWith('/icons/') || url.pathname.endsWith('.woff2'))) {
+                    (url.pathname.startsWith('/build/') || url.pathname.startsWith('/icons/') || url.pathname.endsWith('.woff2') || url.pathname.endsWith('.woff'))) {
                     const responseToCache = networkResponse.clone();
                     caches.open(CACHE_NAME).then((cache) => {
                         cache.put(request, responseToCache);

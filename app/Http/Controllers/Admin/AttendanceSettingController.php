@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\AttendanceLocation;
 use App\Services\GeofenceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
