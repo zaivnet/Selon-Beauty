@@ -376,6 +376,14 @@
                 <!-- Video Element -->
                 <video id="camera-video" class="w-full h-52 sm:h-60 object-cover hidden" autoplay playsinline muted></video>
 
+                <!-- Face Detection Indicator Overlay (shown over live video only) -->
+                <div id="face-detection-indicator" class="hidden absolute bottom-2 left-2 right-2 flex justify-center pointer-events-none">
+                    <span id="face-indicator-text" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-sm bg-rose-600/85 text-white shadow-lg">
+                        <span id="face-indicator-dot" class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                        <span id="face-indicator-label">WAJAH BELUM TERDETEKSI</span>
+                    </span>
+                </div>
+
                 <!-- Hidden Canvas for capture -->
                 <canvas id="camera-canvas" class="hidden"></canvas>
 
@@ -476,6 +484,193 @@ let isGpsValid = false;
 const isSelfieRequired = @json($requireSelfie);
 let isSelfieConfirmed = !isSelfieRequired;
 let cameraStream = null;
+
+// ----------------------------------------------------
+// FACE PRESENCE DETECTION
+// Dual-layer: FaceDetector API (Chrome/Android) → skin-tone
+// pixel fallback (iOS Safari/Firefox) → graceful pass-through
+// ----------------------------------------------------
+
+let isFaceDetected = false;
+let faceDetector = null;
+let faceDetectionInterval = null;
+const FACE_DETECT_THROTTLE_MS = 500; // 2 checks/sec — battery safe
+
+/**
+ * Try to initialise the browser-native FaceDetector.
+ * Returns true on success, false if not available.
+ */
+async function initFaceDetector() {
+    if (typeof FaceDetector !== 'undefined') {
+        try {
+            faceDetector = new FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
+            // Warm-up call to confirm it actually works (some browsers expose the
+            // API but throw at detect time for missing platform support).
+            const warmCanvas = document.createElement('canvas');
+            warmCanvas.width = 4; warmCanvas.height = 4;
+            await faceDetector.detect(warmCanvas);
+            return true;
+        } catch (e) {
+            faceDetector = null;
+        }
+    }
+    return false;
+}
+
+/**
+ * Skin-tone pixel fallback for iOS Safari / Firefox.
+ * Samples a 12×12 grid of pixels from the centre 40% of the
+ * video frame and checks how many fall into a broad skin-tone
+ * HSL range. Returns true when ≥8% of sampled pixels match.
+ */
+function detectFaceBySkinTone(videoEl) {
+    try {
+        const vw = videoEl.videoWidth || 640;
+        const vh = videoEl.videoHeight || 480;
+        if (vw === 0 || vh === 0) return false;
+
+        const SAMPLE = 12;
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = SAMPLE; offCanvas.height = SAMPLE;
+        const ctx = offCanvas.getContext('2d');
+        // Draw only the centre 40% of the frame into the 12×12 sample grid
+        ctx.drawImage(videoEl,
+            Math.floor(vw * 0.3), Math.floor(vh * 0.3),
+            Math.floor(vw * 0.4), Math.floor(vh * 0.4),
+            0, 0, SAMPLE, SAMPLE);
+
+        const data = ctx.getImageData(0, 0, SAMPLE, SAMPLE).data;
+        const total = SAMPLE * SAMPLE;
+        let skinCount = 0;
+
+        for (let i = 0; i < data.length; i += 4) {
+            const r = data[i], g = data[i+1], b = data[i+2];
+            const max = Math.max(r,g,b)/255, min = Math.min(r,g,b)/255;
+            const l = (max+min)/2;
+            if (max === min) continue;
+            const d = max - min;
+            const s = l > 0.5 ? d/(2-max-min) : d/(max+min);
+            let h;
+            if (max === r/255)       h = ((g-b)/255/d + (g < b ? 6 : 0)) / 6;
+            else if (max === g/255)  h = ((b-r)/255/d + 2) / 6;
+            else                     h = ((r-g)/255/d + 4) / 6;
+            h *= 360;
+            // Broad skin-tone: hue 0–45°, saturation >15%, lightness 25–85%
+            if (h >= 0 && h <= 45 && s > 0.15 && l >= 0.25 && l <= 0.85) skinCount++;
+        }
+        return skinCount / total >= 0.08;
+    } catch (e) {
+        return false;
+    }
+}
+
+/**
+ * Run face detection once against the live video element.
+ * Updates isFaceDetected and refreshes the face indicator overlay.
+ */
+async function runFaceDetection(videoEl) {
+    if (!videoEl || videoEl.readyState < 2) return;
+
+    let detected = false;
+    if (faceDetector) {
+        try {
+            const faces = await faceDetector.detect(videoEl);
+            detected = faces.length > 0;
+        } catch (e) {
+            detected = detectFaceBySkinTone(videoEl);
+        }
+    } else {
+        detected = detectFaceBySkinTone(videoEl);
+    }
+
+    if (detected !== isFaceDetected) {
+        isFaceDetected = detected;
+        updateFaceIndicator(detected);
+        evaluateCaptureButton();
+    }
+}
+
+/** Update the face indicator pill overlay shown over the live video. */
+function updateFaceIndicator(detected) {
+    const indicator = document.getElementById('face-detection-indicator');
+    const dot       = document.getElementById('face-indicator-dot');
+    const label     = document.getElementById('face-indicator-label');
+    if (!indicator) return;
+    indicator.classList.remove('hidden');
+    const pill = indicator.querySelector('span');
+    if (detected) {
+        if (pill)  pill.className  = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-sm bg-emerald-600/90 text-white shadow-lg';
+        if (dot)   dot.className   = 'w-2 h-2 rounded-full bg-white';
+        if (label) label.textContent = '\u2713 WAJAH TERDETEKSI';
+    } else {
+        if (pill)  pill.className  = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-sm bg-rose-600/85 text-white shadow-lg';
+        if (dot)   dot.className   = 'w-2 h-2 rounded-full bg-white animate-pulse';
+        if (label) label.textContent = 'WAJAH BELUM TERDETEKSI';
+    }
+}
+
+/** Hide face indicator (camera not active). */
+function hideFaceIndicator() {
+    const indicator = document.getElementById('face-detection-indicator');
+    if (indicator) indicator.classList.add('hidden');
+    isFaceDetected = false;
+}
+
+/** Start throttled periodic face detection on the live video. */
+function startFaceDetection(videoEl) {
+    stopFaceDetection();
+    runFaceDetection(videoEl); // immediate first check
+    faceDetectionInterval = setInterval(() => runFaceDetection(videoEl), FACE_DETECT_THROTTLE_MS);
+}
+
+/** Stop periodic face detection and reset state. */
+function stopFaceDetection() {
+    if (faceDetectionInterval !== null) {
+        clearInterval(faceDetectionInterval);
+        faceDetectionInterval = null;
+    }
+    hideFaceIndicator();
+    evaluateCaptureButton();
+}
+
+/**
+ * Run face detection against the already-captured canvas frame.
+ * Returns a Promise<bool>. Always resolves (never throws).
+ */
+async function detectFaceInCanvas(canvasEl) {
+    if (!canvasEl) return true; // safe pass-through
+    if (faceDetector) {
+        try {
+            const faces = await faceDetector.detect(canvasEl);
+            return faces.length > 0;
+        } catch (e) { /* fall through to skin-tone */ }
+    }
+    try {
+        const w = canvasEl.width, h = canvasEl.height;
+        const data = canvasEl.getContext('2d').getImageData(
+            Math.floor(w*0.3), Math.floor(h*0.3),
+            Math.floor(w*0.4), Math.floor(h*0.4)
+        ).data;
+        const total = Math.floor(w*0.4) * Math.floor(h*0.4);
+        let skinCount = 0;
+        for (let i = 0; i < data.length; i += 4) {
+            const r=data[i], g=data[i+1], b=data[i+2];
+            const max=Math.max(r,g,b)/255, min=Math.min(r,g,b)/255;
+            const l=(max+min)/2;
+            if (max===min) continue;
+            const d=max-min, s=l>0.5?d/(2-max-min):d/(max+min);
+            let h2;
+            if (max===r/255)       h2=((g-b)/255/d+(g<b?6:0))/6;
+            else if (max===g/255)  h2=((b-r)/255/d+2)/6;
+            else                   h2=((r-g)/255/d+4)/6;
+            h2*=360;
+            if (h2>=0&&h2<=45&&s>0.15&&l>=0.25&&l<=0.85) skinCount++;
+        }
+        return total > 0 && skinCount/total >= 0.08;
+    } catch (e) {
+        return true; // safe pass-through if canvas read blocked
+    }
+}
 
 // Haversine Distance Calculation for Instant UX Feedback
 function calculateHaversineMeters(lat1, lon1, lat2, lon2) {
@@ -588,6 +783,9 @@ function stopCameraStream() {
 async function openCamera() {
     updateCameraUI('requesting', 'Meminta izin akses kamera browser...');
 
+    // Initialise face detector (best effort — never blocks camera open)
+    await initFaceDetector();
+
     try {
         const constraints = {
             video: {
@@ -608,8 +806,9 @@ async function openCamera() {
         if (video) {
             video.srcObject = cameraStream;
             await video.play();
+            startFaceDetection(video);
         }
-        updateCameraUI('active', 'Kamera aktif. Posisikan wajah Anda pada frame lalu klik "Ambil Foto".');
+        updateCameraUI('active', 'Kamera aktif. Pastikan wajah terlihat jelas lalu klik "Ambil Foto".');
     } catch (err) {
         stopCameraStream();
         let msg = 'Gagal mengakses kamera.';
@@ -625,12 +824,37 @@ async function openCamera() {
 }
 
 function closeCamera() {
-    stopCameraStream();
+    stopCameraStream(); // also calls stopFaceDetection()
     isSelfieConfirmed = false;
     updateCameraUI('unopened', 'Kamera ditutup. Klik "Buka Kamera" jika ingin mengambil foto.');
 }
 
+/**
+ * Enable/disable the Capture Photo button based on live face detection.
+ * Only matters while the camera is active (button is visible).
+ */
+function evaluateCaptureButton() {
+    const btn = document.getElementById('btn-capture-photo');
+    if (!btn) return;
+    if (isFaceDetected) {
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        btn.title = '';
+    } else {
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+        btn.title = 'Pastikan wajah terlihat jelas terlebih dahulu';
+    }
+}
+
 function capturePhoto() {
+    // Safety gate: should not be reachable when disabled, but guard anyway
+    if (isSelfieRequired && !isFaceDetected) {
+        const statusText = document.getElementById('camera-status-text');
+        if (statusText) statusText.innerText = 'Pastikan wajah Anda terlihat jelas di dalam frame terlebih dahulu.';
+        return;
+    }
+
     const video = document.getElementById('camera-video');
     const canvas = document.getElementById('camera-canvas');
     const preview = document.getElementById('selfie-preview');
@@ -646,7 +870,7 @@ function capturePhoto() {
     const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
     preview.src = dataUrl;
 
-    stopCameraStream();
+    stopCameraStream(); // stops face detection + stream
     isSelfieConfirmed = false;
     updateCameraUI('captured', 'Foto selfie berhasil diambil. Klik "Gunakan Foto" untuk mengonfirmasi.');
 }
@@ -667,9 +891,28 @@ function retakePhoto() {
     openCamera();
 }
 
-function confirmPhoto() {
+async function confirmPhoto() {
     const preview = document.getElementById('selfie-preview');
     if (!preview || !preview.src || preview.src === '') return;
+
+    // Re-validate face presence in the captured canvas frame
+    if (isSelfieRequired) {
+        const canvas = document.getElementById('camera-canvas');
+        const hasFace = await detectFaceInCanvas(canvas);
+        if (!hasFace) {
+            const statusText = document.getElementById('camera-status-text');
+            if (statusText) statusText.innerText = 'Wajah tidak terdeteksi pada foto. Pastikan wajah terlihat jelas lalu ambil selfie ulang.';
+
+            const badge = document.getElementById('camera-badge-status');
+            if (badge) {
+                badge.className = "inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/60 px-2.5 py-1 rounded-full";
+                badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span> Wajah Tidak Terdeteksi';
+            }
+            isSelfieConfirmed = false;
+            evaluateSubmitButtons();
+            return;
+        }
+    }
 
     const dataUrl = preview.src;
 
