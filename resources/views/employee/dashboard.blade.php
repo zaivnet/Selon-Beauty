@@ -496,7 +496,7 @@ let faceDetectionInterval = null;
 let cameraError = false;
 let detectorError = false;
 
-function updateFaceIndicator(state) {
+function updateFaceIndicator(state, diagnosticCode = null) {
     const indicator = document.getElementById('face-detection-indicator');
     const dot = document.getElementById('face-indicator-dot');
     const label = document.getElementById('face-indicator-label');
@@ -515,7 +515,7 @@ function updateFaceIndicator(state) {
     } else if (state === 'error') {
         if (pill) pill.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-sm bg-rose-700/90 text-white shadow-lg';
         if (dot) dot.className = 'w-2 h-2 rounded-full bg-white';
-        label.textContent = 'DETEKSI WAJAH BERMASALAH';
+        label.textContent = `DETEKSI WAJAH BERMASALAH${diagnosticCode ? ` [${diagnosticCode}]` : ''}`;
     } else {
         if (pill) pill.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-sm bg-rose-600/85 text-white shadow-lg';
         if (dot) dot.className = 'w-2 h-2 rounded-full bg-white animate-pulse';
@@ -538,10 +538,10 @@ async function initFacePresenceDetector() {
         return true;
     } catch (error) {
         facePresenceDetector = null;
-        detectorError = true;
-        updateFaceIndicator('error');
+        detectorError = error?.code || 'FD-UNKNOWN';
+        updateFaceIndicator('error', detectorError);
         const statusText = document.getElementById('camera-status-text');
-        if (statusText) statusText.innerText = 'Coba tutup dan buka kembali kamera.';
+        if (statusText) statusText.innerText = `Deteksi wajah bermasalah. [${detectorError}] Coba tutup dan buka kembali kamera.`;
         return false;
     }
 }
@@ -561,11 +561,11 @@ async function detectValidFace(source, waitForCurrent = false, mode = 'video') {
     } catch (error) {
         faceDetectorReady = false;
         faceValid = false;
-        detectorError = true;
+        detectorError = error?.code || 'FD-INFERENCE';
         stopFaceDetection();
-        updateFaceIndicator('error');
+        updateFaceIndicator('error', detectorError);
         const statusText = document.getElementById('camera-status-text');
-        if (statusText) statusText.innerText = 'Coba tutup dan buka kembali kamera.';
+        if (statusText) statusText.innerText = `Deteksi wajah bermasalah. [${detectorError}] Coba tutup dan buka kembali kamera.`;
         return false;
     } finally {
         activeFaceDetectionPromise = null;
@@ -575,7 +575,7 @@ async function detectValidFace(source, waitForCurrent = false, mode = 'video') {
 async function checkLiveFace(video) {
     if (!video || video.readyState < 2) return;
     faceValid = await detectValidFace(video);
-    updateFaceIndicator(faceValid ? 'detected' : (faceDetectorReady ? 'missing' : 'error'));
+    updateFaceIndicator(faceValid ? 'detected' : (faceDetectorReady ? 'missing' : 'error'), detectorError || null);
     evaluateCaptureButton();
 }
 
@@ -764,7 +764,7 @@ async function openCamera() {
         const detectorInitialized = await initFacePresenceDetector();
         if (!detectorInitialized) {
             const statusText = document.getElementById('camera-status-text');
-            if (statusText) statusText.innerText = 'Deteksi wajah bermasalah. Coba tutup dan buka kembali kamera.';
+            if (statusText) statusText.innerText = `Deteksi wajah bermasalah. [${detectorError || 'FD-UNKNOWN'}] Coba tutup dan buka kembali kamera.`;
             evaluateCaptureButton();
             return;
         }

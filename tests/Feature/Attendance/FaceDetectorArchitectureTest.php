@@ -14,14 +14,23 @@ class FaceDetectorArchitectureTest extends TestCase
         $this->assertSame('1.0.0', $package['dependencies']['@mediapipe/tasks-vision']);
         $this->assertStringContainsString("'FaceDetector' in window", $module);
         $this->assertStringContainsString("import('@mediapipe/tasks-vision')", $module);
-        $this->assertStringContainsString('FilesetResolver.forVisionTasks(MEDIAPIPE_WASM_ROOT)', $module);
+        $this->assertStringContainsString('FilesetResolver.forVisionTasks(wasmRoot)', $module);
+        $this->assertStringContainsString("const MEDIAPIPE_WASM_PATH = '/vendor/mediapipe/tasks-vision-1.0.0/wasm';", $module);
+        $this->assertStringContainsString("new URL(MEDIAPIPE_WASM_PATH, window.location.origin)", $module);
+        $this->assertStringNotContainsString('import.meta.env.BASE_URL', $module);
         $this->assertStringContainsString('blaze_face_short_range.tflite?url', $module);
+        $this->assertStringContainsString("delegate: 'CPU'", $module);
         $this->assertStringContainsString("this.backend = 'native'", $module);
         $this->assertStringContainsString("this.backend = 'mediapipe'", $module);
-        $this->assertStringNotContainsString('wasmLoaderPath:', $module);
-        $this->assertStringNotContainsString('wasmBinaryPath:', $module);
+        $this->assertStringContainsString('vision_wasm_nosimd_internal.js', $module);
+        $this->assertStringContainsString('vision_wasm_nosimd_internal.wasm', $module);
         $this->assertStringContainsString('detectForVideo(this.canvas, this.lastVideoTimestamp)', $module);
         $this->assertStringContainsString("setOptions({ runningMode: 'IMAGE' })", $module);
+        foreach (['FD-IMPORT', 'FD-WASM', 'FD-CREATE', 'FD-INFERENCE'] as $code) {
+            $this->assertStringContainsString($code, $module);
+        }
+        $this->assertStringContainsString("this.stage = 'READY'", $module);
+        $this->assertStringContainsString('throw failure;', $module);
     }
 
     public function test_official_resolver_wasm_directory_contains_simd_and_non_simd_assets(): void
@@ -73,7 +82,8 @@ class FaceDetectorArchitectureTest extends TestCase
             strpos($openCamera, 'navigator.mediaDevices.getUserMedia'),
         );
         $this->assertStringContainsString('cameraError = true', $openCamera);
-        $this->assertStringContainsString('detectorError = true', $dashboard);
+        $this->assertStringContainsString("detectorError = error?.code || 'FD-UNKNOWN'", $dashboard);
+        $this->assertStringContainsString('[${detectorError}]', $dashboard);
     }
 
     public function test_no_skin_colour_heuristic_exists(): void
