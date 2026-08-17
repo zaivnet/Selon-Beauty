@@ -376,6 +376,10 @@
                 <!-- Video Element -->
                 <video id="camera-video" class="w-full h-52 sm:h-60 object-cover hidden" autoplay playsinline muted></video>
 
+                <div id="face-guide-overlay" class="hidden pointer-events-none absolute inset-0 items-center justify-center" aria-hidden="true">
+                    <div class="h-[72%] w-[58%] rounded-[50%] border-2 border-dashed border-white/80 shadow-[0_0_0_999px_rgba(15,23,42,0.18)]"></div>
+                </div>
+
                 <div id="face-detection-indicator" class="hidden absolute bottom-2 left-2 right-2 flex justify-center pointer-events-none">
                     <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-sm bg-rose-600/85 text-white shadow-lg">
                         <span id="face-indicator-dot" class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
@@ -484,10 +488,10 @@ const isSelfieRequired = @json($requireSelfie);
 let isSelfieConfirmed = !isSelfieRequired;
 let cameraStream = null;
 
-// Native face presence detection only. No heuristic fallback is used.
-let faceDetector = null;
-let faceDetectionAvailable = false;
-let isFaceDetected = false;
+let facePresenceDetector = null;
+let faceDetectorReady = !isSelfieRequired;
+let faceValid = !isSelfieRequired;
+let activeFaceDetectionPromise = null;
 let faceDetectionInterval = null;
 
 function updateFaceIndicator(state) {
@@ -501,11 +505,15 @@ function updateFaceIndicator(state) {
     if (state === 'detected') {
         if (pill) pill.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-sm bg-emerald-600/90 text-white shadow-lg';
         if (dot) dot.className = 'w-2 h-2 rounded-full bg-white';
-        label.textContent = 'WAJAH TERDETEKSI';
-    } else if (state === 'unavailable') {
-        if (pill) pill.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-sm bg-slate-700/90 text-white shadow-lg';
-        if (dot) dot.className = 'w-2 h-2 rounded-full bg-slate-300';
-        label.textContent = 'DETEKSI WAJAH TIDAK TERSEDIA';
+        label.textContent = '✓ WAJAH TERDETEKSI';
+    } else if (state === 'loading') {
+        if (pill) pill.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-sm bg-indigo-600/90 text-white shadow-lg';
+        if (dot) dot.className = 'w-2 h-2 rounded-full bg-white animate-pulse';
+        label.textContent = 'MEMUAT DETEKSI WAJAH...';
+    } else if (state === 'error') {
+        if (pill) pill.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-sm bg-rose-700/90 text-white shadow-lg';
+        if (dot) dot.className = 'w-2 h-2 rounded-full bg-white';
+        label.textContent = 'DETEKSI WAJAH BERMASALAH';
     } else {
         if (pill) pill.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-sm bg-rose-600/85 text-white shadow-lg';
         if (dot) dot.className = 'w-2 h-2 rounded-full bg-white animate-pulse';
@@ -513,58 +521,79 @@ function updateFaceIndicator(state) {
     }
 }
 
-async function initFaceDetector() {
-    faceDetector = null;
-    faceDetectionAvailable = false;
-    if (typeof FaceDetector === 'undefined') {
-        updateFaceIndicator('unavailable');
-        return;
-    }
-
+async function initFacePresenceDetector() {
+    if (!isSelfieRequired) return true;
+    faceDetectorReady = false;
+    faceValid = false;
+    updateFaceIndicator('loading');
     try {
-        faceDetector = new FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
-        faceDetectionAvailable = true;
+        facePresenceDetector?.destroy();
+        facePresenceDetector = new window.AttendanceFaceDetector();
+        await facePresenceDetector.init();
+        faceDetectorReady = true;
         updateFaceIndicator('missing');
+        return true;
     } catch (error) {
-        updateFaceIndicator('unavailable');
+        facePresenceDetector = null;
+        updateFaceIndicator('error');
+        const statusText = document.getElementById('camera-status-text');
+        if (statusText) statusText.innerText = 'Coba tutup dan buka kembali kamera.';
+        return false;
     }
 }
 
-async function detectFace(source) {
-    if (!faceDetectionAvailable || !faceDetector || !source) return null;
+async function detectValidFace(source, waitForCurrent = false) {
+    if (!faceDetectorReady || !facePresenceDetector || !source) return false;
+    if (activeFaceDetectionPromise) {
+        if (!waitForCurrent) return faceValid;
+        await activeFaceDetectionPromise.catch(() => false);
+        if (!faceDetectorReady || !facePresenceDetector) return false;
+    }
+
+    activeFaceDetectionPromise = facePresenceDetector.detect(source);
     try {
-        return (await faceDetector.detect(source)).length > 0;
+        const result = await activeFaceDetectionPromise;
+        return window.hasAcceptableAttendanceFace(result);
     } catch (error) {
-        faceDetector = null;
-        faceDetectionAvailable = false;
-        updateFaceIndicator('unavailable');
-        return null;
+        faceDetectorReady = false;
+        faceValid = false;
+        stopFaceDetection();
+        updateFaceIndicator('error');
+        return false;
+    } finally {
+        activeFaceDetectionPromise = null;
     }
 }
 
 async function checkLiveFace(video) {
     if (!video || video.readyState < 2) return;
-    const detected = await detectFace(video);
-    isFaceDetected = detected === true;
-    updateFaceIndicator(detected === null ? 'unavailable' : (detected ? 'detected' : 'missing'));
+    faceValid = await detectValidFace(video);
+    updateFaceIndicator(faceValid ? 'detected' : (faceDetectorReady ? 'missing' : 'error'));
     evaluateCaptureButton();
 }
 
 function startFaceDetection(video) {
-    if (!faceDetectionAvailable) {
+    if (!faceDetectorReady) {
         evaluateCaptureButton();
         return;
     }
     checkLiveFace(video);
-    faceDetectionInterval = setInterval(() => checkLiveFace(video), 500);
+    faceDetectionInterval = setInterval(() => checkLiveFace(video), 400);
 }
 
 function stopFaceDetection() {
     if (faceDetectionInterval !== null) clearInterval(faceDetectionInterval);
     faceDetectionInterval = null;
-    isFaceDetected = false;
+    faceValid = !isSelfieRequired;
     const indicator = document.getElementById('face-detection-indicator');
     if (indicator) indicator.classList.add('hidden');
+}
+
+function destroyFacePresenceDetector() {
+    stopFaceDetection();
+    facePresenceDetector?.destroy();
+    facePresenceDetector = null;
+    faceDetectorReady = !isSelfieRequired;
 }
 
 // Haversine Distance Calculation for Instant UX Feedback
@@ -589,6 +618,7 @@ function updateCameraUI(state, message = '') {
     const placeholder = document.getElementById('camera-placeholder');
     const video = document.getElementById('camera-video');
     const preview = document.getElementById('selfie-preview');
+    const faceGuide = document.getElementById('face-guide-overlay');
 
     const btnOpen = document.getElementById('btn-open-camera');
     const actionsActive = document.getElementById('camera-actions-active');
@@ -665,6 +695,11 @@ function updateCameraUI(state, message = '') {
         if (actionsCaptured) actionsCaptured.classList.add('hidden');
     }
 
+    if (faceGuide) {
+        faceGuide.classList.toggle('hidden', state !== 'active');
+        faceGuide.classList.toggle('flex', state === 'active');
+    }
+
     evaluateSubmitButtons();
 }
 
@@ -678,7 +713,11 @@ function stopCameraStream() {
 
 async function openCamera() {
     updateCameraUI('requesting', 'Meminta izin akses kamera browser...');
-    await initFaceDetector();
+    const detectorInitialized = await initFacePresenceDetector();
+    if (isSelfieRequired && !detectorInitialized) {
+        updateCameraUI('error', 'Deteksi wajah bermasalah. Coba tutup dan buka kembali kamera.');
+        return;
+    }
 
     try {
         const constraints = {
@@ -702,9 +741,7 @@ async function openCamera() {
             await video.play();
             startFaceDetection(video);
         }
-        updateCameraUI('active', faceDetectionAvailable
-            ? 'Kamera aktif. Pastikan wajah terdeteksi lalu klik "Ambil Foto".'
-            : 'Kamera aktif. Deteksi wajah native tidak tersedia di browser ini.');
+        updateCameraUI('active', 'Kamera aktif. Posisikan wajah di dalam area kamera.');
     } catch (err) {
         stopCameraStream();
         let msg = 'Gagal mengakses kamera.';
@@ -721,6 +758,7 @@ async function openCamera() {
 
 function closeCamera() {
     stopCameraStream();
+    destroyFacePresenceDetector();
     isSelfieConfirmed = false;
     updateCameraUI('unopened', 'Kamera ditutup. Klik "Buka Kamera" jika ingin mengambil foto.');
 }
@@ -728,14 +766,14 @@ function closeCamera() {
 function evaluateCaptureButton() {
     const button = document.getElementById('btn-capture-photo');
     if (!button) return;
-    const blocked = isSelfieRequired && faceDetectionAvailable && !isFaceDetected;
+    const blocked = isSelfieRequired && (!faceDetectorReady || !faceValid);
     button.disabled = blocked;
     button.classList.toggle('opacity-50', blocked);
     button.classList.toggle('cursor-not-allowed', blocked);
 }
 
 function capturePhoto() {
-    if (isSelfieRequired && faceDetectionAvailable && !isFaceDetected) return;
+    if (isSelfieRequired && (!faceDetectorReady || !faceValid)) return;
     const video = document.getElementById('camera-video');
     const canvas = document.getElementById('camera-canvas');
     const preview = document.getElementById('selfie-preview');
@@ -776,13 +814,13 @@ async function confirmPhoto() {
     const preview = document.getElementById('selfie-preview');
     if (!preview || !preview.src || preview.src === '') return;
 
-    if (isSelfieRequired && faceDetectionAvailable) {
-        const detected = await detectFace(document.getElementById('camera-canvas'));
-        if (detected === false) {
+    if (isSelfieRequired) {
+        faceValid = await detectValidFace(document.getElementById('camera-canvas'), true);
+        if (!faceValid) {
             isSelfieConfirmed = false;
             updateFaceIndicator('missing');
             const statusText = document.getElementById('camera-status-text');
-            if (statusText) statusText.innerText = 'Wajah tidak terdeteksi pada foto. Silakan ambil selfie ulang.';
+            if (statusText) statusText.innerText = 'Wajah tidak terdeteksi pada foto. Ambil selfie ulang.';
             evaluateSubmitButtons();
             return;
         }
@@ -819,8 +857,53 @@ async function confirmPhoto() {
     }
 
     isSelfieConfirmed = true;
+    destroyFacePresenceDetector();
     updateCameraUI('confirmed', '✓ Foto selfie berhasil dikonfirmasi dan siap dikirim.');
 }
+
+async function validateSelectedSelfieFile(event) {
+    if (!isSelfieRequired || !event.target.files?.[0]) return;
+
+    isSelfieConfirmed = false;
+    faceValid = false;
+    updateFaceIndicator('loading');
+    if (!faceDetectorReady && !await initFacePresenceDetector()) {
+        event.target.value = '';
+        evaluateSubmitButtons();
+        return;
+    }
+
+    const objectUrl = URL.createObjectURL(event.target.files[0]);
+    try {
+        const image = new Image();
+        image.src = objectUrl;
+        await image.decode();
+        faceValid = await detectValidFace(image, true);
+        if (!faceValid) {
+            event.target.value = '';
+            updateFaceIndicator('missing');
+            const statusText = document.getElementById('camera-status-text');
+            if (statusText) statusText.innerText = 'Wajah tidak terdeteksi pada foto. Ambil selfie ulang.';
+            return;
+        }
+
+        const preview = document.getElementById('selfie-preview');
+        if (preview) preview.src = objectUrl;
+        isSelfieConfirmed = true;
+        updateFaceIndicator('detected');
+        updateCameraUI('confirmed', '✓ Foto selfie berhasil dikonfirmasi dan siap dikirim.');
+        destroyFacePresenceDetector();
+    } catch (_error) {
+        event.target.value = '';
+        updateFaceIndicator('error');
+    } finally {
+        if (!isSelfieConfirmed) URL.revokeObjectURL(objectUrl);
+        evaluateSubmitButtons();
+    }
+}
+
+document.getElementById('selfie_file_checkin')?.addEventListener('change', validateSelectedSelfieFile);
+document.getElementById('selfie_file_checkout')?.addEventListener('change', validateSelectedSelfieFile);
 
 // ----------------------------------------------------
 // GPS LOGIC & GEOFENCE EVALUATION
@@ -1023,6 +1106,14 @@ function detectGPSLocation() {
 }
 
 document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'hidden' && cameraStream) {
+        stopCameraStream();
+        destroyFacePresenceDetector();
+        isSelfieConfirmed = false;
+        updateCameraUI('unopened', 'Sesi kamera dihentikan. Buka kembali kamera untuk melanjutkan.');
+        return;
+    }
+
     if (document.visibilityState === 'visible') {
         const now = Date.now();
         if (lastGpsTimestamp && (now - lastGpsTimestamp > 180000)) {
@@ -1039,6 +1130,11 @@ document.addEventListener('visibilitychange', function() {
             evaluateSubmitButtons();
         }
     }
+});
+
+window.addEventListener('beforeunload', function() {
+    stopCameraStream();
+    destroyFacePresenceDetector();
 });
 
 // ----------------------------------------------------
