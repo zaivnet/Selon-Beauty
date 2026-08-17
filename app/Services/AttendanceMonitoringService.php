@@ -22,12 +22,16 @@ class AttendanceMonitoringService
 
     /**
      * Get KPI summary metrics for a given date in business timezone (Asia/Jakarta).
+     * Accepts optional $items to avoid redundant getAttendanceMonitoringList calls.
      */
-    public function getSummaryMetrics(?string $dateStr = null, ?\App\Models\User $actor = null): array
+    public function getSummaryMetrics(?string $dateStr = null, ?\App\Models\User $actor = null, ?array $items = null): array
     {
         $targetDate = $dateStr ?: Carbon::now(config('app.timezone'))->toDateString();
 
-        $items = $this->getAttendanceMonitoringList(['date' => $targetDate], null, $actor);
+        if ($items === null) {
+            $items = $this->getAttendanceMonitoringList(['date' => $targetDate], null, $actor);
+        }
+
         $collection = collect($items);
 
         $employeesQuery = Employee::whereNull('deleted_at')
@@ -164,30 +168,145 @@ class AttendanceMonitoringService
 
     /**
      * Get past week trend data for admin dashboard chart.
+     * Batches all 7-day data requests to prevent N+1 query loops.
      */
     public function getPastWeekTrendData(?\App\Models\User $actor = null): array
     {
         $today = Carbon::now(config('app.timezone'));
+        $startDate = (clone $today)->subDays(6)->toDateString();
+        $endDate = $today->toDateString();
+
+        // 1. Fetch active employees scoped by actor
+        $employeesQuery = Employee::with(['jobTitle', 'outlet'])
+            ->whereNull('deleted_at')
+            ->where('status', 'active')
+            ->currentAttendanceWorkforce();
+
+        if ($actor && $actor->role === 'admin') {
+            $adminOutletId = $actor->outlet_id ?? $actor->employee?->outlet_id;
+            $employeesQuery->where('employees.outlet_id', $adminOutletId);
+        }
+
+        $employees = $employeesQuery->orderBy('full_name', 'asc')->get();
+        $empIds = $employees->pluck('id');
+
+        if ($empIds->isEmpty()) {
+            $dates = [];
+            for ($i = 6; $i >= 0; $i--) {
+                $date = (clone $today)->subDays($i)->toDateString();
+                $dates[] = [
+                    'date' => $date,
+                    'label' => Carbon::parse($date)->locale('id')->isoFormat('ddd'),
+                    'total' => 0,
+                    'present' => 0,
+                    'late' => 0,
+                    'pending' => 0,
+                    'absent' => 0,
+                    'leave' => 0,
+                ];
+            }
+
+            return ['has_data' => false, 'data' => $dates];
+        }
+
+        // 2. Batch fetch schedules, overrides, holidays, attendance records, and approved leaves for the 7-day range
+        $schedules = EmployeeSchedule::with(['shift'])
+            ->whereIn('employee_id', $empIds)
+            ->whereDate('work_date', '>=', $startDate)
+            ->whereDate('work_date', '<=', $endDate)
+            ->get()
+            ->groupBy(fn ($item) => $item->employee_id.'_'.$item->work_date->format('Y-m-d'));
+
+        $overrides = EmployeeScheduleOverride::with('shift')
+            ->whereIn('employee_id', $empIds)
+            ->whereDate('date', '>=', $startDate)
+            ->whereDate('date', '<=', $endDate)
+            ->get()
+            ->groupBy(fn ($item) => $item->employee_id.'_'.$item->date->format('Y-m-d'));
+
+        $calendarDays = Holiday::whereDate('date', '>=', $startDate)
+            ->whereDate('date', '<=', $endDate)
+            ->get()
+            ->keyBy(fn ($item) => $item->date->format('Y-m-d'));
+
+        $records = AttendanceRecord::with(['location'])
+            ->whereIn('employee_id', $empIds)
+            ->whereDate('work_date', '>=', $startDate)
+            ->whereDate('work_date', '<=', $endDate)
+            ->get()
+            ->groupBy(fn ($item) => $item->employee_id.'_'.$item->work_date->format('Y-m-d'));
+
+        $approvedLeaves = LeaveRequest::whereIn('employee_id', $empIds)
+            ->where('status', 'approved')
+            ->whereDate('start_date', '<=', $endDate)
+            ->whereDate('end_date', '>=', $startDate)
+            ->get();
+
+        $leaveMap = [];
+        foreach ($approvedLeaves as $leaveReq) {
+            $lStart = $leaveReq->start_date->copy()->max(Carbon::parse($startDate));
+            $lEnd = $leaveReq->end_date->copy()->min(Carbon::parse($endDate));
+            foreach (\Carbon\CarbonPeriod::create($lStart, $lEnd) as $d) {
+                $leaveMap[$leaveReq->employee_id.'_'.$d->format('Y-m-d')] = $leaveReq;
+            }
+        }
+
         $dates = [];
         $hasData = false;
 
         for ($i = 6; $i >= 0; $i--) {
             $date = (clone $today)->subDays($i)->toDateString();
-            $metrics = $this->getSummaryMetrics($date, $actor);
-            $totalPresent = $metrics['present_today'];
-            if ($totalPresent > 0) {
+            $calendarDay = $calendarDays->get($date);
+
+            $presentCount = 0;
+            $lateCount = 0;
+            $pendingCount = 0;
+            $absentCount = 0;
+            $leaveCount = 0;
+
+            foreach ($employees as $emp) {
+                $key = $emp->id.'_'.$date;
+                $schedule = $schedules->get($key)?->first();
+                $override = $overrides->get($key)?->first();
+                $record = $records->get($key)?->first();
+                $approvedLeave = $leaveMap[$key] ?? null;
+
+                $effective = $this->effectiveScheduleService->resolveFromModels(
+                    $emp, $date, $schedule, $override, $calendarDay,
+                );
+                $resolved = $this->statusResolver->resolveEffective($effective, $record, $approvedLeave, null);
+                $statusKey = $resolved['key'];
+
+                if (in_array($statusKey, ['present', 'late'], true)) {
+                    $presentCount++;
+                }
+                if ($statusKey === 'late') {
+                    $lateCount++;
+                }
+                if ($statusKey === 'pending') {
+                    $pendingCount++;
+                }
+                if ($statusKey === 'absent') {
+                    $absentCount++;
+                }
+                if (in_array($statusKey, ['permission', 'sick', 'leave'], true)) {
+                    $leaveCount++;
+                }
+            }
+
+            if ($presentCount > 0) {
                 $hasData = true;
             }
 
             $dates[] = [
                 'date' => $date,
                 'label' => Carbon::parse($date)->locale('id')->isoFormat('ddd'),
-                'total' => $totalPresent,
-                'present' => $metrics['present_today'],
-                'late' => $metrics['late_today'],
-                'pending' => $metrics['pending_check_in_today'],
-                'absent' => $metrics['absent_today'] ?? 0,
-                'leave' => $metrics['leave_today'],
+                'total' => $presentCount,
+                'present' => $presentCount,
+                'late' => $lateCount,
+                'pending' => $pendingCount,
+                'absent' => $absentCount,
+                'leave' => $leaveCount,
             ];
         }
 

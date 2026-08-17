@@ -29,8 +29,8 @@ class DashboardController extends Controller
             'actor' => $actor,
         ], $now);
 
-        $metrics = $this->monitoringService->getSummaryMetrics($todayStr, $actor);
         $attendanceItems = $this->monitoringService->getAttendanceMonitoringList(['date' => $todayStr], $now, $actor);
+        $metrics = $this->monitoringService->getSummaryMetrics($todayStr, $actor, $attendanceItems);
         $trendData = $this->monitoringService->getPastWeekTrendData($actor);
         $shifts = Shift::orderBy('name', 'asc')->get();
 
