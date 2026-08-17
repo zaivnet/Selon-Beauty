@@ -1,107 +1,86 @@
-# Portable Attendance & Scheduling Application
+# Attendance / Absen Selon Beauty
 
-Aplikasi Sistem Presensi, Penjadwalan Kerja, dan Manajemen Karyawan Berbasis Web (PWA-Ready) yang Dirancang Portable untuk Berbagai Perusahaan dan Lingkungan Hosting.
+Aplikasi Laravel 13 untuk presensi, penjadwalan, multi-outlet, izin/cuti, lembur, audit, rekap bulanan, dan backup. Antarmuka employee berbentuk PWA yang dapat dipasang di iPhone dan Android.
 
----
+## Fitur Utama
 
-## 🌟 Fitur Utama
+- **Multi-Outlet & Geofence:** setiap Employee mengikuti koordinat, radius, dan batas akurasi Outlet miliknya.
+- **Presensi GPS & Selfie:** validasi server-side untuk GPS dan selfie check-in/check-out sesuai pengaturan global.
+- **Face Presence Detection Lokal:** native browser fast path dan fallback MediaPipe lokal untuk memastikan terdapat wajah pada foto. Fitur ini **bukan face recognition, identity matching, atau liveness verification**.
+- **Shift & Kalender Kerja:** jadwal, holiday, schedule override, shift swap, dan cross-midnight.
+- **Leave & Overtime:** approval izin/sakit/cuti, overtime request, session, serta recovery admin.
+- **Audit & Correction:** perubahan sensitif memiliki audit trail; evidence original dipertahankan.
+- **Rekap Kehadiran Bulanan:** data payroll-ready dalam menit, CSV, print, dan indikator review tanpa menghitung nominal gaji.
+- **Operational Exception Center:** kondisi yang membutuhkan perhatian admin saat ini.
+- **Attendance Participation:** role aplikasi terpisah dari kewajiban mengikuti workforce attendance.
+- **Backup & Restore:** backup manual dan scheduled backup melalui Laravel scheduler.
+- **Zero-Node Production:** build Vite, model BlazeFace, dan WASM MediaPipe tersedia di repository.
 
-- **PWA (Progressive Web App)**: Mobile-first interface yang dapat di-install di perangkat Android/iOS seperti aplikasi native (offline fallback & shortcut).
-- **Presensi Berbasis GPS & Geofencing**: Validasi lokasi GPS waktu nyata saat karyawan melakukan Check-In / Check-Out.
-- **Validasi Selfie**: Mengambil foto selfie saat presensi menggunakan kamera bawaan perangkat.
-- **Manajemen Shift & Jadwal Kerja**: Jadwal mingguan, kalender hari libur/hari kerja khusus, override per karyawan dan tanggal, serta permohonan lembur dan izin/cuti.
-- **Rekap Kehadiran Bulanan**: Ringkasan dan detail payroll-ready berbasis menit, status kelengkapan data, CSV, dan print—tanpa menghitung nominal gaji.
-- **Penguncian Periode Kehadiran (Period Lock)**: Konsep penutupan periode bulanan (`OPEN` / `CLOSED`) oleh Owner/Superadmin yang mengunci seluruh mutasi presensi, lembur, cuti, jadwal, override, dan kalender kerja untuk periode yang telah disetujui.
-- **Pertukaran Jadwal Kerja (Shift Swap)**: Fitur pertukaran shift antar karyawan (Ayu ↔ Dia) dengan persetujuan dua tahap (rekan kerja lalu admin/owner), perlindungan tanggal masa lalu/periode terkunci/konflik absensi/izin/lembur, dan penerapan otomatis melalui override jadwal tanpa merusak master jadwal reguler.
-- **Pusat Perhatian Operasional**: Dashboard exception read-only untuk attendance, approval, overtime aktif, override, koreksi terbaru, dan kesehatan backup sesuai hak akses.
-- **Partisipasi Workforce Eksplisit**: Role aplikasi terpisah dari kewajiban jadwal/absensi melalui `attendance_enabled`, tanpa menghapus histori atau akses administratif.
-- **Sistem Role & Hak Akses (RBAC)**: Mendukung role **Superadmin**, **Owner**, **Admin Operasional**, dan **Employee**.
-- **First-Run Portable Setup**: Wizard inisialisasi awal otomatis saat pertama kali dibuka di browser tanpa perlu SQL seed manual.
-- **Keamanan & Email Reset**: Pemulihan password via email (Mailpit support di local, SMTP di production), rate limiting, pembatalan session lama saat reset, dan audit log lengkap.
-- **Backup & Restore Terjadwal**: Fitur backup database & media bawaan dari admin portal.
-- **Zero-Node Production Deployment**: Pre-compiled Vite assets tersedia di repository, sehingga aplikasi dapat berjalan langsung di Shared Hosting tanpa butuh Node.js di server.
+## Requirements
 
----
+- PHP minimum 8.3; PHP 8.4 direkomendasikan.
+- Laravel 13 (`laravel/framework ^13.8`).
+- MySQL 8.0+ atau MariaDB 10.5+.
+- Composer 2.x.
+- HTTPS dan Document Root yang menunjuk ke `<PROJECT_ROOT>/public`.
 
-## 💻 Spesifikasi & Requirements
+Lihat daftar extension dan detail hosting pada [INSTALLATION.md](INSTALLATION.md).
 
-- **Language**: PHP `>= 8.3` (Disarankan **PHP 8.3** atau **PHP 8.4**)
-- **Framework**: Laravel 13
-- **Database**: MySQL `>= 8.0` atau MariaDB `>= 10.5` (`utf8mb4_unicode_ci`)
-- **Composer**: Composer v2.x
-- **Web Server**: Apache (`mod_rewrite` aktif) atau Nginx
-- **Web Document Root**: Mengarah ke direktori `<PROJECT_ROOT>/public`
-
----
-
-## 🚀 Quick Start (Instalasi Cepat)
+## Shared Hosting Quick Start
 
 ```bash
-# 1. Clone Repository
-git clone https://github.com/zaivnet/Selon-Beauty <PROJECT_ROOT>
-cd <PROJECT_ROOT>
+cd /home/<USERNAME>/apps
+git clone https://github.com/zaivnet/Selon-Beauty.git attendance
+cd attendance
 
-# 2. Install Dependensi Composer (Production)
-composer install --no-dev --prefer-dist --optimize-autoloader
-
-# 3. Setup File Environment
 cp .env.example .env
+# Edit APP_URL, database, mail, dan konfigurasi production pada .env
 
-# 4. Sesuaikan Kredensial Database pada .env, Lalu Generate Application Key & Migrasi
+composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
 php artisan key:generate
 php artisan migrate --force
-
-# 5. Point Document Root Web Server ke: <PROJECT_ROOT>/public
-
-# 6. Buka Browser
-https://<DOMAIN>
-```
-
-Saat pertama kali dibuka, sistem akan otomatis mengarahkan ke halaman **/setup** untuk membuat akun **Superadmin** pertama serta menentukan nama aplikasi & perusahaan Anda.
-
-> 📖 **Panduan Instalasi Lengkap**: Untuk langkah-langkah detail pada VPS, Cloud Server, maupun **Shared Hosting (cPanel / DirectAdmin / Plesk)**, silakan baca [**INSTALLATION.md**](INSTALLATION.md).
-
----
-
-## 🔄 Pembaruan Aplikasi (Git Update Workflow)
-
-Untuk memperbarui versi aplikasi dari GitHub Repository **tanpa mereset database**:
-
-```bash
-cd <PROJECT_ROOT>
-git pull origin main
-composer install --no-dev --prefer-dist --optimize-autoloader
-php artisan migrate --force
+php artisan storage:link
 php artisan optimize:clear
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 ```
 
----
+Kemudian:
 
-## ⏰ Task Scheduler (Cron Job)
+1. Arahkan Document Root domain ke `/home/<USERNAME>/apps/attendance/public`.
+2. Aktifkan HTTPS.
+3. Tambahkan Cron `* * * * * cd <PROJECT_ROOT> && <PHP_BINARY> artisan schedule:run >> /dev/null 2>&1`.
+4. Buka `https://<DOMAIN>/setup` untuk membuat Superadmin pertama.
+5. Buat Outlet pertama, lalu konfigurasikan Shift, Admin, dan Employee.
 
-Tambahkan perintah Cron berikut pada server / cPanel untuk menjalankan tugas terjadwal:
+Node.js tidak diperlukan pada hosting production selama aset repository `public/build` dan `public/vendor/mediapipe` tersedia.
 
-```cron
-* * * * * cd <PROJECT_ROOT> && php artisan schedule:run >> /dev/null 2>&1
+> Panduan lengkap untuk cPanel, DirectAdmin, Plesk, CloudLinux/Alt-PHP, troubleshooting, PWA, backup, dan VPS tersedia di [INSTALLATION.md](INSTALLATION.md).
+
+## Update Production
+
+Buat backup melalui aplikasi sebelum update besar, kemudian:
+
+```bash
+cd <PROJECT_ROOT>
+git pull --ff-only origin main
+composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+php artisan migrate --force
+php artisan optimize:clear
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+git log -1 --oneline
+git status
 ```
 
----
+Jangan menjalankan `migrate:fresh`, `migrate:refresh`, `migrate:reset`, atau `db:wipe` pada production.
 
-## 🔒 Catatan Keamanan
+## Dokumentasi
 
-- File `.env`, password database, kredensial SMTP, dan file unggahan pengguna diabaikan oleh `.gitignore` dan **TIDAK PERNAH** dimasukkan ke repository.
-- Email bersifat unik (*case-insensitive*) untuk seluruh akun user di database level.
-- Dilarang menjalankan `php artisan migrate:fresh` atau `php artisan db:wipe` pada lingkungan production.
-
----
-
-## 📁 Dokumentasi Arsitektur
-
-- [**INSTALLATION.md**](INSTALLATION.md) — Panduan instalasi generik & Shared Hosting
-- [`docs/PRD.md`](docs/PRD.md) — Product Requirements Document
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Arsitektur Sistem
-- [`docs/DATABASE_SCHEMA.md`](docs/DATABASE_SCHEMA.md) — Skema Database
-- [`docs/RULES.md`](docs/RULES.md) — Aturan Pengembangan Kode
+- [INSTALLATION.md](INSTALLATION.md) — instalasi Shared Hosting dan VPS.
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — arsitektur aplikasi.
+- [docs/DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md) — skema database.
+- [docs/RULES.md](docs/RULES.md) — aturan sistem dan pengembangan.
+- [docs/PRD.md](docs/PRD.md) — product requirements.
