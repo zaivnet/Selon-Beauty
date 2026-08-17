@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cetak Laporan Kehadiran Karyawan - SELON BEAUTY</title>
+    <title>Cetak Laporan Kehadiran Karyawan - {{ $branding['app_name'] ?? 'Absensi' }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -51,7 +51,7 @@
         <!-- Document Header -->
         <div class="flex items-start justify-between border-b-2 border-slate-900 pb-4">
             <div>
-                <h1 class="text-2xl font-black tracking-tight text-slate-900">SELON BEAUTY</h1>
+                <h1 class="text-2xl font-black tracking-tight text-slate-900">{{ $branding['company_name'] ?? ($branding['app_name'] ?? 'Aplikasi Absensi') }}</h1>
                 <h2 class="text-sm font-extrabold text-rose-700 uppercase tracking-widest mt-0.5">Laporan Kehadiran Karyawan</h2>
             </div>
             <div class="text-right text-xs space-y-0.5 text-slate-600 font-medium">
@@ -168,7 +168,7 @@
             <div>
                 <p>Disetujui Oleh,</p>
                 <div class="h-16"></div>
-                <p class="font-bold border-t border-slate-400 max-w-xs mx-auto pt-1">Owner SELON BEAUTY</p>
+                <p class="font-bold border-t border-slate-400 max-w-xs mx-auto pt-1">Owner</p>
             </div>
         </div>
 

@@ -75,7 +75,7 @@
 
                     <span class="inline-flex items-center gap-1 text-xs font-semibold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 px-2.5 py-1 rounded-lg border border-rose-200 dark:border-rose-800/60" title="Outlet Penugasan Karyawan">
                         <svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h4m-4 0V11a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002-2v-2a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 002 2"/></svg>
-                        <span>Outlet: {{ $employee->outlet?->name ?? 'SELON PUSAT' }}</span>
+                        <span>Outlet: {{ $employee->outlet?->name ?? 'Lokasi Belum Dikonfigurasi' }}</span>
                     </span>
 
                     @if($employee->user)

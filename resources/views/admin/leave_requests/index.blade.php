@@ -30,7 +30,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div>
                 <h2 class="text-xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Kelola Pengajuan Karyawan</h2>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Daftar pengajuan izin, sakit, dan cuti karyawan SELON BEAUTY</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Daftar pengajuan izin, sakit, dan cuti karyawan</p>
             </div>
             <div class="flex items-center gap-2">
                 <x-outlet-filter />

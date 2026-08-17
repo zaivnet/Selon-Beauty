@@ -14,7 +14,7 @@
 
     <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 md:p-8 space-y-6 transition-colors">
         <div>
-            <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Informasi Karyawan SELON BEAUTY</h3>
+            <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">Informasi Karyawan</h3>
             <p class="text-xs text-slate-500 dark:text-slate-400">Lengkapi formulir di bawah ini untuk menambahkan data karyawan baru.</p>
         </div>
 

@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'Kelola Shift Kerja')
-@section('page-title', 'Daftar Shift Kerja SELON BEAUTY')
+@section('page-title', 'Daftar Shift Kerja')
 
 @section('content')
 <div class="space-y-6">
@@ -65,7 +65,7 @@
                 </div>
                 <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200">Belum Ada Shift Kerja</h4>
                 <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-1">
-                    Tambahkan shift kerja pertama untuk mengatur jam operasional toko SELON BEAUTY.
+                    Tambahkan shift kerja pertama untuk mengatur jam operasional toko.
                 </p>
                 <div class="mt-4">
                     <a href="{{ route('admin.shifts.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 text-white font-bold text-xs rounded-xl shadow-xs hover:bg-rose-700 transition-colors">

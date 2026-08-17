@@ -7,7 +7,7 @@
     <!-- Header Page -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Outlet & Cabang SELON BEAUTY</h1>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Outlet & Cabang</h1>
             <p class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">Kelola seluruh lokasi outlet fisik, penugasan admin, dan koordinat geofence absensi.</p>
         </div>
         <div>

@@ -26,7 +26,7 @@
                     <label for="name" class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                         Nama Outlet / Cabang <span class="text-rose-500">*</span>
                     </label>
-                    <input type="text" name="name" id="name" value="{{ old('name') }}" placeholder="Contoh: Selon Beauty Cabang Kemang" required
+                    <input type="text" name="name" id="name" value="{{ old('name') }}" placeholder="Contoh: Cabang Utama Kemang" required
                         class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all">
                     @error('name')
                         <p class="text-xs font-semibold text-rose-500 mt-1.5">{{ $message }}</p>

@@ -1,7 +1,22 @@
 @extends('layouts.admin')
 
 @section('title', 'Kelola Karyawan')
-@section('page-title', 'Daftar Karyawan SELON BEAUTY')
+@php
+    $pageTitle = 'Daftar Karyawan';
+    if (request('outlet_id')) {
+        $selectedOutlet = \App\Models\Outlet::find(request('outlet_id'));
+        if ($selectedOutlet) {
+            $pageTitle .= ' — ' . $selectedOutlet->name;
+        }
+    } elseif (!\app(\App\Services\OutletScopeService::class)->isGlobalScope(auth()->user())) {
+        $adminOutletId = \app(\App\Services\OutletScopeService::class)->getAdminOutletId(auth()->user());
+        $adminOutlet = \App\Models\Outlet::find($adminOutletId);
+        if ($adminOutlet) {
+            $pageTitle .= ' — ' . $adminOutlet->name;
+        }
+    }
+@endphp
+@section('page-title', $pageTitle)
 
 @section('content')
 <div class="space-y-6">
@@ -69,7 +84,7 @@
                 </div>
                 <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200">Belum Ada Karyawan</h4>
                 <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-1">
-                    Tambahkan karyawan pertama untuk mulai menggunakan SELON BEAUTY Attendance.
+                    Tambahkan karyawan pertama untuk mulai menggunakan aplikasi absensi.
                 </p>
                 <div class="mt-4">
                     <a href="{{ route('admin.employees.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 text-white font-bold text-xs rounded-xl shadow-xs hover:bg-rose-700 transition-colors">
@@ -109,7 +124,7 @@
                                 </td>
                                 <td class="p-3 whitespace-nowrap">
                                     <span class="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 font-bold text-[11px] rounded-md">
-                                        {{ $emp->outlet?->name ?? 'SELON PUSAT' }}
+                                        {{ $emp->outlet?->name ?? 'Lokasi Belum Dikonfigurasi' }}
                                     </span>
                                 </td>
                                 <td class="p-3 text-slate-600 dark:text-slate-300 font-semibold">{{ $emp->jobTitle?->name ?: '-' }}</td>

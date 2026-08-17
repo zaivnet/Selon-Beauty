@@ -176,7 +176,7 @@
                                 </td>
                                 <td class="py-3.5 px-4">
                                     @if($rec && $rec->check_in_distance_meters !== null)
-                                        <span class="font-bold text-slate-800 dark:text-slate-200 block text-[11px]">{{ $rec->location?->name ?? 'SELON BEAUTY' }}</span>
+                                        <span class="font-bold text-slate-800 dark:text-slate-200 block text-[11px]">{{ $rec->outlet?->name ?? ($rec->location?->name ?? 'Lokasi Belum Dikonfigurasi') }}</span>
                                         <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium block">Jarak: {{ round($rec->check_in_distance_meters) }}m • Akurasi: ±{{ round($rec->check_in_accuracy_meters) }}m</span>
                                     @else
                                         <span class="text-slate-400 dark:text-slate-500 text-[11px]">--</span>
@@ -328,7 +328,7 @@ async function showAttendanceDetail(recordId) {
                 </div>
                 <div>
                     <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">Lokasi Toko</span>
-                    <span class="font-bold text-slate-900 dark:text-slate-100">${loc.name || 'SELON BEAUTY'}</span>
+                    <span class="font-bold text-slate-900 dark:text-slate-100">${loc.name || 'Lokasi Belum Dikonfigurasi'}</span>
                     <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block">📍 Jarak: ${data.check_in_distance_meters !== null ? Math.round(data.check_in_distance_meters) + 'm' : '--'} (Akurasi ±${data.check_in_accuracy_meters !== null ? Math.round(data.check_in_accuracy_meters) + 'm' : '--'})</span>
                 </div>
             </div>
