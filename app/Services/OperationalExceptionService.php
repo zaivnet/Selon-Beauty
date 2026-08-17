@@ -57,7 +57,8 @@ class OperationalExceptionService
 
         $employeesQuery = Employee::with('jobTitle')->whereNull('deleted_at')->where('status', 'active')->currentAttendanceWorkforce();
         if (! empty($filters['actor'])) {
-            $employeesQuery = $this->outletScopeService->scopeEmployeesFor($filters['actor'], $employeesQuery);
+            $requestedOutletId = isset($filters['outlet_id']) ? (int) $filters['outlet_id'] : null;
+            $employeesQuery = $this->outletScopeService->scopeByRequestedOutlet($filters['actor'], $employeesQuery, $requestedOutletId);
         }
         if (! empty($filters['employee_id'])) {
             $employeesQuery->whereKey((int) $filters['employee_id']);

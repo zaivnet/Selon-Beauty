@@ -37,7 +37,8 @@ class MonthlyAttendanceRecapService
         $employeesQuery = Employee::with(['jobTitle', 'user'])->whereNull('deleted_at');
         if (! empty($filters['actor'])) {
             $outletScopeService = new OutletScopeService;
-            $employeesQuery = $outletScopeService->scopeEmployeesFor($filters['actor'], $employeesQuery);
+            $requestedOutletId = isset($filters['outlet_id']) ? (int) $filters['outlet_id'] : null;
+            $employeesQuery = $outletScopeService->scopeByRequestedOutlet($filters['actor'], $employeesQuery, $requestedOutletId);
         }
         if (! empty($filters['employee_id'])) {
             $employeesQuery->whereKey((int) $filters['employee_id']);

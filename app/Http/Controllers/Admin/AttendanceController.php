@@ -27,20 +27,24 @@ class AttendanceController extends Controller
         $selectedEmployeeId = $request->input('employee_id');
         $selectedStatus = $request->input('status');
 
+        $actor = $request->user();
+        $inputOutletId = $request->has('outlet_id') ? (int) $request->input('outlet_id') : null;
+        $requestedOutletId = $this->outletScopeService->resolveRequestedOutlet($actor, $inputOutletId);
+
         $filters = [
             'date' => $selectedDate,
             'employee_id' => $selectedEmployeeId,
             'status' => $selectedStatus,
+            'outlet_id' => $requestedOutletId,
         ];
 
-        $actor = $request->user();
-        $metrics = $this->monitoringService->getSummaryMetrics($selectedDate, $actor);
-        $attendanceItems = $this->monitoringService->getAttendanceMonitoringList($filters, null, $actor);
+        $metrics = $this->monitoringService->getSummaryMetrics($selectedDate, $actor, null, $requestedOutletId);
+        $attendanceItems = $this->monitoringService->getAttendanceMonitoringList($filters, null, $actor, $requestedOutletId);
 
         $employeesQuery = Employee::whereNull('deleted_at')
             ->where('status', 'active')
             ->currentAttendanceWorkforce();
-        $employeesQuery = $this->outletScopeService->scopeEmployeesFor($actor, $employeesQuery);
+        $employeesQuery = $this->outletScopeService->scopeByRequestedOutlet($actor, $employeesQuery, $requestedOutletId);
 
         $employees = $employeesQuery->orderBy('full_name', 'asc')->get();
 

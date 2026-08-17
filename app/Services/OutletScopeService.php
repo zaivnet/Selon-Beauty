@@ -252,6 +252,107 @@ class OutletScopeService
     }
 
     /**
+     * Get list of active outlets for global actors UI filters.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, \App\Models\Outlet>
+     */
+    public function getActiveOutlets(): \Illuminate\Database\Eloquent\Collection
+    {
+        return \App\Models\Outlet::where('is_active', true)->orderBy('name')->get();
+    }
+
+    /**
+     * Resolve the requested active outlet ID for actor with session persistence and security sanitization.
+     *
+     * - Superadmin / Owner: May request '0' / null for All Outlets, or valid active outlet ID.
+     * - Admin: Strictly limited to assigned outlet ID; browser request input is ignored.
+     */
+    public function resolveRequestedOutlet(User $actor, ?int $inputOutletId = null): ?int
+    {
+        if ($this->isGlobalScope($actor)) {
+            // Explicit clear request (e.g. 0 or negative) -> All Outlets
+            if ($inputOutletId !== null && $inputOutletId <= 0) {
+                session()->forget('active_outlet_id');
+
+                return null;
+            }
+
+            // Explicit valid outlet ID requested
+            if ($inputOutletId !== null && $inputOutletId > 0) {
+                $isValidActive = \App\Models\Outlet::where('id', $inputOutletId)
+                    ->where('is_active', true)
+                    ->exists();
+
+                if ($isValidActive) {
+                    session(['active_outlet_id' => $inputOutletId]);
+
+                    return $inputOutletId;
+                }
+
+                // Invalid or inactive requested outlet ID -> clear session & fallback to All Outlets safely
+                session()->forget('active_outlet_id');
+
+                return null;
+            }
+
+            // No explicit input provided -> check session persistence
+            $sessionOutletId = session('active_outlet_id');
+            if ($sessionOutletId) {
+                $isValidActive = \App\Models\Outlet::where('id', $sessionOutletId)
+                    ->where('is_active', true)
+                    ->exists();
+
+                if ($isValidActive) {
+                    return (int) $sessionOutletId;
+                }
+
+                session()->forget('active_outlet_id');
+            }
+
+            return null;
+        }
+
+        // Admin role: Always strictly scoped to assigned outlet ID
+        return $this->getAdminOutletId($actor);
+    }
+
+    /**
+     * Scope Eloquent query by resolved requested outlet ID.
+     */
+    public function scopeByRequestedOutlet(User $actor, Builder $query, ?int $inputOutletId = null, string $outletColumn = 'outlet_id'): Builder
+    {
+        $targetOutletId = $this->resolveRequestedOutlet($actor, $inputOutletId);
+
+        if ($targetOutletId !== null) {
+            $model = $query->getModel();
+
+            if (in_array($outletColumn, $model->getFillable(), true) || $model->getTable() === 'outlets') {
+                return $query->where($model->getTable().'.'.$outletColumn, $targetOutletId);
+            }
+
+            if (method_exists($model, 'employee')) {
+                return $query->whereHas('employee', function (Builder $empQuery) use ($targetOutletId) {
+                    $empQuery->where('employees.outlet_id', $targetOutletId);
+                });
+            }
+
+            if ($model->getTable() === 'employees') {
+                return $query->where('employees.outlet_id', $targetOutletId);
+            }
+
+            return $query->whereRaw('1 = 0');
+        }
+
+        // Target outlet ID is null (All Outlets for Superadmin/Owner)
+        if ($this->isGlobalScope($actor)) {
+            return $query;
+        }
+
+        // Fail closed for Admin without outlet
+        return $query->whereRaw('1 = 0');
+    }
+
+    /**
      * Enforce that Admin user has an assigned outlet. Fail closed with 403 if missing.
      */
     public function ensureAdminHasOutlet(User $user): void

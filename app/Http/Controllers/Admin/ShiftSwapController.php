@@ -30,11 +30,13 @@ class ShiftSwapController extends Controller
             'requester', 'target', 'requesterShift', 'targetShift', 'adminUser',
         ]);
 
-        if ($request->user()->role === 'admin') {
-            $adminOutletId = $this->outletScopeService->getAdminOutletId($request->user());
-            $query->where(function ($q) use ($adminOutletId) {
-                $q->whereHas('requester', fn ($reqQ) => $reqQ->where('outlet_id', $adminOutletId))
-                    ->orWhereHas('target', fn ($targetQ) => $targetQ->where('outlet_id', $adminOutletId));
+        $inputOutletId = $request->has('outlet_id') ? (int) $request->input('outlet_id') : null;
+        $targetOutletId = $this->outletScopeService->resolveRequestedOutlet($request->user(), $inputOutletId);
+
+        if ($targetOutletId !== null) {
+            $query->where(function ($q) use ($targetOutletId) {
+                $q->whereHas('requester', fn ($reqQ) => $reqQ->where('outlet_id', $targetOutletId))
+                    ->orWhereHas('target', fn ($targetQ) => $targetQ->where('outlet_id', $targetOutletId));
             });
         }
 
@@ -59,17 +61,16 @@ class ShiftSwapController extends Controller
         $swaps = $query->latest()->paginate(20)->withQueryString();
 
         $pendingAdminQuery = ShiftSwapRequest::where('status', ShiftSwapRequest::STATUS_PENDING_ADMIN);
-        if ($request->user()->role === 'admin') {
-            $adminOutletId = $this->outletScopeService->getAdminOutletId($request->user());
-            $pendingAdminQuery->where(function ($q) use ($adminOutletId) {
-                $q->whereHas('requester', fn ($reqQ) => $reqQ->where('outlet_id', $adminOutletId))
-                    ->orWhereHas('target', fn ($targetQ) => $targetQ->where('outlet_id', $adminOutletId));
+        if ($targetOutletId !== null) {
+            $pendingAdminQuery->where(function ($q) use ($targetOutletId) {
+                $q->whereHas('requester', fn ($reqQ) => $reqQ->where('outlet_id', $targetOutletId))
+                    ->orWhereHas('target', fn ($targetQ) => $targetQ->where('outlet_id', $targetOutletId));
             });
         }
         $pendingAdminCount = $pendingAdminQuery->count();
 
         $employeesQuery = Employee::orderBy('full_name');
-        $employeesQuery = $this->outletScopeService->scopeEmployeesFor($request->user(), $employeesQuery);
+        $employeesQuery = $this->outletScopeService->scopeByRequestedOutlet($request->user(), $employeesQuery, $targetOutletId);
 
         return view('admin.shift_swaps.index', [
             'swaps' => $swaps,

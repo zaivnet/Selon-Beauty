@@ -34,7 +34,8 @@ class OvertimeRequestController extends Controller
         $query = OvertimeRequest::with(['employee.jobTitle', 'reviewer', 'session'])
             ->orderBy('created_at', 'desc');
 
-        $query = $this->outletScopeService->scopeQueryFor($request->user(), $query);
+        $inputOutletId = $request->has('outlet_id') ? (int) $request->input('outlet_id') : null;
+        $query = $this->outletScopeService->scopeByRequestedOutlet($request->user(), $query, $inputOutletId);
 
         if ($statusFilter && $statusFilter !== 'all') {
             $query->where('status', $statusFilter);
@@ -77,7 +78,7 @@ class OvertimeRequestController extends Controller
         $employeesQuery = Employee::whereNull('deleted_at')
             ->where('status', 'active')
             ->currentAttendanceWorkforce();
-        $employeesQuery = $this->outletScopeService->scopeEmployeesFor($request->user(), $employeesQuery);
+        $employeesQuery = $this->outletScopeService->scopeByRequestedOutlet($request->user(), $employeesQuery, $inputOutletId);
 
         $employees = $employeesQuery->orderBy('full_name', 'asc')->get();
 

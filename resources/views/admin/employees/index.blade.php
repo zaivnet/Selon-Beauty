@@ -45,8 +45,9 @@
             @endif
         </form>
 
-        <!-- Add Employee CTA Button -->
+        <!-- Add Employee CTA Button & Outlet Filter -->
         <div class="flex items-center gap-2">
+            <x-outlet-filter />
             <a href="{{ route('admin.job-titles.index') }}" class="px-3.5 py-2 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold text-xs rounded-xl transition-colors">
                 Kelola Jabatan
             </a>

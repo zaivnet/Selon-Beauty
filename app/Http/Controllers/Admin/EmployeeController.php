@@ -37,7 +37,8 @@ class EmployeeController extends Controller
         $status = $request->input('status', '');
 
         $query = Employee::with(['jobTitle', 'user', 'outlet']);
-        $query = $this->outletScopeService->scopeEmployeesFor($request->user(), $query);
+        $inputOutletId = $request->has('outlet_id') ? (int) $request->input('outlet_id') : null;
+        $query = $this->outletScopeService->scopeByRequestedOutlet($request->user(), $query, $inputOutletId);
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {

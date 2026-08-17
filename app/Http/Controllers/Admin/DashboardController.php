@@ -24,14 +24,19 @@ class DashboardController extends Controller
         $todayStr = $now->toDateString();
         $includeBackupHealth = in_array($actor->role, ['owner', 'superadmin'], true);
 
+        $outletScopeService = app(\App\Services\OutletScopeService::class);
+        $inputOutletId = $request->has('outlet_id') ? (int) $request->input('outlet_id') : null;
+        $requestedOutletId = $outletScopeService->resolveRequestedOutlet($actor, $inputOutletId);
+
         $exceptions = $this->exceptionService->generate($todayStr, [
             'include_backup_health' => $includeBackupHealth,
             'actor' => $actor,
+            'outlet_id' => $requestedOutletId,
         ], $now);
 
-        $attendanceItems = $this->monitoringService->getAttendanceMonitoringList(['date' => $todayStr], $now, $actor);
-        $metrics = $this->monitoringService->getSummaryMetrics($todayStr, $actor, $attendanceItems);
-        $trendData = $this->monitoringService->getPastWeekTrendData($actor);
+        $attendanceItems = $this->monitoringService->getAttendanceMonitoringList(['date' => $todayStr], $now, $actor, $requestedOutletId);
+        $metrics = $this->monitoringService->getSummaryMetrics($todayStr, $actor, $attendanceItems, $requestedOutletId);
+        $trendData = $this->monitoringService->getPastWeekTrendData($actor, $requestedOutletId);
         $shifts = Shift::orderBy('name', 'asc')->get();
 
         return view('admin.dashboard', [
@@ -41,6 +46,7 @@ class DashboardController extends Controller
             'trendData' => $trendData,
             'shifts' => $shifts,
             'todayFormatted' => $now->locale('id')->isoFormat('dddd, D MMMM YYYY'),
+            'requestedOutletId' => $requestedOutletId,
         ]);
     }
 }

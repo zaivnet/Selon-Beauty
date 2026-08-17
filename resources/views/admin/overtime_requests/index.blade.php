@@ -38,8 +38,11 @@
     <!-- Header Card -->
     <div class="bg-white dark:bg-slate-900 p-5 md:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors">
         <div>
-            <h2 class="text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight">Kelola Pengajuan Lembur</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">Review dan tentukan menit lembur yang disetujui (Approved Overtime Minutes) karyawan.</p>
+            <h2 class="text-xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Persetujuan & Monitoring Lembur</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Kelola persetujuan pengajuan lembur dan monitoring verifikasi sesi lembur karyawan</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <x-outlet-filter />
         </div>
     </div>
 

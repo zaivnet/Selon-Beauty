@@ -32,6 +32,9 @@
                 <h2 class="text-xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Kelola Pengajuan Karyawan</h2>
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Daftar pengajuan izin, sakit, dan cuti karyawan SELON BEAUTY</p>
             </div>
+            <div class="flex items-center gap-2">
+                <x-outlet-filter />
+            </div>
         </div>
 
         <!-- Filter Form -->

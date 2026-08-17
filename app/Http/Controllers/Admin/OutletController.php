@@ -135,8 +135,9 @@ class OutletController extends Controller
 
         if (! $newStatus) {
             $activeEmployeesCount = $outlet->employees()->where('status', 'active')->count();
-            if ($activeEmployeesCount > 0) {
-                return redirect()->back()->with('error', "Outlet {$outlet->name} masih memiliki {$activeEmployeesCount} karyawan aktif. Pindahkan karyawan terlebih dahulu sebelum menonaktifkan outlet.");
+            $activeAdminsCount = $outlet->users()->where('role', 'admin')->where('is_active', true)->count();
+            if ($activeEmployeesCount > 0 || $activeAdminsCount > 0) {
+                return redirect()->back()->with('error', "Outlet {$outlet->name} masih memiliki {$activeEmployeesCount} Karyawan dan {$activeAdminsCount} Admin aktif. Pindahkan pengguna ke outlet aktif lain sebelum menonaktifkan outlet ini.");
             }
         }
 

@@ -24,12 +24,12 @@ class AttendanceMonitoringService
      * Get KPI summary metrics for a given date in business timezone (Asia/Jakarta).
      * Accepts optional $items to avoid redundant getAttendanceMonitoringList calls.
      */
-    public function getSummaryMetrics(?string $dateStr = null, ?\App\Models\User $actor = null, ?array $items = null): array
+    public function getSummaryMetrics(?string $dateStr = null, ?\App\Models\User $actor = null, ?array $items = null, ?int $requestedOutletId = null): array
     {
         $targetDate = $dateStr ?: Carbon::now(config('app.timezone'))->toDateString();
 
         if ($items === null) {
-            $items = $this->getAttendanceMonitoringList(['date' => $targetDate], null, $actor);
+            $items = $this->getAttendanceMonitoringList(['date' => $targetDate], null, $actor, $requestedOutletId);
         }
 
         $collection = collect($items);
@@ -38,9 +38,13 @@ class AttendanceMonitoringService
             ->where('status', 'active')
             ->currentAttendanceWorkforce();
 
-        if ($actor && $actor->role === 'admin') {
-            $adminOutletId = $actor->outlet_id ?? $actor->employee?->outlet_id;
-            $employeesQuery->where('employees.outlet_id', $adminOutletId);
+        $outletScopeService = app(OutletScopeService::class);
+        $targetOutletId = $actor ? $outletScopeService->resolveRequestedOutlet($actor, $requestedOutletId) : $requestedOutletId;
+
+        if ($targetOutletId !== null) {
+            $employeesQuery->where('employees.outlet_id', $targetOutletId);
+        } elseif ($actor && ! $outletScopeService->isGlobalScope($actor)) {
+            $employeesQuery->whereRaw('1 = 0');
         }
 
         $totalEmployees = $employeesQuery->count();
@@ -65,7 +69,7 @@ class AttendanceMonitoringService
     /**
      * Get real-time filterable attendance monitoring items for a specific date.
      */
-    public function getAttendanceMonitoringList(array $filters = [], ?Carbon $nowServerTime = null, ?\App\Models\User $actor = null): array
+    public function getAttendanceMonitoringList(array $filters = [], ?Carbon $nowServerTime = null, ?\App\Models\User $actor = null, ?int $requestedOutletId = null): array
     {
         $targetDate = $filters['date'] ?? Carbon::now(config('app.timezone'))->toDateString();
         $filterEmployeeId = ! empty($filters['employee_id']) ? (int) $filters['employee_id'] : null;
@@ -77,9 +81,14 @@ class AttendanceMonitoringService
             ->where('status', 'active')
             ->currentAttendanceWorkforce();
 
-        if ($actor && $actor->role === 'admin') {
-            $adminOutletId = $actor->outlet_id ?? $actor->employee?->outlet_id;
-            $employeesQuery->where('employees.outlet_id', $adminOutletId);
+        $outletScopeService = app(OutletScopeService::class);
+        $inputOutletId = $requestedOutletId ?? ($filters['outlet_id'] ?? null);
+        $targetOutletId = $actor ? $outletScopeService->resolveRequestedOutlet($actor, $inputOutletId ? (int) $inputOutletId : null) : $inputOutletId;
+
+        if ($targetOutletId !== null) {
+            $employeesQuery->where('employees.outlet_id', $targetOutletId);
+        } elseif ($actor && ! $outletScopeService->isGlobalScope($actor)) {
+            $employeesQuery->whereRaw('1 = 0');
         }
 
         if ($filterEmployeeId) {
@@ -170,21 +179,25 @@ class AttendanceMonitoringService
      * Get past week trend data for admin dashboard chart.
      * Batches all 7-day data requests to prevent N+1 query loops.
      */
-    public function getPastWeekTrendData(?\App\Models\User $actor = null): array
+    public function getPastWeekTrendData(?\App\Models\User $actor = null, ?int $requestedOutletId = null): array
     {
         $today = Carbon::now(config('app.timezone'));
         $startDate = (clone $today)->subDays(6)->toDateString();
         $endDate = $today->toDateString();
 
-        // 1. Fetch active employees scoped by actor
+        // 1. Fetch active employees scoped by actor & requested outlet
         $employeesQuery = Employee::with(['jobTitle', 'outlet'])
             ->whereNull('deleted_at')
             ->where('status', 'active')
             ->currentAttendanceWorkforce();
 
-        if ($actor && $actor->role === 'admin') {
-            $adminOutletId = $actor->outlet_id ?? $actor->employee?->outlet_id;
-            $employeesQuery->where('employees.outlet_id', $adminOutletId);
+        $outletScopeService = app(OutletScopeService::class);
+        $targetOutletId = $actor ? $outletScopeService->resolveRequestedOutlet($actor, $requestedOutletId) : $requestedOutletId;
+
+        if ($targetOutletId !== null) {
+            $employeesQuery->where('employees.outlet_id', $targetOutletId);
+        } elseif ($actor && ! $outletScopeService->isGlobalScope($actor)) {
+            $employeesQuery->whereRaw('1 = 0');
         }
 
         $employees = $employeesQuery->orderBy('full_name', 'asc')->get();

@@ -52,7 +52,8 @@ class ScheduleController extends Controller
 
         $employeesQuery = Employee::where('status', 'active')
             ->currentAttendanceWorkforce();
-        $employeesQuery = $this->outletScopeService->scopeEmployeesFor($request->user(), $employeesQuery);
+        $inputOutletId = $request->has('outlet_id') ? (int) $request->input('outlet_id') : null;
+        $employeesQuery = $this->outletScopeService->scopeByRequestedOutlet($request->user(), $employeesQuery, $inputOutletId);
 
         $employees = $employeesQuery->orderBy('full_name')->get();
 

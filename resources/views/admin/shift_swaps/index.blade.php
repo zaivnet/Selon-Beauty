@@ -10,12 +10,15 @@
             <h2 class="text-xl font-black tracking-tight text-slate-950 dark:text-slate-100 md:text-2xl">Permintaan Pertukaran Jadwal Kerja</h2>
             <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Verifikasi dan setujui penukaran jadwal antar karyawan secara aman.</p>
         </div>
-        @if($pendingAdminCount > 0)
-            <span class="inline-flex items-center gap-1.5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 px-3 py-1 text-xs font-black text-indigo-800 dark:text-indigo-300">
-                <svg class="h-4 w-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                {{ $pendingAdminCount }} Menunggu Persetujuan Admin
-            </span>
-        @endif
+        <div class="flex flex-wrap items-center gap-2">
+            <x-outlet-filter />
+            @if($pendingAdminCount > 0)
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 px-3 py-1 text-xs font-black text-indigo-800 dark:text-indigo-300">
+                    <svg class="h-4 w-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    {{ $pendingAdminCount }} Menunggu Persetujuan Admin
+                </span>
+            @endif
+        </div>
     </div>
 
     <!-- Filters Section -->

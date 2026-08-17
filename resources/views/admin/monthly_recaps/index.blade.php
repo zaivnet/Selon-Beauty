@@ -172,7 +172,8 @@
                 <h2 class="mt-3 text-xl font-black tracking-tight text-slate-950 dark:text-slate-100 md:text-2xl">Dasar rekap sebelum proses payroll</h2>
                 <p class="mt-1.5 max-w-2xl text-xs font-medium leading-5 text-slate-500 dark:text-slate-400">Rekap ini berisi waktu kerja dan kehadiran, bukan slip atau perhitungan nominal gaji. Periksa semua data berstatus perlu review sebelum digunakan.</p>
             </div>
-            <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 md:mt-0 md:shrink-0">
+            <div class="mt-4 flex flex-wrap items-center gap-2 md:mt-0 md:shrink-0">
+                <x-outlet-filter />
                 <a href="{{ route('admin.monthly-recaps.export-summary', $query) }}" class="flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/40 px-4 text-xs font-extrabold text-emerald-800 dark:text-emerald-300 transition hover:bg-emerald-100 dark:hover:bg-emerald-900/40 focus:outline-none focus:ring-2 focus:ring-emerald-500">CSV Ringkasan</a>
                 <a href="{{ route('admin.monthly-recaps.export-detail', $query) }}" class="flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-xs font-extrabold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">CSV Detail</a>
             </div>

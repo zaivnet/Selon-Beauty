@@ -42,7 +42,7 @@ class MonthlyRecapController extends Controller
         $closeEligibility = $this->periodService->validateCloseEligibility($year, $month);
 
         $employeesQuery = Employee::whereNull('deleted_at')->currentAttendanceWorkforce();
-        $employeesQuery = $this->outletScopeService->scopeEmployeesFor($request->user(), $employeesQuery);
+        $employeesQuery = $this->outletScopeService->scopeByRequestedOutlet($request->user(), $employeesQuery, $filters['outlet_id'] ?? null);
         $employees = $employeesQuery->orderBy('full_name')->get();
 
         return view('admin.monthly_recaps.index', [
@@ -154,11 +154,16 @@ class MonthlyRecapController extends Controller
         $validated = $request->validate([
             'employee_id' => ['nullable', 'integer', 'exists:employees,id'],
             'job_title_id' => ['nullable', 'integer', 'exists:job_titles,id'],
+            'outlet_id' => ['nullable', 'integer'],
         ]);
+
+        $inputOutletId = $request->has('outlet_id') ? (int) $request->input('outlet_id') : null;
+        $requestedOutletId = $this->outletScopeService->resolveRequestedOutlet($request->user(), $inputOutletId);
 
         return [
             'employee_id' => $validated['employee_id'] ?? null,
             'job_title_id' => $validated['job_title_id'] ?? null,
+            'outlet_id' => $requestedOutletId,
             'actor' => $request->user(),
         ];
     }
