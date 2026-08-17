@@ -493,6 +493,8 @@ let faceDetectorReady = !isSelfieRequired;
 let faceValid = !isSelfieRequired;
 let activeFaceDetectionPromise = null;
 let faceDetectionInterval = null;
+let cameraError = false;
+let detectorError = false;
 
 function updateFaceIndicator(state) {
     const indicator = document.getElementById('face-detection-indicator');
@@ -525,6 +527,7 @@ async function initFacePresenceDetector() {
     if (!isSelfieRequired) return true;
     faceDetectorReady = false;
     faceValid = false;
+    detectorError = false;
     updateFaceIndicator('loading');
     try {
         facePresenceDetector?.destroy();
@@ -535,6 +538,7 @@ async function initFacePresenceDetector() {
         return true;
     } catch (error) {
         facePresenceDetector = null;
+        detectorError = true;
         updateFaceIndicator('error');
         const statusText = document.getElementById('camera-status-text');
         if (statusText) statusText.innerText = 'Coba tutup dan buka kembali kamera.';
@@ -542,7 +546,7 @@ async function initFacePresenceDetector() {
     }
 }
 
-async function detectValidFace(source, waitForCurrent = false) {
+async function detectValidFace(source, waitForCurrent = false, mode = 'video') {
     if (!faceDetectorReady || !facePresenceDetector || !source) return false;
     if (activeFaceDetectionPromise) {
         if (!waitForCurrent) return faceValid;
@@ -550,15 +554,18 @@ async function detectValidFace(source, waitForCurrent = false) {
         if (!faceDetectorReady || !facePresenceDetector) return false;
     }
 
-    activeFaceDetectionPromise = facePresenceDetector.detect(source);
+    activeFaceDetectionPromise = facePresenceDetector.detect(source, mode);
     try {
         const result = await activeFaceDetectionPromise;
         return window.hasAcceptableAttendanceFace(result);
     } catch (error) {
         faceDetectorReady = false;
         faceValid = false;
+        detectorError = true;
         stopFaceDetection();
         updateFaceIndicator('error');
+        const statusText = document.getElementById('camera-status-text');
+        if (statusText) statusText.innerText = 'Coba tutup dan buka kembali kamera.';
         return false;
     } finally {
         activeFaceDetectionPromise = null;
@@ -713,12 +720,9 @@ function stopCameraStream() {
 
 async function openCamera() {
     updateCameraUI('requesting', 'Meminta izin akses kamera browser...');
-    const detectorInitialized = await initFacePresenceDetector();
-    if (isSelfieRequired && !detectorInitialized) {
-        updateCameraUI('error', 'Deteksi wajah bermasalah. Coba tutup dan buka kembali kamera.');
-        return;
-    }
+    cameraError = false;
 
+    let video = null;
     try {
         const constraints = {
             video: {
@@ -735,14 +739,14 @@ async function openCamera() {
             cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
         }
 
-        const video = document.getElementById('camera-video');
+        video = document.getElementById('camera-video');
         if (video) {
             video.srcObject = cameraStream;
             await video.play();
-            startFaceDetection(video);
         }
-        updateCameraUI('active', 'Kamera aktif. Posisikan wajah di dalam area kamera.');
+        updateCameraUI('active', isSelfieRequired ? 'Memuat deteksi wajah...' : 'Kamera aktif.');
     } catch (err) {
+        cameraError = true;
         stopCameraStream();
         let msg = 'Gagal mengakses kamera.';
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
@@ -753,6 +757,20 @@ async function openCamera() {
             msg = 'Kamera sedang digunakan oleh aplikasi/tab lain.';
         }
         updateCameraUI('error', msg);
+        return;
+    }
+
+    if (isSelfieRequired) {
+        const detectorInitialized = await initFacePresenceDetector();
+        if (!detectorInitialized) {
+            const statusText = document.getElementById('camera-status-text');
+            if (statusText) statusText.innerText = 'Deteksi wajah bermasalah. Coba tutup dan buka kembali kamera.';
+            evaluateCaptureButton();
+            return;
+        }
+        if (video) startFaceDetection(video);
+        const statusText = document.getElementById('camera-status-text');
+        if (statusText) statusText.innerText = 'Posisikan wajah di dalam area kamera.';
     }
 }
 
@@ -815,7 +833,7 @@ async function confirmPhoto() {
     if (!preview || !preview.src || preview.src === '') return;
 
     if (isSelfieRequired) {
-        faceValid = await detectValidFace(document.getElementById('camera-canvas'), true);
+        faceValid = await detectValidFace(document.getElementById('camera-canvas'), true, 'image');
         if (!faceValid) {
             isSelfieConfirmed = false;
             updateFaceIndicator('missing');
@@ -878,7 +896,7 @@ async function validateSelectedSelfieFile(event) {
         const image = new Image();
         image.src = objectUrl;
         await image.decode();
-        faceValid = await detectValidFace(image, true);
+        faceValid = await detectValidFace(image, true, 'image');
         if (!faceValid) {
             event.target.value = '';
             updateFaceIndicator('missing');

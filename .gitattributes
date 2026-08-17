@@ -5,7 +5,7 @@
 *.html diff=html
 *.md diff=markdown
 *.php diff=php
-public/build/assets/vision_wasm_module_internal-*.js whitespace=-trailing-space
+public/vendor/mediapipe/**/*.js whitespace=-trailing-space
 
 /.github export-ignore
 CHANGELOG.md export-ignore

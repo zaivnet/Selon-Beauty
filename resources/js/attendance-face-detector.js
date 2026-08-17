@@ -1,8 +1,7 @@
-import mediapipeWasmLoaderUrl from '@mediapipe/tasks-vision/vision_wasm_module_internal.js?url';
-import mediapipeWasmBinaryUrl from '@mediapipe/tasks-vision/vision_wasm_module_internal.wasm?url';
 import mediapipeModelUrl from '../models/blaze_face_short_range.tflite?url';
 
 const DETECTION_WIDTH = 320;
+const MEDIAPIPE_WASM_ROOT = `${import.meta.env.BASE_URL}vendor/mediapipe/tasks-vision-1.0.0/wasm`;
 
 function sourceSize(source) {
     return {
@@ -40,6 +39,7 @@ export class AttendanceFaceDetector {
         this.detector = null;
         this.canvas = document.createElement('canvas');
         this.context = this.canvas.getContext('2d', { willReadFrequently: false });
+        this.lastVideoTimestamp = 0;
     }
 
     async init() {
@@ -65,22 +65,24 @@ export class AttendanceFaceDetector {
 
     async initFallback() {
         try {
-            const { FaceDetector: MediaPipeFaceDetector } = await import('@mediapipe/tasks-vision');
-            this.detector = await MediaPipeFaceDetector.createFromOptions({
-                wasmLoaderPath: mediapipeWasmLoaderUrl,
-                wasmBinaryPath: mediapipeWasmBinaryUrl,
-            }, {
+            const {
+                FaceDetector: MediaPipeFaceDetector,
+                FilesetResolver,
+            } = await import('@mediapipe/tasks-vision');
+            const vision = await FilesetResolver.forVisionTasks(MEDIAPIPE_WASM_ROOT);
+            this.detector = await MediaPipeFaceDetector.createFromOptions(vision, {
                 baseOptions: {
                     modelAssetPath: mediapipeModelUrl,
                     delegate: 'CPU',
                 },
-                runningMode: 'IMAGE',
+                runningMode: 'VIDEO',
                 minDetectionConfidence: 0.6,
                 minSuppressionThreshold: 0.3,
             });
             this.backend = 'mediapipe';
             return this.backend;
-        } catch (_error) {
+        } catch (error) {
+            console.warn('[FaceDetector] MediaPipe initialization failed:', error instanceof Error ? error.message : 'Unknown error');
             this.detector = null;
             this.backend = null;
             throw new Error('Face presence detector failed to initialize.');
@@ -91,7 +93,7 @@ export class AttendanceFaceDetector {
         return this.detector !== null;
     }
 
-    async detect(source) {
+    async detect(source, mode = 'video') {
         if (!this.isReady() || !source || !this.context) {
             throw new Error('Face presence detector is not ready.');
         }
@@ -115,11 +117,23 @@ export class AttendanceFaceDetector {
                 };
             } catch (_error) {
                 await this.initFallback();
-                return this.detect(source);
+                return this.detect(source, mode);
             }
         }
 
-        const result = this.detector.detect(this.canvas);
+        let result;
+        if (mode === 'image') {
+            await this.detector.setOptions({ runningMode: 'IMAGE' });
+            try {
+                result = this.detector.detect(this.canvas);
+            } finally {
+                await this.detector.setOptions({ runningMode: 'VIDEO' });
+            }
+        } else {
+            const now = performance.now();
+            this.lastVideoTimestamp = Math.max(now, this.lastVideoTimestamp + 1);
+            result = this.detector.detectForVideo(this.canvas, this.lastVideoTimestamp);
+        }
         return {
             faces: (result.detections || []).map((face) => normalizeBox(face.boundingBox)),
             frameWidth: this.canvas.width,

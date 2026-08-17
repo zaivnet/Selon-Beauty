@@ -14,9 +14,28 @@ class FaceDetectorArchitectureTest extends TestCase
         $this->assertSame('1.0.0', $package['dependencies']['@mediapipe/tasks-vision']);
         $this->assertStringContainsString("'FaceDetector' in window", $module);
         $this->assertStringContainsString("import('@mediapipe/tasks-vision')", $module);
+        $this->assertStringContainsString('FilesetResolver.forVisionTasks(MEDIAPIPE_WASM_ROOT)', $module);
         $this->assertStringContainsString('blaze_face_short_range.tflite?url', $module);
         $this->assertStringContainsString("this.backend = 'native'", $module);
         $this->assertStringContainsString("this.backend = 'mediapipe'", $module);
+        $this->assertStringNotContainsString('wasmLoaderPath:', $module);
+        $this->assertStringNotContainsString('wasmBinaryPath:', $module);
+        $this->assertStringContainsString('detectForVideo(this.canvas, this.lastVideoTimestamp)', $module);
+        $this->assertStringContainsString("setOptions({ runningMode: 'IMAGE' })", $module);
+    }
+
+    public function test_official_resolver_wasm_directory_contains_simd_and_non_simd_assets(): void
+    {
+        $directory = public_path('vendor/mediapipe/tasks-vision-1.0.0/wasm');
+
+        foreach ([
+            'vision_wasm_internal.js',
+            'vision_wasm_internal.wasm',
+            'vision_wasm_nosimd_internal.js',
+            'vision_wasm_nosimd_internal.wasm',
+        ] as $asset) {
+            $this->assertFileExists($directory.DIRECTORY_SEPARATOR.$asset);
+        }
     }
 
     public function test_model_is_local_versioned_and_has_expected_integrity(): void
@@ -41,12 +60,20 @@ class FaceDetectorArchitectureTest extends TestCase
             '✓ WAJAH TERDETEKSI',
             'DETEKSI WAJAH BERMASALAH',
             '(!faceDetectorReady || !faceValid)',
-            "detectValidFace(document.getElementById('camera-canvas'), true)",
+            "detectValidFace(document.getElementById('camera-canvas'), true, 'image')",
             'validateSelectedSelfieFile',
             'Wajah tidak terdeteksi pada foto. Ambil selfie ulang.',
         ] as $expected) {
             $this->assertStringContainsString($expected, $dashboard);
         }
+
+        $openCamera = substr($dashboard, strpos($dashboard, 'async function openCamera()'));
+        $this->assertLessThan(
+            strpos($openCamera, 'await initFacePresenceDetector()'),
+            strpos($openCamera, 'navigator.mediaDevices.getUserMedia'),
+        );
+        $this->assertStringContainsString('cameraError = true', $openCamera);
+        $this->assertStringContainsString('detectorError = true', $dashboard);
     }
 
     public function test_no_skin_colour_heuristic_exists(): void

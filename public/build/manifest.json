@@ -28,7 +28,7 @@
     "src": "_instrument-sans-600-normal-B9e8oLYv.woff"
   },
   "node_modules/@mediapipe/tasks-vision/vision_bundle.mjs": {
-    "file": "assets/vision_bundle-Cm9AP93a.js",
+    "file": "assets/vision_bundle-C_uIGY-R.js",
     "name": "vision_bundle",
     "src": "node_modules/@mediapipe/tasks-vision/vision_bundle.mjs",
     "isDynamicEntry": true,
@@ -36,16 +36,8 @@
       "resources/js/app.js"
     ]
   },
-  "node_modules/@mediapipe/tasks-vision/wasm/vision_wasm_module_internal.js": {
-    "file": "assets/vision_wasm_module_internal-CwBzQVDJ.js",
-    "src": "node_modules/@mediapipe/tasks-vision/wasm/vision_wasm_module_internal.js"
-  },
-  "node_modules/@mediapipe/tasks-vision/wasm/vision_wasm_module_internal.wasm": {
-    "file": "assets/vision_wasm_module_internal-CbqAzM1z.wasm",
-    "src": "node_modules/@mediapipe/tasks-vision/wasm/vision_wasm_module_internal.wasm"
-  },
   "resources/css/app.css": {
-    "file": "assets/app-COQbs4et.css",
+    "file": "assets/app-CYi5no4V.css",
     "name": "app",
     "names": [
       "app.css"
@@ -54,7 +46,7 @@
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-Cj5rIRLW.js",
+    "file": "assets/app-c3iYn5sU.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -62,8 +54,6 @@
       "node_modules/@mediapipe/tasks-vision/vision_bundle.mjs"
     ],
     "assets": [
-      "assets/vision_wasm_module_internal-CwBzQVDJ.js",
-      "assets/vision_wasm_module_internal-CbqAzM1z.wasm",
       "assets/blaze_face_short_range-CYqvruwv.tflite"
     ]
   },
