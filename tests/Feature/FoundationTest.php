@@ -37,8 +37,8 @@ class FoundationTest extends TestCase
 
         $response->assertStatus(200)
             ->assertSee('SELON BEAUTY')
-            ->assertSee('Status Operasional Hari Ini')
-            ->assertSee('Operasional hari ini aman');
+            ->assertSee('Status Operasional Global')
+            ->assertSee('Backup Operasional');
     }
 
     public function test_employee_dashboard_loads_without_error(): void

@@ -268,6 +268,17 @@ class AttendanceMonitoringTest extends TestCase
     {
         $today = Carbon::now('Asia/Jakarta')->toDateString();
 
+        $outlet = \App\Models\Outlet::create([
+            'name' => 'Outlet Test',
+            'code' => 'OTL-01',
+            'latitude' => -6.200000,
+            'longitude' => 106.816666,
+            'radius_meters' => 50,
+            'address' => 'Jl. Kebon Jeruk No. 12',
+            'is_active' => true,
+        ]);
+        $this->employee1->update(['outlet_id' => $outlet->id]);
+
         $activeShift = Shift::create([
             'name' => 'Shift Active Now',
             'code' => 'ACTIVE',
@@ -285,7 +296,7 @@ class AttendanceMonitoringTest extends TestCase
             'schedule_type' => 'work',
         ]);
 
-        $response = $this->actingAs($this->ownerUser)->get('/admin/dashboard');
+        $response = $this->actingAs($this->ownerUser)->get('/admin/dashboard?outlet_id=' . $outlet->id);
 
         $response->assertOk();
         $response->assertSee('Ayu Lestari');

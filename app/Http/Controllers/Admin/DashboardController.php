@@ -14,7 +14,8 @@ class DashboardController extends Controller
 {
     public function __construct(
         protected OperationalExceptionService $exceptionService,
-        protected AttendanceMonitoringService $monitoringService
+        protected AttendanceMonitoringService $monitoringService,
+        protected \App\Services\MultiOutletDashboardService $multiOutletDashboardService
     ) {}
 
     public function index(Request $request): View
@@ -35,6 +36,18 @@ class DashboardController extends Controller
         ], $now);
 
         $attendanceItems = $this->monitoringService->getAttendanceMonitoringList(['date' => $todayStr], $now, $actor, $requestedOutletId);
+
+        if ($requestedOutletId === null && $outletScopeService->isGlobalScope($actor)) {
+            $activeOutlets = $outletScopeService->getActiveOutlets();
+            $globalData = $this->multiOutletDashboardService->generateOverview($activeOutlets, $attendanceItems, $exceptions);
+
+            return view('admin.dashboard_global', [
+                'globalData' => $globalData,
+                'exceptions' => $exceptions,
+                'todayFormatted' => $now->locale('id')->isoFormat('dddd, D MMMM YYYY'),
+            ]);
+        }
+
         $metrics = $this->monitoringService->getSummaryMetrics($todayStr, $actor, $attendanceItems, $requestedOutletId);
         $trendData = $this->monitoringService->getPastWeekTrendData($actor, $requestedOutletId);
         $shifts = Shift::orderBy('name', 'asc')->get();

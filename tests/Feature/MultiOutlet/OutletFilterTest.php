@@ -118,7 +118,7 @@ class OutletFilterTest extends TestCase
     {
         $responseAll = $this->actingAs($this->owner)->get(route('admin.dashboard'));
         $responseAll->assertOk();
-        $responseAll->assertViewHas('metrics', fn ($m) => $m['total_employees'] === 2);
+        $responseAll->assertViewHas('globalData', fn ($data) => $data['global_kpi']['total_employees'] === 2);
 
         $responseFiltered = $this->actingAs($this->owner)->get(route('admin.dashboard', ['outlet_id' => $this->outlet1->id]));
         $responseFiltered->assertOk();
@@ -198,11 +198,11 @@ class OutletFilterTest extends TestCase
     {
         $responseInvalid = $this->actingAs($this->owner)->get(route('admin.dashboard', ['outlet_id' => 999999]));
         $responseInvalid->assertOk();
-        $responseInvalid->assertViewHas('metrics', fn ($m) => $m['total_employees'] === 2);
+        $responseInvalid->assertViewHas('globalData', fn ($data) => $data['global_kpi']['total_employees'] === 2);
 
         $responseInactive = $this->actingAs($this->owner)->get(route('admin.dashboard', ['outlet_id' => $this->inactiveOutlet->id]));
         $responseInactive->assertOk();
-        $responseInactive->assertViewHas('metrics', fn ($m) => $m['total_employees'] === 2);
+        $responseInactive->assertViewHas('globalData', fn ($data) => $data['global_kpi']['total_employees'] === 2);
     }
 
     public function test_outlet_deactivation_prevents_deactivating_outlet_with_active_users(): void

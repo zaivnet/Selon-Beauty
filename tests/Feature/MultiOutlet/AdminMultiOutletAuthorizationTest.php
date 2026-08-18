@@ -338,9 +338,8 @@ class AdminMultiOutletAuthorizationTest extends TestCase
 
         // Owner dashboard reflects total 2 employees
         $ownerResponse = $this->actingAs($this->owner)->get(route('admin.dashboard'));
-        $ownerResponse->assertStatus(200);
-        $ownerMetrics = $ownerResponse->viewData('metrics');
-        $this->assertEquals(2, $ownerMetrics['total_employees']);
+        $ownerMetrics = $ownerResponse->viewData('globalData');
+        $this->assertEquals(2, $ownerMetrics['global_kpi']['total_employees']);
 
         Carbon::setTestNow(); // Explicitly reset for safety
     }
