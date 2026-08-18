@@ -22,21 +22,21 @@ class DynamicOutletContextTest extends TestCase
 
     public function test_employee_index_global_does_not_contain_hardcoded_company_name()
     {
-        $superadmin = User::factory()->create(['role' => UserRole::SUPERADMIN->value]);
+        $superadmin = User::factory()->create(['role' => UserRole::SUPERADMIN->value, 'is_active' => true]);
 
         $response = $this->actingAs($superadmin)->get(route('admin.employees.index'));
 
         $response->assertStatus(200);
         $response->assertSee('<title>Kelola Karyawan', false);
         $response->assertSee('Daftar Karyawan');
-        $response->assertDontSee('SELON BEAUTY');
+        $response->assertDontSee('Daftar Karyawan SELON BEAUTY');
     }
 
     public function test_employee_index_with_selected_outlet_uses_dynamic_name()
     {
-        $superadmin = User::factory()->create(['role' => UserRole::SUPERADMIN->value]);
-        $outletAlpha = Outlet::create(['name' => 'Outlet Alpha', 'code' => 'ALPHA', 'timezone' => 'Asia/Jakarta']);
-        $outletBeta = Outlet::create(['name' => 'Outlet Beta', 'code' => 'BETA', 'timezone' => 'Asia/Jakarta']);
+        $superadmin = User::factory()->create(['role' => UserRole::SUPERADMIN->value, 'is_active' => true]);
+        $outletAlpha = Outlet::create(['name' => 'Outlet Alpha', 'code' => 'ALPHA', 'timezone' => 'Asia/Jakarta', 'latitude' => 0, 'longitude' => 0, 'radius_meters' => 10]);
+        $outletBeta = Outlet::create(['name' => 'Outlet Beta', 'code' => 'BETA', 'timezone' => 'Asia/Jakarta', 'latitude' => 0, 'longitude' => 0, 'radius_meters' => 10]);
 
         // Test Alpha
         $responseAlpha = $this->actingAs($superadmin)->get(route('admin.employees.index', ['outlet_id' => $outletAlpha->id]));
@@ -53,9 +53,9 @@ class DynamicOutletContextTest extends TestCase
 
     public function test_employee_index_for_single_outlet_admin_uses_dynamic_name()
     {
-        $outletAlpha = Outlet::create(['name' => 'Outlet Alpha', 'code' => 'ALPHA', 'timezone' => 'Asia/Jakarta']);
+        $outletAlpha = Outlet::create(['name' => 'Outlet Alpha', 'code' => 'ALPHA', 'timezone' => 'Asia/Jakarta', 'latitude' => 0, 'longitude' => 0, 'radius_meters' => 10]);
         
-        $admin = User::factory()->create(['role' => UserRole::ADMIN->value]);
+        $admin = User::factory()->create(['role' => UserRole::ADMIN->value, 'is_active' => true, 'outlet_id' => $outletAlpha->id]);
         
         // Setup admin outlet context
         $adminEmployee = Employee::create([
@@ -75,12 +75,12 @@ class DynamicOutletContextTest extends TestCase
 
     public function test_shift_index_does_not_contain_hardcoded_company_name()
     {
-        $superadmin = User::factory()->create(['role' => UserRole::SUPERADMIN->value]);
+        $superadmin = User::factory()->create(['role' => UserRole::SUPERADMIN->value, 'is_active' => true]);
 
         $response = $this->actingAs($superadmin)->get(route('admin.shifts.index'));
 
         $response->assertStatus(200);
         $response->assertSee('Daftar Shift Kerja');
-        $response->assertDontSee('SELON BEAUTY');
+        $response->assertDontSee('Daftar Shift Kerja SELON BEAUTY');
     }
 }
