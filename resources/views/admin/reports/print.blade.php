@@ -10,6 +10,9 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         @media print {
+            @page {
+                size: A4 landscape;
+            }
             .no-print {
                 display: none !important;
             }
@@ -35,26 +38,26 @@
 <body class="bg-slate-100 text-slate-900 p-4 md:p-8 antialiased min-h-screen">
 
     <!-- Action Bar (Hidden when printing) -->
-    <div class="max-w-6xl mx-auto mb-6 flex items-center justify-between no-print">
-        <a href="{{ route('admin.reports.attendance', $reportData['filters']) }}" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-extrabold rounded-xl text-xs transition-all flex items-center gap-1">
+    <div class="max-w-6xl mx-auto mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 no-print">
+        <a href="{{ route('admin.reports.attendance', $reportData['filters']) }}" class="px-4 py-3 sm:py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-extrabold rounded-xl text-sm sm:text-xs transition-all flex items-center justify-center sm:justify-start gap-1 text-center">
             &larr; Kembali ke Aplikasi
         </a>
-        <button onclick="window.print()" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-xl text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+        <button onclick="window.print()" class="px-5 py-3 sm:py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-xl text-sm sm:text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer">
+            <svg class="w-5 h-5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
             <span>Cetak Dokumen (Print / Save PDF)</span>
         </button>
     </div>
 
     <!-- Main Printable Document Container -->
-    <div class="max-w-6xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-slate-200 space-y-6">
+    <div class="max-w-6xl mx-auto bg-white p-4 sm:p-8 rounded-2xl shadow-sm border border-slate-200 space-y-6">
 
         <!-- Document Header -->
-        <div class="flex items-start justify-between border-b-2 border-slate-900 pb-4">
+        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between border-b-2 border-slate-900 pb-4 gap-4">
             <div>
-                <h1 class="text-2xl font-black tracking-tight text-slate-900">{{ $branding['company_name'] ?? ($branding['app_name'] ?? 'Aplikasi Absensi') }}</h1>
-                <h2 class="text-sm font-extrabold text-rose-700 uppercase tracking-widest mt-0.5">Laporan Kehadiran Karyawan</h2>
+                <h1 class="text-xl sm:text-2xl font-black tracking-tight text-slate-900">{{ $branding['company_name'] ?? ($branding['app_name'] ?? 'Aplikasi Absensi') }}</h1>
+                <h2 class="text-xs sm:text-sm font-extrabold text-rose-700 uppercase tracking-widest mt-0.5">Laporan Kehadiran Karyawan</h2>
             </div>
-            <div class="text-right text-xs space-y-0.5 text-slate-600 font-medium">
+            <div class="sm:text-right text-xs space-y-0.5 text-slate-600 font-medium">
                 <p><strong>Periode:</strong> {{ \Carbon\Carbon::parse($reportData['start_date'])->translatedFormat('d M Y') }} - {{ \Carbon\Carbon::parse($reportData['end_date'])->translatedFormat('d M Y') }}</p>
                 <p><strong>Dicetak Pada:</strong> {{ $printedAt }}</p>
             </div>
@@ -69,46 +72,50 @@
             $oHours = (int) floor($gSum['total_approved_overtime_minutes'] / 60);
             $oMins = $gSum['total_approved_overtime_minutes'] % 60;
         @endphp
-        <div class="grid grid-cols-8 gap-2 text-center text-xs">
-            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 text-center text-xs">
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex flex-col justify-center">
                 <span class="text-[10px] font-bold text-slate-500 block uppercase">Hari Kerja</span>
                 <span class="text-base font-black text-slate-900">{{ $gSum['scheduled_work_days'] }}</span>
             </div>
-            <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+            <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex flex-col justify-center">
                 <span class="text-[10px] font-bold text-emerald-700 block uppercase">Hadir</span>
                 <span class="text-base font-black text-emerald-900">{{ $gSum['present_count'] }}</span>
             </div>
-            <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+            <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl flex flex-col justify-center">
                 <span class="text-[10px] font-bold text-amber-700 block uppercase">Libur</span>
                 <span class="text-base font-black text-amber-900">{{ $gSum['holiday_count'] ?? 0 }}</span>
             </div>
-            <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl text-white">
+            <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl text-white flex flex-col justify-center">
                 <span class="text-[10px] font-bold text-slate-300 block uppercase">Rate</span>
                 <span class="text-base font-black">{{ number_format((float) ($gSum['attendance_rate'] ?? 0), 1) }}%</span>
             </div>
-            <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl">
-                <span class="text-[10px] font-bold text-rose-700 block uppercase">Tidak Hadir</span>
+            <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl flex flex-col justify-center">
+                <span class="text-[10px] font-bold text-rose-700 block uppercase">Tdk Hadir</span>
                 <span class="text-base font-black text-rose-900">{{ $gSum['absent_count'] }}</span>
             </div>
-            <div class="p-3 bg-indigo-50 border border-indigo-200 rounded-xl">
-                <span class="text-[10px] font-bold text-indigo-700 block uppercase">Izin/Sakit/Cuti</span>
+            <div class="p-3 bg-indigo-50 border border-indigo-200 rounded-xl flex flex-col justify-center">
+                <span class="text-[10px] font-bold text-indigo-700 block uppercase line-clamp-1">Izin/Skt/Cuti</span>
                 <span class="text-base font-black text-indigo-900">{{ $gSum['permission_count'] + $gSum['sick_count'] + $gSum['leave_count'] }}</span>
             </div>
-            <div class="p-3 bg-blue-50 border border-blue-200 rounded-xl">
-                <span class="text-[10px] font-bold text-blue-700 block uppercase">Total Worked</span>
+            <div class="p-3 bg-blue-50 border border-blue-200 rounded-xl flex flex-col justify-center">
+                <span class="text-[10px] font-bold text-blue-700 block uppercase">Worked</span>
                 <span class="text-sm font-black text-blue-900 font-mono">{{ $wHours }}j {{ $wMins }}m</span>
             </div>
-            <div class="p-3 bg-pink-50 border border-pink-200 rounded-xl">
-                <span class="text-[10px] font-bold text-pink-700 block uppercase">Approved Lembur</span>
-                <span class="text-sm font-black text-pink-900 font-mono">{{ $oHours }}j {{ $oMins }}m</span>
+            <div class="p-3 bg-pink-50 border border-pink-200 rounded-xl flex flex-col justify-center">
+                <span class="text-[10px] font-bold text-pink-700 block uppercase leading-tight">Apprv<br>Lembur</span>
+                <span class="text-sm font-black text-pink-900 font-mono mt-0.5">{{ $oHours }}j {{ $oMins }}m</span>
             </div>
         </div>
 
         <!-- Detail Table -->
         <div>
-            <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-2">Rincian Presensi Harian</h3>
-            <table class="w-full text-left text-xs border border-slate-300">
-                <thead class="bg-slate-100 text-slate-800 uppercase font-extrabold text-[10px]">
+            <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-2 flex justify-between items-center">
+                <span>Rincian Presensi Harian</span>
+                <span class="text-[10px] font-normal text-slate-500 sm:hidden no-print">Geser tabel &rarr;</span>
+            </h3>
+            <div class="overflow-x-auto print:overflow-visible -mx-4 sm:mx-0 px-4 sm:px-0">
+                <table class="w-full min-w-max print:min-w-full text-left text-xs border border-slate-300">
+                    <thead class="bg-slate-100 text-slate-800 uppercase font-extrabold text-[10px]">
                     <tr>
                         <th class="p-2 border border-slate-300">Tanggal</th>
                         <th class="p-2 border border-slate-300">NIP / Nama Karyawan</th>
@@ -156,10 +163,11 @@
                     @endforeach
                 </tbody>
             </table>
+            </div>
         </div>
 
         <!-- Document Footer / Signatures -->
-        <div class="pt-8 grid grid-cols-2 gap-8 text-center text-xs font-semibold">
+        <div class="pt-8 grid grid-cols-1 sm:grid-cols-2 gap-8 text-center text-xs font-semibold">
             <div>
                 <p>Dibuat Oleh,</p>
                 <div class="h-16"></div>
