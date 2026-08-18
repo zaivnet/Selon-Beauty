@@ -310,6 +310,8 @@ class AdminMultiOutletAuthorizationTest extends TestCase
 
     public function test_admin_a_dashboard_kpi_and_employee_table_are_scoped_to_outlet_a(): void
     {
+        Carbon::setTestNow(Carbon::parse('2026-08-17 12:00:00', config('app.timezone')));
+
         AttendanceRecord::create([
             'employee_id' => $this->employeeA->id,
             'outlet_id' => $this->outletA->id,
@@ -339,6 +341,8 @@ class AdminMultiOutletAuthorizationTest extends TestCase
         $ownerResponse->assertStatus(200);
         $ownerMetrics = $ownerResponse->viewData('metrics');
         $this->assertEquals(2, $ownerMetrics['total_employees']);
+
+        Carbon::setTestNow(); // Explicitly reset for safety
     }
 
     /* -------------------------------------------------------------------------- */
