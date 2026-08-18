@@ -26,6 +26,47 @@
 </head>
 <body class="bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen antialiased flex flex-col justify-between max-w-md mx-auto shadow-2xl border-x border-slate-200/70 dark:border-slate-800/70 relative transition-colors">
 
+    <!-- Global Navigation Loader Overlay (Employee Skeleton) -->
+    <div id="app-page-loader" class="flex flex-col h-full max-w-md mx-auto relative bg-slate-100 dark:bg-slate-950">
+        <!-- Header Skeleton -->
+        <header class="h-16 bg-gradient-to-r from-rose-700 via-rose-600 to-pink-600 px-4 py-3 flex items-center justify-between shadow-md" style="padding-top: max(0.75rem, env(safe-area-inset-top, 0px));">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-white/20"></div>
+                <div class="space-y-1">
+                    <div class="h-4 w-32 bg-white/30 rounded-md"></div>
+                    <div class="h-2.5 w-24 bg-white/20 rounded-md"></div>
+                </div>
+            </div>
+            <div class="w-8 h-8 rounded-full bg-white/20"></div>
+        </header>
+
+        <!-- Body Skeleton -->
+        <main class="flex-1 p-4 space-y-4">
+            <!-- Greeting Card Skeleton -->
+            <div class="h-20 bg-gradient-to-br from-rose-600 to-rose-700 rounded-2xl opacity-60"></div>
+            
+            <!-- Quick Actions Skeleton -->
+            <div class="grid grid-cols-3 gap-2.5">
+                <div class="h-24 ui-skeleton ui-skeleton-card"></div>
+                <div class="h-24 ui-skeleton ui-skeleton-card"></div>
+                <div class="h-24 ui-skeleton ui-skeleton-card"></div>
+            </div>
+
+            <!-- Main Status Card Skeleton -->
+            <div class="h-40 ui-skeleton ui-skeleton-card mt-2"></div>
+            <div class="h-32 ui-skeleton ui-skeleton-card mt-2"></div>
+        </main>
+        
+        <!-- Bottom Nav Skeleton -->
+        <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/95 dark:bg-slate-950/95 border-t border-slate-200/80 dark:border-slate-800/80 py-2 px-2 flex justify-around items-center" style="padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));">
+            <div class="w-10 h-10 ui-skeleton ui-skeleton-circle"></div>
+            <div class="w-10 h-10 ui-skeleton ui-skeleton-circle"></div>
+            <div class="w-12 h-12 ui-skeleton ui-skeleton-circle -mt-4 border-2 border-white dark:border-slate-900"></div>
+            <div class="w-10 h-10 ui-skeleton ui-skeleton-circle"></div>
+            <div class="w-10 h-10 ui-skeleton ui-skeleton-circle"></div>
+        </nav>
+    </div>
+
     <!-- Top Header -->
     <header class="bg-gradient-to-r from-rose-700 via-rose-600 to-pink-600 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20 shadow-md" style="padding-top: max(0.75rem, env(safe-area-inset-top, 0px));">
         <div class="flex items-center gap-2.5">

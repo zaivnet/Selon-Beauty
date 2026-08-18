@@ -53,13 +53,50 @@
       "
       class="bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen antialiased flex flex-col md:flex-row relative transition-colors duration-200">
 
+    <!-- Global Navigation Loader Overlay (Admin Skeleton) -->
+    <div id="app-page-loader" class="flex flex-col md:flex-row">
+        <!-- Sidebar Skeleton -->
+        <aside class="hidden md:flex flex-col w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex-shrink-0 h-screen p-4">
+            <div class="h-10 w-32 ui-skeleton mb-8"></div>
+            <div class="space-y-4">
+                <div class="ui-skeleton-text"></div>
+                <div class="ui-skeleton-text w-3/4"></div>
+                <div class="ui-skeleton-text"></div>
+                <div class="ui-skeleton-text w-5/6"></div>
+                <div class="ui-skeleton-text"></div>
+            </div>
+        </aside>
+        
+        <!-- Main Content Skeleton -->
+        <div class="flex-1 flex flex-col min-h-screen">
+            <!-- Topbar Skeleton -->
+            <header class="h-16 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-6 flex items-center shadow-xs">
+                <div class="w-8 h-8 md:hidden ui-skeleton ui-skeleton-card mr-4"></div>
+                <div class="h-6 w-40 ui-skeleton"></div>
+            </header>
+            
+            <!-- Body Skeleton -->
+            <main class="flex-1 p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
+                <!-- KPI Row -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="h-28 ui-skeleton ui-skeleton-card"></div>
+                    <div class="h-28 ui-skeleton ui-skeleton-card"></div>
+                    <div class="h-28 hidden md:block ui-skeleton ui-skeleton-card"></div>
+                    <div class="h-28 hidden lg:block ui-skeleton ui-skeleton-card"></div>
+                </div>
+                <!-- Main Panel -->
+                <div class="h-96 ui-skeleton ui-skeleton-card mt-6"></div>
+            </main>
+        </div>
+    </div>
+
     <!-- Mobile Sidebar Backdrop Overlay -->
     <div x-show="mobileOpen"
          @click="mobileOpen = false"
-         x-transition:enter="transition-opacity ease-linear duration-200"
+         x-transition:enter="transition-opacity ease-linear duration-150"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
-         x-transition:leave="transition-opacity ease-linear duration-150"
+         x-transition:leave="transition-opacity ease-linear duration-100"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
          class="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-xs md:hidden"

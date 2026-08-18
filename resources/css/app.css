@@ -298,3 +298,81 @@ html.dark main {
     background-color: rgba(30, 41, 59, 0.6);
     border-color: #334155;
 }
+
+/* ==========================================================================
+   Skeleton Loading System & Transitions (Sprint 07)
+   ========================================================================== */
+
+/* Shimmer Animation Base */
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.ui-skeleton {
+    background-color: #e2e8f0; /* slate-200 */
+    background-image: linear-gradient(90deg, #e2e8f0 0px, #f1f5f9 40px, #e2e8f0 80px);
+    background-size: 600px;
+    animation: shimmer 1.5s infinite linear;
+    border-radius: 0.25rem;
+}
+
+.dark .ui-skeleton {
+    background-color: #1e293b; /* slate-800 */
+    background-image: linear-gradient(90deg, #1e293b 0px, #334155 40px, #1e293b 80px);
+}
+
+.ui-skeleton-text {
+    height: 1rem; /* 16px */
+    width: 100%;
+    border-radius: 0.375rem; /* rounded-md */
+}
+
+.ui-skeleton-title {
+    height: 1.5rem; /* 24px */
+    width: 60%;
+    border-radius: 0.5rem;
+}
+
+.ui-skeleton-circle {
+    border-radius: 9999px;
+}
+
+.ui-skeleton-card {
+    border-radius: 1rem;
+}
+
+/* Page Loader Overlay */
+#app-page-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background-color: #f8fafc;
+    transition: opacity 150ms ease-in-out, visibility 150ms ease-in-out;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.dark #app-page-loader {
+    background-color: #020617; /* slate-950 */
+}
+
+/* When loader is active */
+#app-page-loader.active {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Disable animations for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .ui-skeleton {
+        animation: none !important;
+        background-image: none !important;
+    }
+    #app-page-loader {
+        transition: none !important;
+    }
+}
