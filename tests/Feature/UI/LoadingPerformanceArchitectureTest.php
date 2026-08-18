@@ -67,5 +67,7 @@ class LoadingPerformanceArchitectureTest extends TestCase
         $this->assertStringContainsString("document.getElementById('app-page-loader')", $jsContent);
         $this->assertStringContainsString("document.addEventListener('submit'", $jsContent);
         $this->assertStringContainsString("window.addEventListener('pageshow'", $jsContent);
+        $this->assertStringContainsString("requestAnimationFrame", $jsContent);
+        $this->assertStringContainsString("e.preventDefault()", $jsContent);
     }
 }

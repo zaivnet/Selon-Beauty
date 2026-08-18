@@ -36,8 +36,18 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const url = new URL(href, window.location.origin);
             if (url.origin === window.location.origin && url.pathname !== window.location.pathname) {
-                // Show loader immediately
+                // 1. Prevent immediate native navigation to allow paint
+                e.preventDefault();
+
+                // 2. Show loader immediately
                 pageLoader.classList.add('active');
+
+                // 3. Guarantee paint opportunity before navigation blocks the thread
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        window.location.href = href;
+                    });
+                });
             }
         } catch (err) {
             // Ignore invalid URLs

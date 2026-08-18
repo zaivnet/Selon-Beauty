@@ -361,6 +361,7 @@ html.dark main {
 
 /* When loader is active */
 #app-page-loader.active {
+    transition: none; /* Show instantly, do not wait for fade in during navigation */
     visibility: visible;
     opacity: 1;
     pointer-events: auto;
