@@ -24,7 +24,7 @@
                 <span class="inline-block w-2.5 h-2.5 rounded-full bg-rose-600 dark:bg-rose-500"></span>
                 <span class="text-[11px] font-black uppercase tracking-wider text-rose-700 dark:text-rose-400">Workforce Control</span>
             </div>
-            <h1 class="text-xl md:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight mt-1">Status Operasional Hari Ini</h1>
+            <h1 class="text-xl md:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight mt-1 ui-page-header">Status Operasional Hari Ini</h1>
             <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">Ringkasan operasional hari ini &bull; {{ $todayFormatted }}</p>
         </div>
 
@@ -36,7 +36,7 @@
                 <span>{{ $todayFormatted }}</span>
             </span>
 
-            <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center gap-1.5 text-xs font-extrabold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 px-3.5 py-2 rounded-xl transition-all shadow-xs cursor-pointer">
+            <a href="{{ route('admin.dashboard') }}" class="ui-btn ui-btn-secondary h-9 text-xs">
                 <svg class="w-4 h-4 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                 <span>Refresh</span>
             </a>
@@ -193,13 +193,13 @@
                                x-model="search"
                                placeholder="Cari karyawan..."
                                aria-label="Cari karyawan"
-                               class="w-full pl-9 pr-3 py-2 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500">
-                        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                               class="ui-input pl-9 h-10 text-xs font-bold">
+                        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </div>
 
                     <select x-model="statusFilter"
                             aria-label="Filter status absensi"
-                            class="w-full sm:w-auto px-3 py-2 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-rose-500">
+                            class="ui-select w-full sm:w-auto h-10 text-xs font-bold">
                         <option value="all">Semua Status</option>
                         <option value="present">Hadir / Tepat Waktu</option>
                         <option value="late">Terlambat</option>
@@ -209,10 +209,10 @@
                 </div>
 
                 <!-- Full Width Table Container -->
-                <div class="overflow-x-auto w-full border border-slate-200/80 dark:border-slate-800 rounded-xl">
-                    <table class="w-full text-left border-collapse">
+                <div class="ui-table-container">
+                    <table class="ui-table">
                         <thead>
-                            <tr class="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200/80 dark:border-slate-800 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                            <tr>
                                 <th class="py-2.5 px-3.5">Karyawan</th>
                                 <th class="py-2.5 px-3.5">Shift</th>
                                 <th class="py-2.5 px-3.5">Check-in</th>
@@ -220,7 +220,7 @@
                                 <th class="py-2.5 px-3.5 text-right">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs font-medium">
+                        <tbody class="text-xs font-medium">
                             @forelse(collect($attendanceItems)->take(7) as $item)
                                 @php
                                     $emp = $item['employee'];
@@ -302,7 +302,7 @@
                     </div>
 
                     <div class="pt-2">
-                        <a href="{{ route('admin.operational-exceptions.index') }}" class="w-full py-2.5 px-3 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 font-extrabold rounded-xl text-xs flex items-center justify-center gap-1 transition-colors border border-rose-200 dark:border-rose-800">
+                        <a href="{{ route('admin.operational-exceptions.index') }}" class="ui-btn ui-btn-secondary w-full border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60">
                             <span>Lihat Semua Pusat Perhatian</span>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                         </a>
@@ -394,7 +394,7 @@
                     @endif
 
                     @if(in_array(Auth::user()->role, ['owner', 'superadmin'], true))
-                        <a href="{{ route('admin.settings.backups.index') }}" class="w-full py-2 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-extrabold rounded-xl text-xs flex items-center justify-center gap-1 transition-colors">
+                        <a href="{{ route('admin.settings.backups.index') }}" class="ui-btn ui-btn-secondary w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border-transparent">
                             <span>Buka Backup</span>
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                         </a>

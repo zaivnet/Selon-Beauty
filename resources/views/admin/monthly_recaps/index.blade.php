@@ -28,7 +28,7 @@
 <div class="space-y-5" x-data="{ showCloseModal: false, showReopenModal: false }">
     <nav class="flex gap-1 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1 shadow-xs transition-colors" aria-label="Jenis laporan">
         <a href="{{ route('admin.reports.attendance') }}" class="flex min-h-[44px] shrink-0 items-center rounded-lg px-4 text-xs font-extrabold text-slate-500 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200">Laporan Kehadiran</a>
-        <a href="{{ route('admin.monthly-recaps.index', $query) }}" aria-current="page" class="flex min-h-[44px] shrink-0 items-center rounded-lg bg-slate-900 dark:bg-rose-600 px-4 text-xs font-extrabold text-white shadow-sm">Rekap Bulanan</a>
+        <a href="{{ route('admin.monthly-recaps.index', $query) }}" aria-current="page" class="flex min-h-[44px] shrink-0 items-center rounded-lg bg-slate-900 dark:bg-rose-600 px-4 text-xs font-extrabold text-white shadow-sm ui-btn ui-btn-primary">Rekap Bulanan</a>
     </nav>
 
     <!-- Period Closing Status Card -->
@@ -191,31 +191,31 @@
         <form action="{{ route('admin.monthly-recaps.index') }}" method="GET" class="grid grid-cols-1 gap-3 text-xs sm:grid-cols-2 xl:grid-cols-6">
             <div class="min-w-0">
                 <label for="recap-month" class="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">Bulan</label>
-                <select id="recap-month" name="month" class="min-h-[44px] w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-bold text-slate-800 dark:text-slate-100 focus:border-rose-500 focus:ring-rose-500">
+                <select id="recap-month" name="month" class="min-h-[44px] w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-bold text-slate-800 dark:text-slate-100 focus:border-rose-500 focus:ring-rose-500 ui-input ui-select">
                     @foreach(range(1, 12) as $month)<option value="{{ $month }}" @selected((int) $filters['month'] === $month)>{{ \Carbon\Carbon::create(null, $month, 1)->locale('id')->translatedFormat('F') }}</option>@endforeach
                 </select>
             </div>
             <div class="min-w-0">
                 <label for="recap-year" class="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">Tahun</label>
-                <select id="recap-year" name="year" class="min-h-[44px] w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-bold text-slate-800 dark:text-slate-100 focus:border-rose-500 focus:ring-rose-500">
+                <select id="recap-year" name="year" class="min-h-[44px] w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-bold text-slate-800 dark:text-slate-100 focus:border-rose-500 focus:ring-rose-500 ui-input ui-select">
                     @foreach(range(now()->year + 1, now()->year - 5) as $year)<option value="{{ $year }}" @selected((int) $filters['year'] === $year)>{{ $year }}</option>@endforeach
                 </select>
             </div>
             <div class="min-w-0 sm:col-span-2 xl:col-span-1">
                 <label for="recap-employee" class="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">Karyawan</label>
-                <select id="recap-employee" name="employee_id" class="min-h-[44px] w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-bold text-slate-800 dark:text-slate-100 focus:border-rose-500 focus:ring-rose-500">
+                <select id="recap-employee" name="employee_id" class="min-h-[44px] w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-bold text-slate-800 dark:text-slate-100 focus:border-rose-500 focus:ring-rose-500 ui-input ui-select">
                     <option value="">Semua karyawan</option>
                     @foreach($employees as $employee)<option value="{{ $employee->id }}" @selected((int) ($filters['employee_id'] ?? 0) === $employee->id)>{{ $employee->full_name }}</option>@endforeach
                 </select>
             </div>
             <div class="min-w-0 sm:col-span-2 xl:col-span-1">
                 <label for="recap-job-title" class="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">Jabatan</label>
-                <select id="recap-job-title" name="job_title_id" class="min-h-[44px] w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-bold text-slate-800 dark:text-slate-100 focus:border-rose-500 focus:ring-rose-500">
+                <select id="recap-job-title" name="job_title_id" class="min-h-[44px] w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-bold text-slate-800 dark:text-slate-100 focus:border-rose-500 focus:ring-rose-500 ui-input ui-select">
                     <option value="">Semua jabatan</option>
                     @foreach($jobTitles as $jobTitle)<option value="{{ $jobTitle->id }}" @selected((int) ($filters['job_title_id'] ?? 0) === $jobTitle->id)>{{ $jobTitle->name }}</option>@endforeach
                 </select>
             </div>
-            <button class="min-h-[44px] self-end rounded-xl bg-rose-600 px-4 font-extrabold text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2">Terapkan Filter</button>
+            <button class="min-h-[44px] self-end rounded-xl bg-rose-600 px-4 font-extrabold text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 ui-btn ui-btn-primary">Terapkan Filter</button>
             <a href="{{ route('admin.monthly-recaps.index') }}" class="flex min-h-[44px] self-end items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 px-4 font-extrabold text-slate-700 dark:text-slate-300 transition hover:bg-slate-200 dark:hover:bg-slate-700">Reset</a>
         </form>
     </section>
@@ -225,8 +225,8 @@
         @if($recaps->isEmpty())
             <div class="px-5 py-14 text-center"><div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"><svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M9 17v-6m4 6V7m4 10v-3M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div><p class="mt-3 text-sm font-black text-slate-800 dark:text-slate-200">Belum ada data rekap</p><p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Coba ubah periode atau filter karyawan.</p></div>
         @else
-            <div class="hidden overflow-x-auto md:block">
-                <table class="w-full min-w-[1180px] text-left text-xs border-collapse">
+            <div class="hidden overflow-x-auto md:block ui-table-container">
+                <table class="w-full min-w-[1180px] text-left text-xs border-collapse ui-table">
                     <thead class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400"><tr><th class="sticky left-0 bg-slate-50 dark:bg-slate-800/90 px-4 py-3">Karyawan</th><th class="px-3 py-3">Status</th><th class="px-3 py-3">Hari Kerja</th><th class="px-3 py-3">Hadir</th><th class="px-3 py-3">Terlambat</th><th class="px-3 py-3">Tidak Hadir</th><th class="px-3 py-3">I / S / C</th><th class="px-3 py-3">Libur</th><th class="px-3 py-3">Jam Kerja</th><th class="px-3 py-3">Lembur Credited</th><th class="px-3 py-3">Rate</th></tr></thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                     @foreach($recaps as $recap) @php($s = $recap['summary'])

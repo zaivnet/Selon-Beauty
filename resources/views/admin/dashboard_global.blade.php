@@ -23,7 +23,7 @@
                 <span class="inline-block w-2.5 h-2.5 rounded-full bg-indigo-600 dark:bg-indigo-500 shadow-[0_0_8px_rgba(79,70,229,0.6)]"></span>
                 <span class="text-[11px] font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-400">Owner & Superadmin</span>
             </div>
-            <h1 class="text-xl md:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight mt-1">Status Operasional Global</h1>
+            <h1 class="text-xl md:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight mt-1 ui-page-header">Status Operasional Global</h1>
             <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">Ringkasan operasional di seluruh outlet &bull; {{ $todayFormatted }}</p>
         </div>
 

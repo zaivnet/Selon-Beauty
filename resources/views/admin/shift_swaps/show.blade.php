@@ -137,12 +137,12 @@
                 @csrf
                 <div>
                     <label for="reject-reason" class="mb-1 block text-xs font-black text-slate-700 dark:text-slate-300">Alasan Penolakan Admin <span class="text-rose-600 dark:text-rose-400">*</span></label>
-                    <textarea id="reject-reason" name="reason" rows="3" required minlength="5" placeholder="Tuliskan alasan penolakan..." class="w-full rounded-xl border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-xs focus:border-rose-500 focus:ring-rose-500"></textarea>
+                    <textarea id="reject-reason" name="reason" rows="3" required minlength="5" placeholder="Tuliskan alasan penolakan..." class="w-full rounded-xl border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-xs focus:border-rose-500 focus:ring-rose-500 ui-input"></textarea>
                     <p class="mt-1 text-[10px] text-slate-500 dark:text-slate-400">Minimal 5 karakter wajib diisi.</p>
                 </div>
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" @click="rejectModal = false" class="min-h-[44px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 px-4 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700">Batal</button>
-                    <button type="submit" class="min-h-[44px] rounded-xl bg-rose-600 px-5 text-xs font-black text-white hover:bg-rose-700">Tolak Permintaan</button>
+                    <button type="submit" class="min-h-[44px] rounded-xl bg-rose-600 px-5 text-xs font-black text-white hover:bg-rose-700 ui-btn ui-btn-primary">Tolak Permintaan</button>
                 </div>
             </form>
         </div>

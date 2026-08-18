@@ -45,7 +45,7 @@
             <h1 class="text-xl font-black tracking-tight text-slate-950 dark:text-slate-100 md:text-2xl">Pertukaran Jadwal Kerja</h1>
             <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Ajukan atau kelola penukaran shift dengan rekan kerja secara aman.</p>
         </div>
-        <a href="{{ route('employee.shift-swaps.create') }}" class="flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-slate-900 dark:bg-rose-600 px-5 text-xs font-black text-white shadow-xs hover:bg-slate-800 dark:hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-slate-900">
+        <a href="{{ route('employee.shift-swaps.create') }}" class="flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-slate-900 dark:bg-rose-600 px-5 text-xs font-black text-white shadow-xs hover:bg-slate-800 dark:hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-slate-900 ui-btn ui-btn-primary">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             Ajukan Tukar Jadwal
         </a>
@@ -226,7 +226,7 @@
                     <label for="swap-modal-reason" class="mb-1 block text-xs font-black text-slate-700 dark:text-slate-300">
                         Alasan / Catatan Respon <span id="swap-modal-reason-required" class="text-rose-600 hidden">*</span>
                     </label>
-                    <textarea id="swap-modal-reason" name="reason" rows="3" placeholder="Tuliskan catatan alasan..." class="w-full rounded-xl border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs focus:border-slate-900 dark:focus:border-rose-500 focus:ring-slate-900 dark:focus:ring-rose-500"></textarea>
+                    <textarea id="swap-modal-reason" name="reason" rows="3" placeholder="Tuliskan catatan alasan..." class="w-full rounded-xl border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs focus:border-slate-900 dark:focus:border-rose-500 focus:ring-slate-900 dark:focus:ring-rose-500 ui-input"></textarea>
                     <p id="swap-modal-reason-help" class="mt-1 text-[10px] text-slate-500 dark:text-slate-400 hidden">Wajib diisi minimal 5 karakter jika menolak.</p>
                 </div>
                 <div class="flex justify-end gap-2 pt-2">

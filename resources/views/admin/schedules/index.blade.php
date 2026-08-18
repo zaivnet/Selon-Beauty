@@ -107,8 +107,8 @@
             </div>
         @else
             <!-- Desktop Weekly Matrix Grid (Hidden on Mobile) -->
-            <div class="hidden md:block overflow-x-auto">
-                <table class="w-full text-left text-xs border-collapse">
+            <div class="hidden md:block overflow-x-auto ui-table-container">
+                <table class="w-full text-left text-xs border-collapse ui-table">
                     <thead>
                         <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider bg-slate-50/60 dark:bg-slate-800/60">
                             <th class="p-3 w-48 min-w-[180px]">Karyawan</th>
@@ -196,7 +196,7 @@
                                 {{ $day['day_name'] }}, {{ $day['short_date'] }}
                             </span>
                             @if($day['is_today'])
-                                <span class="px-2 py-0.5 bg-rose-600 text-white font-bold text-[10px] rounded-full">HARI INI</span>
+                                <span class="px-2 py-0.5 bg-rose-600 text-white font-bold text-[10px] rounded-full ui-btn ui-btn-primary">HARI INI</span>
                             @endif
                         </div>
 
@@ -268,7 +268,7 @@
 
             <div>
                 <label for="modal_employee_id" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Karyawan *</label>
-                <select name="employee_id" id="modal_employee_id" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+                <select name="employee_id" id="modal_employee_id" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 ui-select">
                     <option value="">-- Pilih Karyawan --</option>
                     @foreach($employees as $emp)
                         <option value="{{ $emp->id }}">{{ $emp->full_name }} ({{ $emp->employee_code }})</option>
@@ -283,7 +283,7 @@
 
             <div>
                 <label for="modal_schedule_type" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Jenis Jadwal *</label>
-                <select name="schedule_type" id="modal_schedule_type" required onchange="toggleShiftSelect(this.value)" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+                <select name="schedule_type" id="modal_schedule_type" required onchange="toggleShiftSelect(this.value)" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 ui-select">
                     <option value="work">Kerja (Masuk Shift)</option>
                     <option value="off">OFF / Libur Karyawan</option>
                     <option value="holiday">Holiday / Hari Libur Toko</option>
@@ -292,7 +292,7 @@
 
             <div id="container-shift-select">
                 <label for="modal_shift_id" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Shift Kerja *</label>
-                <select name="shift_id" id="modal_shift_id" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+                <select name="shift_id" id="modal_shift_id" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 ui-select">
                     <option value="">-- Pilih Shift Kerja --</option>
                     @foreach($shifts as $sf)
                         <option value="{{ $sf->id }}">{{ $sf->name }} ({{ $sf->code }} • {{ substr($sf->start_time, 0, 5) }}-{{ substr($sf->end_time, 0, 5) }}) {{ !$sf->is_active ? '[NONAKTIF]' : '' }}</option>
@@ -312,7 +312,7 @@
 
                 <div class="flex items-center gap-2 ml-auto">
                     <button type="button" onclick="document.getElementById('modal-assign-schedule').classList.add('hidden')" class="min-h-[44px] px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200">Batal</button>
-                    <button type="submit" id="btn_submit_schedule" class="min-h-[44px] px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-colors cursor-pointer">
+                    <button type="submit" id="btn_submit_schedule" class="min-h-[44px] px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-colors cursor-pointer ui-btn ui-btn-primary">
                         Simpan Jadwal
                     </button>
                 </div>

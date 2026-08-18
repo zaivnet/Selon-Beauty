@@ -109,7 +109,7 @@
             </div>
 
             <div class="flex items-center justify-end gap-3 pt-2">
-                <button type="submit" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer">
+                <button type="submit" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all cursor-pointer ui-btn ui-btn-primary">
                     Simpan Perubahan Shift
                 </button>
             </div>

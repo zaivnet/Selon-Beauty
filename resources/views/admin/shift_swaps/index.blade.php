@@ -26,7 +26,7 @@
         <form action="{{ route('admin.shift-swaps.index') }}" method="GET" class="grid grid-cols-1 gap-3 text-xs sm:grid-cols-2 lg:grid-cols-4">
             <div>
                 <label for="filter-status" class="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">Status</label>
-                <select id="filter-status" name="status" class="min-h-[44px] w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-bold text-slate-800 dark:text-slate-100 focus:border-rose-500 focus:ring-rose-500">
+                <select id="filter-status" name="status" class="min-h-[44px] w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-bold text-slate-800 dark:text-slate-100 focus:border-rose-500 focus:ring-rose-500 ui-input ui-select">
                     <option value="pending_admin" @selected($statusFilter === 'pending_admin')>Menunggu Admin (Default)</option>
                     <option value="pending_target" @selected($statusFilter === 'pending_target')>Menunggu Rekan</option>
                     <option value="approved" @selected($statusFilter === 'approved')>Disetujui</option>
@@ -37,7 +37,7 @@
             </div>
             <div>
                 <label for="filter-employee" class="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">Karyawan</label>
-                <select id="filter-employee" name="employee_id" class="min-h-[44px] w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-bold text-slate-800 dark:text-slate-100 focus:border-rose-500 focus:ring-rose-500">
+                <select id="filter-employee" name="employee_id" class="min-h-[44px] w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-bold text-slate-800 dark:text-slate-100 focus:border-rose-500 focus:ring-rose-500 ui-input ui-select">
                     <option value="">Semua Karyawan</option>
                     @foreach($employees as $emp)
                         <option value="{{ $emp->id }}" @selected($employeeFilter === $emp->id)>{{ $emp->full_name }}</option>
@@ -46,7 +46,7 @@
             </div>
             <div>
                 <label for="filter-date" class="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">Tanggal</label>
-                <input type="date" id="filter-date" name="date" value="{{ $dateFilter }}" class="min-h-[44px] w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-bold text-slate-800 dark:text-slate-100 focus:border-rose-500 focus:ring-rose-500">
+                <input type="date" id="filter-date" name="date" value="{{ $dateFilter }}" class="min-h-[44px] w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-bold text-slate-800 dark:text-slate-100 focus:border-rose-500 focus:ring-rose-500 ui-input">
             </div>
             <div class="flex gap-2 self-end">
                 <button type="submit" class="flex min-h-[44px] flex-1 items-center justify-center rounded-xl bg-slate-900 dark:bg-slate-700 px-4 font-extrabold text-white transition hover:bg-slate-800 dark:hover:bg-slate-600">
@@ -71,8 +71,8 @@
             </div>
         @else
             <!-- Desktop Table View -->
-            <div class="hidden overflow-x-auto md:block">
-                <table class="w-full min-w-[1000px] text-left text-xs border-collapse">
+            <div class="hidden overflow-x-auto md:block ui-table-container">
+                <table class="w-full min-w-[1000px] text-left text-xs border-collapse ui-table">
                     <thead class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">
                         <tr>
                             <th class="px-4 py-3">Tanggal Diajukan</th>
@@ -199,12 +199,12 @@
                 @csrf
                 <div>
                     <label for="admin-reject-reason" class="mb-1 block text-xs font-black text-slate-700 dark:text-slate-300">Alasan Penolakan <span class="text-rose-600 dark:text-rose-400">*</span></label>
-                    <textarea id="admin-reject-reason" name="reason" rows="3" required minlength="5" placeholder="Tuliskan alasan penolakan admin..." class="w-full rounded-xl border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-xs focus:border-rose-500 focus:ring-rose-500"></textarea>
+                    <textarea id="admin-reject-reason" name="reason" rows="3" required minlength="5" placeholder="Tuliskan alasan penolakan admin..." class="w-full rounded-xl border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-xs focus:border-rose-500 focus:ring-rose-500 ui-input"></textarea>
                     <p class="mt-1 text-[10px] text-slate-500 dark:text-slate-400">Minimal 5 karakter wajib diisi.</p>
                 </div>
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" @click="rejectModal = false" class="min-h-[44px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 px-4 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700">Batal</button>
-                    <button type="submit" class="min-h-[44px] rounded-xl bg-rose-600 px-5 text-xs font-black text-white hover:bg-rose-700">Tolak Permintaan</button>
+                    <button type="submit" class="min-h-[44px] rounded-xl bg-rose-600 px-5 text-xs font-black text-white hover:bg-rose-700 ui-btn ui-btn-primary">Tolak Permintaan</button>
                 </div>
             </form>
         </div>

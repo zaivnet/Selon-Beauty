@@ -31,7 +31,7 @@
 
             <div class="w-full min-w-0 max-w-full">
                 <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Karyawan</label>
-                <select name="employee_id" class="w-full min-w-0 max-w-full box-border px-3 py-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px]">
+                <select name="employee_id" class="w-full min-w-0 max-w-full box-border px-3 py-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px] ui-select">
                     <option value="">Semua Karyawan</option>
                     @foreach($employees as $emp)
                         <option value="{{ $emp->id }}" {{ $filters['employee_id'] == $emp->id ? 'selected' : '' }}>
@@ -43,7 +43,7 @@
 
             <div>
                 <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Status Kehadiran</label>
-                <select name="status" class="w-full px-3 py-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                <select name="status" class="w-full px-3 py-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-rose-500 focus:outline-none ui-select">
                     <option value="">Semua Status</option>
                     <option value="present" {{ $filters['status'] === 'present' ? 'selected' : '' }}>Hadir / Tepat Waktu</option>
                     <option value="late" {{ $filters['status'] === 'late' ? 'selected' : '' }}>Terlambat</option>
@@ -102,8 +102,8 @@
             </div>
         @else
             <!-- Desktop Table View -->
-            <div class="hidden md:block overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+            <div class="hidden md:block overflow-x-auto ui-table-container">
+                <table class="w-full text-left border-collapse ui-table">
                     <thead>
                         <tr class="border-b border-slate-200 dark:border-slate-800 text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 bg-slate-50/80 dark:bg-slate-800/60">
                             <th class="py-3 px-4 rounded-l-xl">Karyawan</th>

@@ -42,7 +42,7 @@
         <a href="{{ route('admin.reports.attendance', $reportData['filters']) }}" class="px-4 py-3 sm:py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-extrabold rounded-xl text-sm sm:text-xs transition-all flex items-center justify-center sm:justify-start gap-1 text-center">
             &larr; Kembali ke Aplikasi
         </a>
-        <button onclick="window.print()" class="px-5 py-3 sm:py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-xl text-sm sm:text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer">
+        <button onclick="window.print()" class="px-5 py-3 sm:py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-xl text-sm sm:text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer ui-btn ui-btn-primary">
             <svg class="w-5 h-5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
             <span>Cetak Dokumen (Print / Save PDF)</span>
         </button>
@@ -54,7 +54,7 @@
         <!-- Document Header -->
         <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between border-b-2 border-slate-900 pb-4 gap-4">
             <div>
-                <h1 class="text-xl sm:text-2xl font-black tracking-tight text-slate-900">{{ $branding['company_name'] ?? ($branding['app_name'] ?? 'Aplikasi Absensi') }}</h1>
+                <h1 class="text-xl sm:text-2xl font-black tracking-tight text-slate-900 ui-page-header">{{ $branding['company_name'] ?? ($branding['app_name'] ?? 'Aplikasi Absensi') }}</h1>
                 <h2 class="text-xs sm:text-sm font-extrabold text-rose-700 uppercase tracking-widest mt-0.5">Laporan Kehadiran Karyawan</h2>
             </div>
             <div class="sm:text-right text-xs space-y-0.5 text-slate-600 font-medium">
@@ -113,8 +113,8 @@
                 <span>Rincian Presensi Harian</span>
                 <span class="text-[10px] font-normal text-slate-500 sm:hidden no-print">Geser tabel &rarr;</span>
             </h3>
-            <div class="overflow-x-auto print:overflow-visible -mx-4 sm:mx-0 px-4 sm:px-0">
-                <table class="w-full min-w-max print:min-w-full text-left text-xs border border-slate-300">
+            <div class="overflow-x-auto print:overflow-visible -mx-4 sm:mx-0 px-4 sm:px-0 ui-table-container">
+                <table class="w-full min-w-max print:min-w-full text-left text-xs border border-slate-300 ui-table">
                     <thead class="bg-slate-100 text-slate-800 uppercase font-extrabold text-[10px]">
                     <tr>
                         <th class="p-2 border border-slate-300">Tanggal</th>

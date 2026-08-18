@@ -40,11 +40,11 @@
         <form action="{{ route('employee.shift-swaps.create') }}" method="GET" class="grid grid-cols-1 gap-4 text-xs sm:grid-cols-2">
             <div>
                 <label for="work-date" class="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">Tanggal Jadwal Saya <span class="text-rose-600">*</span></label>
-                <input type="date" id="work-date" name="work_date" value="{{ $reqDate }}" min="{{ now()->toDateString() }}" class="min-h-[44px] w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-100 focus:border-slate-900 dark:focus:border-rose-500 focus:ring-slate-900 dark:focus:ring-rose-500" onchange="this.form.submit()">
+                <input type="date" id="work-date" name="work_date" value="{{ $reqDate }}" min="{{ now()->toDateString() }}" class="min-h-[44px] w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-100 focus:border-slate-900 dark:focus:border-rose-500 focus:ring-slate-900 dark:focus:ring-rose-500 ui-input" onchange="this.form.submit()">
             </div>
             <div>
                 <label for="target-employee" class="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">Pilih Rekan Kerja <span class="text-rose-600">*</span></label>
-                <select id="target-employee" name="target_employee_id" class="min-h-[44px] w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-100 focus:border-slate-900 dark:focus:border-rose-500 focus:ring-slate-900 dark:focus:ring-rose-500" onchange="this.form.submit()">
+                <select id="target-employee" name="target_employee_id" class="min-h-[44px] w-full rounded-xl border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-100 focus:border-slate-900 dark:focus:border-rose-500 focus:ring-slate-900 dark:focus:ring-rose-500 ui-input ui-select" onchange="this.form.submit()">
                     <option value="">-- Pilih Rekan Kerja --</option>
                     @foreach($eligibleTargets as $targetOption)
                         <option value="{{ $targetOption->id }}" @selected($targetId === $targetOption->id)>
@@ -132,13 +132,13 @@
 
             <div>
                 <label for="reason" class="block text-xs font-black text-slate-700 dark:text-slate-300 mb-1.5">Alasan Penukaran Jadwal <span class="text-rose-600">*</span></label>
-                <textarea id="reason" name="reason" rows="3" required minlength="5" placeholder="Contoh: Ada keperluan keluarga mendadak di jam pagi." class="w-full rounded-xl border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs focus:border-slate-900 dark:focus:border-rose-500 focus:ring-slate-900 dark:focus:ring-rose-500">{{ old('reason') }}</textarea>
+                <textarea id="reason" name="reason" rows="3" required minlength="5" placeholder="Contoh: Ada keperluan keluarga mendadak di jam pagi." class="w-full rounded-xl border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs focus:border-slate-900 dark:focus:border-rose-500 focus:ring-slate-900 dark:focus:ring-rose-500 ui-input">{{ old('reason') }}</textarea>
                 <p class="mt-1 text-[10px] text-slate-500 dark:text-slate-400">Minimal 5 karakter wajib diisi.</p>
             </div>
 
             <div class="flex justify-end gap-3 pt-2">
                 <a href="{{ route('employee.shift-swaps.index') }}" class="flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700">Batal</a>
-                <button type="submit" @disabled(!($reqEffective['is_working_day'] && $reqEffective['shift'] && $targetEffective && $targetEffective['is_working_day'] && $targetEffective['shift'])) class="flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 dark:bg-rose-600 px-6 text-xs font-black text-white hover:bg-slate-800 dark:hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                <button type="submit" @disabled(!($reqEffective['is_working_day'] && $reqEffective['shift'] && $targetEffective && $targetEffective['is_working_day'] && $targetEffective['shift'])) class="flex min-h-[44px] items-center justify-center rounded-xl bg-slate-900 dark:bg-rose-600 px-6 text-xs font-black text-white hover:bg-slate-800 dark:hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed ui-btn ui-btn-primary">
                     Kirim Permintaan Tukar Jadwal
                 </button>
             </div>

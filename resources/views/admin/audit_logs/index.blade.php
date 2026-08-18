@@ -26,11 +26,11 @@
         <form method="GET" action="{{ route('admin.audit-logs.index') }}" class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-6">
             <div class="w-full min-w-0 max-w-full"><x-date-input name="date_from" id="audit_date_from" value="{{ $filters['date_from'] ?? '' }}" aria-label="Tanggal mulai" /></div>
             <div class="w-full min-w-0 max-w-full"><x-date-input name="date_to" id="audit_date_to" value="{{ $filters['date_to'] ?? '' }}" aria-label="Tanggal akhir" /></div>
-            <select name="user_id" class="min-w-0 min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 px-3 text-xs">
+            <select name="user_id" class="min-w-0 min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 px-3 text-xs ui-select">
                 <option value="">Semua actor</option>
                 @foreach($actors as $actor)<option value="{{ $actor->id }}" @selected(($filters['user_id'] ?? '') == $actor->id)>{{ $actor->name }}</option>@endforeach
             </select>
-            <select name="module" class="min-w-0 min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 px-3 text-xs">
+            <select name="module" class="min-w-0 min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 px-3 text-xs ui-select">
                 <option value="">Semua modul</option>
                 <option value="attendance" @selected(($filters['module'] ?? '') === 'attendance')>Attendance</option>
                 <option value="overtime" @selected(($filters['module'] ?? '') === 'overtime')>Overtime</option>
@@ -38,7 +38,7 @@
                 <option value="schedule_override" @selected(($filters['module'] ?? '') === 'schedule_override')>Jadwal Khusus</option>
                 <option value="employee" @selected(($filters['module'] ?? '') === 'employee')>Partisipasi Karyawan</option>
             </select>
-            <select name="employee_id" class="min-w-0 min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 px-3 text-xs">
+            <select name="employee_id" class="min-w-0 min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 px-3 text-xs ui-select">
                 <option value="">Semua karyawan</option>
                 @foreach($employees as $employee)<option value="{{ $employee->id }}" @selected(($filters['employee_id'] ?? '') == $employee->id)>{{ $employee->full_name }}</option>@endforeach
             </select>

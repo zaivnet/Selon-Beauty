@@ -74,7 +74,7 @@
             <!-- Tanggal Kerja -->
             <div>
                 <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Tanggal Kerja <span class="text-rose-600">*</span></label>
-                <select name="work_date" id="work_date_select" required onchange="updateAttendanceContext()" class="min-h-[44px] w-full min-w-0 px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-none">
+                <select name="work_date" id="work_date_select" required onchange="updateAttendanceContext()" class="min-h-[44px] w-full min-w-0 px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-none ui-select">
                     <option value="">-- Pilih Tanggal Lembur --</option>
                     @foreach($availableSchedules as $sch)
                         @php

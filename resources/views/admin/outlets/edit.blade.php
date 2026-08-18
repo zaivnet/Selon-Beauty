@@ -11,7 +11,7 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                 Kembali ke Daftar Outlet
             </a>
-            <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Edit Outlet {{ $outlet->name }}</h1>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight ui-page-header">Edit Outlet {{ $outlet->name }}</h1>
         </div>
     </div>
 
@@ -28,7 +28,7 @@
                         Nama Outlet / Cabang <span class="text-rose-500">*</span>
                     </label>
                     <input type="text" name="name" id="name" value="{{ old('name', $outlet->name) }}" required
-                        class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all">
+                        class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all ui-input">
                     @error('name')
                         <p class="text-xs font-semibold text-rose-500 mt-1.5">{{ $message }}</p>
                     @enderror
@@ -39,7 +39,7 @@
                         Kode Outlet <span class="text-rose-500">*</span>
                     </label>
                     <input type="text" name="code" id="code" value="{{ old('code', $outlet->code) }}" required uppercase
-                        class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none uppercase transition-all">
+                        class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none uppercase transition-all ui-input">
                     @error('code')
                         <p class="text-xs font-semibold text-rose-500 mt-1.5">{{ $message }}</p>
                     @enderror
@@ -52,7 +52,7 @@
                     Alamat Fisik Outlet
                 </label>
                 <textarea name="address" id="address" rows="3"
-                    class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all">{{ old('address', $outlet->address) }}</textarea>
+                    class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all ui-input">{{ old('address', $outlet->address) }}</textarea>
                 @error('address')
                     <p class="text-xs font-semibold text-rose-500 mt-1.5">{{ $message }}</p>
                 @enderror
@@ -79,7 +79,7 @@
                             Latitude GPS <span class="text-rose-500">*</span>
                         </label>
                         <input type="number" step="0.0000001" name="latitude" id="latitude" value="{{ old('latitude', $outlet->latitude) }}" required
-                            class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all">
+                            class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all ui-input">
                         @error('latitude')
                             <p class="text-xs font-semibold text-rose-500 mt-1.5">{{ $message }}</p>
                         @enderror
@@ -90,7 +90,7 @@
                             Longitude GPS <span class="text-rose-500">*</span>
                         </label>
                         <input type="number" step="0.0000001" name="longitude" id="longitude" value="{{ old('longitude', $outlet->longitude) }}" required
-                            class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all">
+                            class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all ui-input">
                         @error('longitude')
                             <p class="text-xs font-semibold text-rose-500 mt-1.5">{{ $message }}</p>
                         @enderror
@@ -105,7 +105,7 @@
                         Radius Presensi Terizin (Meter) <span class="text-rose-500">*</span>
                     </label>
                     <input type="number" name="radius_meters" id="radius_meters" value="{{ old('radius_meters', $outlet->radius_meters) }}" min="1" max="50000" required
-                        class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all">
+                        class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all ui-input">
                     <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Jarak maksimum karyawan dari koordinat outlet saat check-in.</p>
                     @error('radius_meters')
                         <p class="text-xs font-semibold text-rose-500 mt-1.5">{{ $message }}</p>
@@ -117,7 +117,7 @@
                         Maksimal Akurasi GPS (Meter)
                     </label>
                     <input type="number" name="max_accuracy_meters" id="max_accuracy_meters" value="{{ old('max_accuracy_meters', $outlet->max_accuracy_meters) }}" min="1" max="500"
-                        class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all">
+                        class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all ui-input">
                     <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Batas toleransi akurasi perangkat HP karyawan.</p>
                     @error('max_accuracy_meters')
                         <p class="text-xs font-semibold text-rose-500 mt-1.5">{{ $message }}</p>
@@ -139,7 +139,7 @@
                 <a href="{{ route('admin.outlets.index') }}" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl transition-all cursor-pointer">
                     Batal
                 </a>
-                <button type="submit" class="px-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-lg shadow-rose-500/25 transition-all cursor-pointer">
+                <button type="submit" class="px-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-lg shadow-rose-500/25 transition-all cursor-pointer ui-btn ui-btn-primary">
                     Perbarui Outlet
                 </button>
             </div>

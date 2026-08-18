@@ -70,7 +70,7 @@
                         </div>
                         <input type="hidden" name="outlet_id" value="{{ $adminOutlet?->id }}">
                     @else
-                        <select name="outlet_id" id="outlet_id" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-semibold">
+                        <select name="outlet_id" id="outlet_id" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-semibold ui-select">
                             @foreach($outlets as $o)
                                 <option value="{{ $o->id }}" {{ old('outlet_id') == $o->id ? 'selected' : '' }}>{{ $o->name }} ({{ $o->code }})</option>
                             @endforeach
@@ -84,7 +84,7 @@
                 <!-- Jabatan (Posisi Pekerjaan) -->
                 <div>
                     <label for="job_title_id" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Jabatan Pekerjaan</label>
-                    <select name="job_title_id" id="job_title_id" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+                    <select name="job_title_id" id="job_title_id" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 ui-select">
                         <option value="">-- Pilih Jabatan Pekerjaan --</option>
                         @foreach($jobTitles as $jt)
                             <option value="{{ $jt->id }}" {{ old('job_title_id') == $jt->id ? 'selected' : '' }}>{{ $jt->name }}</option>
@@ -102,7 +102,7 @@
                 <!-- Status -->
                 <div>
                     <label for="status" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Status Karyawan *</label>
-                    <select name="status" id="status" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+                    <select name="status" id="status" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 ui-select">
                         <option value="active" {{ old('status') === 'active' ? 'selected' : '' }}>Aktif</option>
                         <option value="inactive" {{ old('status') === 'inactive' ? 'selected' : '' }}>Nonaktif</option>
                     </select>
@@ -189,7 +189,7 @@
                     <div>
                         <label for="role" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Role Aplikasi (Hak Akses) *</label>
                         @if(count($assignableRoles) > 1)
-                            <select name="role" id="role" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+                            <select name="role" id="role" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 ui-select">
                                 @foreach($assignableRoles as $rVal => $rLabel)
                                     <option value="{{ $rVal }}" {{ old('role', 'employee') === $rVal ? 'selected' : '' }}>{{ $rLabel }}</option>
                                 @endforeach

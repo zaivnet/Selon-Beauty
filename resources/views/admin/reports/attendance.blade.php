@@ -7,7 +7,7 @@
 <div class="space-y-6">
 
     <nav class="flex gap-1 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1 shadow-xs transition-colors" aria-label="Jenis laporan">
-        <a href="{{ route('admin.reports.attendance') }}" aria-current="page" class="flex min-h-[44px] shrink-0 items-center rounded-lg bg-slate-900 dark:bg-rose-600 px-4 text-xs font-extrabold text-white shadow-sm">Laporan Kehadiran</a>
+        <a href="{{ route('admin.reports.attendance') }}" aria-current="page" class="flex min-h-[44px] shrink-0 items-center rounded-lg bg-slate-900 dark:bg-rose-600 px-4 text-xs font-extrabold text-white shadow-sm ui-btn ui-btn-primary">Laporan Kehadiran</a>
         <a href="{{ route('admin.monthly-recaps.index') }}" class="flex min-h-[44px] shrink-0 items-center rounded-lg px-4 text-xs font-extrabold text-slate-500 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200">Rekap Bulanan</a>
     </nav>
 
@@ -53,7 +53,7 @@
             <!-- Employee -->
             <div>
                 <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Karyawan</label>
-                <select name="employee_id" class="w-full min-w-0 max-w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px]">
+                <select name="employee_id" class="w-full min-w-0 max-w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px] ui-select">
                     <option value="">Semua Karyawan</option>
                     @foreach($employees as $emp)
                         <option value="{{ $emp->id }}" {{ $filters['employee_id'] == $emp->id ? 'selected' : '' }}>
@@ -66,7 +66,7 @@
             <!-- Status -->
             <div>
                 <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Status Kehadiran</label>
-                <select name="status" class="w-full min-w-0 max-w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px]">
+                <select name="status" class="w-full min-w-0 max-w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px] ui-select">
                     <option value="all" {{ $filters['status'] === 'all' ? 'selected' : '' }}>Semua Status</option>
                     <option value="present" {{ $filters['status'] === 'present' ? 'selected' : '' }}>Hadir (Termasuk Terlambat)</option>
                     <option value="late" {{ $filters['status'] === 'late' ? 'selected' : '' }}>Terlambat</option>
@@ -81,7 +81,7 @@
 
             <!-- Submit & Reset Buttons -->
             <div class="flex items-end gap-2">
-                <button type="submit" class="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer min-h-[44px]">
+                <button type="submit" class="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer min-h-[44px] ui-btn ui-btn-primary">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
                     <span>Filter</span>
                 </button>
@@ -163,8 +163,8 @@
                 <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">{{ count($reportData['employee_summaries']) }} Karyawan</span>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs border-collapse">
+            <div class="overflow-x-auto ui-table-container">
+                <table class="w-full text-left text-xs border-collapse ui-table">
                     <thead class="bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 uppercase tracking-wider font-extrabold text-[10px]">
                         <tr>
                             <th class="px-4 py-3">Karyawan</th>
@@ -229,8 +229,8 @@
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Coba ubah filter tanggal atau karyawan di atas.</p>
             </div>
         @else
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs border-collapse">
+            <div class="overflow-x-auto ui-table-container">
+                <table class="w-full text-left text-xs border-collapse ui-table">
                     <thead class="bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 uppercase tracking-wider font-extrabold text-[10px] border-b border-slate-200 dark:border-slate-800">
                         <tr>
                             <th class="px-4 py-3.5">Tanggal</th>

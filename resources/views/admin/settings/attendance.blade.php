@@ -7,11 +7,11 @@
 <div class="max-w-4xl mx-auto space-y-6">
 
     <!-- Settings Sub-Navigation Tabs -->
-    <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 overflow-x-auto">
+    <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 overflow-x-auto ui-table-container">
         <a href="{{ route('admin.settings.branding.index') }}" class="px-4 py-2.5 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
             🎨 Profil & Branding
         </a>
-        <a href="{{ route('admin.settings.attendance') }}" class="px-4 py-2.5 rounded-xl font-extrabold text-xs transition-colors bg-slate-900 dark:bg-rose-600 text-white shadow-xs">
+        <a href="{{ route('admin.settings.attendance') }}" class="px-4 py-2.5 rounded-xl font-extrabold text-xs transition-colors bg-slate-900 dark:bg-rose-600 text-white shadow-xs ui-btn ui-btn-primary">
             ⚙️ Pengaturan Absensi Global
         </a>
         <a href="{{ route('admin.settings.backups.index') }}" class="px-4 py-2.5 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
@@ -46,7 +46,7 @@
         </div>
         <div class="pt-2 border-t border-slate-700/60 flex items-center justify-between text-xs">
             <span class="text-slate-300">Untuk mengelola lokasi fisik, koordinat GPS, dan radius presensi outlet:</span>
-            <a href="{{ route('admin.outlets.index') }}" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs transition-colors shrink-0">
+            <a href="{{ route('admin.outlets.index') }}" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs transition-colors shrink-0 ui-btn ui-btn-primary">
                 Kelola Outlet & Cabang &rarr;
             </a>
         </div>
@@ -68,7 +68,7 @@
                     <label for="timezone" class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                         Zona Waktu Sistem (Timezone) <span class="text-rose-500">*</span>
                     </label>
-                    <select name="timezone" id="timezone" required class="w-full max-w-md px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-semibold focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 outline-none">
+                    <select name="timezone" id="timezone" required class="w-full max-w-md px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-semibold focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 outline-none ui-input ui-select">
                         <option value="Asia/Jakarta" {{ $settings['timezone'] === 'Asia/Jakarta' ? 'selected' : '' }}>Asia/Jakarta (WIB)</option>
                         <option value="Asia/Makassar" {{ $settings['timezone'] === 'Asia/Makassar' ? 'selected' : '' }}>Asia/Makassar (WITA)</option>
                         <option value="Asia/Jayapura" {{ $settings['timezone'] === 'Asia/Jayapura' ? 'selected' : '' }}>Asia/Jayapura (WIT)</option>
@@ -106,7 +106,7 @@
             </div>
 
             <div class="flex items-center justify-end pt-4 border-t border-slate-200/80 dark:border-slate-800">
-                <button type="submit" class="px-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-rose-500/25 transition-all cursor-pointer">
+                <button type="submit" class="px-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-rose-500/25 transition-all cursor-pointer ui-btn ui-btn-primary">
                     Simpan Pengaturan Absensi Global
                 </button>
             </div>

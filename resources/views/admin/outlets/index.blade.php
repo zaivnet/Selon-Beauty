@@ -7,11 +7,11 @@
     <!-- Header Page -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">Outlet & Cabang</h1>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight ui-page-header">Outlet & Cabang</h1>
             <p class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">Kelola seluruh lokasi outlet fisik, penugasan admin, dan koordinat geofence absensi.</p>
         </div>
         <div>
-            <a href="{{ route('admin.outlets.create') }}" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-bold rounded-xl shadow-lg shadow-rose-500/25 transition-all cursor-pointer">
+            <a href="{{ route('admin.outlets.create') }}" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-bold rounded-xl shadow-lg shadow-rose-500/25 transition-all cursor-pointer ui-btn ui-btn-primary">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 Tambah Outlet Baru
             </a>
@@ -48,7 +48,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
                     <div>
                         <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase">Pilih Outlet</label>
-                        <select name="test_outlet_id" required class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-semibold">
+                        <select name="test_outlet_id" required class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-semibold ui-select">
                             @foreach($outlets as $o)
                                 <option value="{{ $o->id }}" {{ request('test_outlet_id') == $o->id ? 'selected' : '' }}>{{ $o->name }} ({{ $o->code }})</option>
                             @endforeach
@@ -69,7 +69,7 @@
                 </div>
 
                 <div class="flex justify-end">
-                    <button type="submit" class="px-5 py-2 bg-slate-900 dark:bg-rose-600 hover:bg-slate-800 dark:hover:bg-rose-700 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer">
+                    <button type="submit" class="px-5 py-2 bg-slate-900 dark:bg-rose-600 hover:bg-slate-800 dark:hover:bg-rose-700 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer ui-btn ui-btn-primary">
                         Hitung Jarak & Uji Status Geofence
                     </button>
                 </div>
@@ -82,7 +82,7 @@
                         @if($testResult['is_valid'])
                             <span class="px-3 py-1 bg-emerald-600 text-white font-black rounded-full text-[10px]">✓ DALAM RADIUS (VALID)</span>
                         @else
-                            <span class="px-3 py-1 bg-rose-600 text-white font-black rounded-full text-[10px]">✕ DI LUAR RADIUS (DITOLAK)</span>
+                            <span class="px-3 py-1 bg-rose-600 text-white font-black rounded-full text-[10px] ui-btn ui-btn-primary">✕ DI LUAR RADIUS (DITOLAK)</span>
                         @endif
                     </div>
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] pt-1">
@@ -103,8 +103,8 @@
 
     <!-- Outlet Grid / Table Card -->
     <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+        <div class="overflow-x-auto ui-table-container">
+            <table class="w-full text-left border-collapse ui-table">
                 <thead>
                     <tr class="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-200/80 dark:border-slate-800 text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                         <th class="py-3.5 px-4 sm:px-6">Kode & Nama Outlet</th>

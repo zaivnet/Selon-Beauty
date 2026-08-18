@@ -41,7 +41,7 @@
         <form method="GET" action="{{ route('admin.leave-requests.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
             <div>
                 <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Status</label>
-                <select name="status" class="w-full min-w-0 max-w-full px-3 py-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px]">
+                <select name="status" class="w-full min-w-0 max-w-full px-3 py-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px] ui-select">
                     <option value="pending" {{ $filters['status'] === 'pending' ? 'selected' : '' }}>Menunggu (Pending)</option>
                     <option value="approved" {{ $filters['status'] === 'approved' ? 'selected' : '' }}>Disetujui</option>
                     <option value="rejected" {{ $filters['status'] === 'rejected' ? 'selected' : '' }}>Ditolak</option>
@@ -52,7 +52,7 @@
 
             <div>
                 <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Jenis</label>
-                <select name="type" class="w-full min-w-0 max-w-full px-3 py-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px]">
+                <select name="type" class="w-full min-w-0 max-w-full px-3 py-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px] ui-select">
                     <option value="all">Semua Jenis</option>
                     <option value="permission" {{ $filters['type'] === 'permission' ? 'selected' : '' }}>Izin</option>
                     <option value="sick" {{ $filters['type'] === 'sick' ? 'selected' : '' }}>Sakit</option>
@@ -62,7 +62,7 @@
 
             <div>
                 <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Karyawan</label>
-                <select name="employee_id" class="w-full min-w-0 max-w-full px-3 py-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px]">
+                <select name="employee_id" class="w-full min-w-0 max-w-full px-3 py-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px] ui-select">
                     <option value="">Semua Karyawan</option>
                     @foreach($employees as $emp)
                         <option value="{{ $emp->id }}" {{ $filters['employee_id'] == $emp->id ? 'selected' : '' }}>
@@ -101,8 +101,8 @@
             </div>
         @else
             <!-- Desktop Table View -->
-            <div class="hidden md:block overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+            <div class="hidden md:block overflow-x-auto ui-table-container">
+                <table class="w-full text-left border-collapse ui-table">
                     <thead>
                         <tr class="border-b border-slate-200 dark:border-slate-800 text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 bg-slate-50/80 dark:bg-slate-800/60">
                             <th class="py-3 px-4 rounded-l-xl">Karyawan</th>
@@ -160,7 +160,7 @@
                                         <button type="button" onclick="openApproveModal({{ $req->id }}, '{{ addslashes($req->employee->full_name) }}', '{{ $req->type_label }}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[11px] transition-colors cursor-pointer shadow-2xs">
                                             Setujui
                                         </button>
-                                        <button type="button" onclick="openRejectModal({{ $req->id }}, '{{ addslashes($req->employee->full_name) }}', '{{ $req->type_label }}')" class="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-[11px] transition-colors cursor-pointer shadow-2xs">
+                                        <button type="button" onclick="openRejectModal({{ $req->id }}, '{{ addslashes($req->employee->full_name) }}', '{{ $req->type_label }}')" class="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-[11px] transition-colors cursor-pointer shadow-2xs ui-btn ui-btn-primary">
                                             Tolak
                                         </button>
                                     @else
@@ -208,7 +208,7 @@
                                     <button type="button" onclick="openApproveModal({{ $req->id }}, '{{ addslashes($req->employee->full_name) }}', '{{ $req->type_label }}')" class="px-2.5 py-1 bg-emerald-600 text-white font-bold text-[11px] rounded-lg">
                                         Setujui
                                     </button>
-                                    <button type="button" onclick="openRejectModal({{ $req->id }}, '{{ addslashes($req->employee->full_name) }}', '{{ $req->type_label }}')" class="px-2.5 py-1 bg-rose-600 text-white font-bold text-[11px] rounded-lg">
+                                    <button type="button" onclick="openRejectModal({{ $req->id }}, '{{ addslashes($req->employee->full_name) }}', '{{ $req->type_label }}')" class="px-2.5 py-1 bg-rose-600 text-white font-bold text-[11px] rounded-lg ui-btn ui-btn-primary">
                                         Tolak
                                     </button>
                                 </div>
@@ -269,7 +269,7 @@
                 <button type="button" onclick="closeRejectModal()" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700">
                     Batal
                 </button>
-                <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-xl shadow-xs">
+                <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-xl shadow-xs ui-btn ui-btn-primary">
                     Tolak Pengajuan
                 </button>
             </div>

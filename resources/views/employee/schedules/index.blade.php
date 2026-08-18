@@ -5,7 +5,7 @@
 @section('content')
 <div class="space-y-4">
     <nav class="flex gap-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1 shadow-xs" aria-label="Jadwal dan rekap">
-        <a href="{{ route('employee.schedules.index') }}" aria-current="page" class="flex min-h-[44px] flex-1 items-center justify-center rounded-lg bg-slate-900 dark:bg-rose-600 px-3 text-[11px] font-extrabold text-white">Jadwal</a>
+        <a href="{{ route('employee.schedules.index') }}" aria-current="page" class="flex min-h-[44px] flex-1 items-center justify-center rounded-lg bg-slate-900 dark:bg-rose-600 px-3 text-[11px] font-extrabold text-white ui-btn ui-btn-primary">Jadwal</a>
         <a href="{{ route('employee.monthly-recap.show') }}" class="flex min-h-[44px] flex-1 items-center justify-center rounded-lg px-3 text-[11px] font-extrabold text-slate-500 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-800">Rekap Saya</a>
     </nav>
     @if(auth()->user()->role === 'superadmin' || !$employee->attendance_enabled)
@@ -51,7 +51,7 @@
                     <div class="min-w-0">
                         <div class="flex flex-wrap items-center gap-1.5">
                             <h4 class="text-xs font-black text-slate-900 dark:text-slate-100">{{ $date->locale('id')->isoFormat('dddd, D MMMM') }}</h4>
-                            @if($isToday)<span class="rounded-md bg-rose-600 px-2 py-0.5 text-[9px] font-black uppercase text-white">Hari Ini</span>@endif
+                            @if($isToday)<span class="rounded-md bg-rose-600 px-2 py-0.5 text-[9px] font-black uppercase text-white ui-btn ui-btn-primary">Hari Ini</span>@endif
                         </div>
                         <p class="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">{{ $date->isoFormat('YYYY') }}</p>
                     </div>

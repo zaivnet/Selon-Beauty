@@ -250,9 +250,9 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
                 navigator.serviceWorker.register('/sw.js').then(function(reg) {
-                    console.log('SELON BEAUTY PWA SW Registered:', reg.scope);
+                    console.log('PWA SW Registered:', reg.scope);
                 }).catch(function(err) {
-                    console.warn('SELON BEAUTY PWA SW Registration Failed:', err);
+                    console.warn('PWA SW Registration Failed:', err);
                 });
             });
         }

@@ -30,7 +30,7 @@
                 <input type="text" name="search" value="{{ $search }}" placeholder="Cari nama atau kode shift..." class="w-full pl-9 pr-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500">
             </div>
 
-            <select name="status" onchange="this.form.submit()" class="w-full sm:w-auto px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50/50 dark:bg-slate-950 text-slate-800 dark:text-slate-100">
+            <select name="status" onchange="this.form.submit()" class="w-full sm:w-auto px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50/50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 ui-select">
                 <option value="">Semua Status</option>
                 <option value="active" {{ $status === 'active' ? 'selected' : '' }}>Aktif</option>
                 <option value="inactive" {{ $status === 'inactive' ? 'selected' : '' }}>Nonaktif</option>
@@ -68,15 +68,15 @@
                     Tambahkan shift kerja pertama untuk mengatur jam operasional toko.
                 </p>
                 <div class="mt-4">
-                    <a href="{{ route('admin.shifts.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 text-white font-bold text-xs rounded-xl shadow-xs hover:bg-rose-700 transition-colors">
+                    <a href="{{ route('admin.shifts.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 text-white font-bold text-xs rounded-xl shadow-xs hover:bg-rose-700 transition-colors ui-btn ui-btn-primary">
                         + Tambah Shift Pertama
                     </a>
                 </div>
             </div>
         @else
             <!-- Desktop Table View (Hidden on Mobile) -->
-            <div class="hidden md:block overflow-x-auto">
-                <table class="w-full text-left text-xs border-collapse">
+            <div class="hidden md:block overflow-x-auto ui-table-container">
+                <table class="w-full text-left text-xs border-collapse ui-table">
                     <thead>
                         <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/60">
                             <th class="p-3">Kode</th>

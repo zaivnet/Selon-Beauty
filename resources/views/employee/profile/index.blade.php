@@ -118,7 +118,7 @@
                 <input type="password" name="password_confirmation" required class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-none">
             </div>
 
-            <button type="submit" class="w-full py-3 px-4 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-xl shadow-md shadow-rose-600/20 transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer">
+            <button type="submit" class="w-full py-3 px-4 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-xl shadow-md shadow-rose-600/20 transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer ui-btn ui-btn-primary">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
                 <span>Simpan Password Baru</span>
             </button>
@@ -129,7 +129,7 @@
     <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
         <form action="{{ route('logout') }}" method="POST">
             @csrf
-            <button type="submit" class="w-full py-3.5 px-4 bg-slate-900 dark:bg-slate-800 hover:bg-rose-600 dark:hover:bg-rose-600 text-white font-extrabold rounded-xl transition-all text-xs flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+            <button type="submit" class="w-full py-3.5 px-4 bg-slate-900 dark:bg-slate-800 hover:bg-rose-600 dark:hover:bg-rose-600 text-white font-extrabold rounded-xl transition-all text-xs flex items-center justify-center gap-2 cursor-pointer shadow-sm ui-btn ui-btn-primary">
                 <svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                 <span>Keluar dari Aplikasi (Logout)</span>
             </button>

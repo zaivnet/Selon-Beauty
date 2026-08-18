@@ -7,14 +7,14 @@
 <div class="space-y-6" x-data="{ restoreModalOpen: false, selectedBackup: null }">
 
     <!-- Settings Sub-Navigation Tabs -->
-    <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 overflow-x-auto">
+    <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 overflow-x-auto ui-table-container">
         <a href="{{ route('admin.settings.branding.index') }}" class="px-4 py-2.5 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
             🎨 Profil & Branding
         </a>
         <a href="{{ route('admin.settings.locations.index') }}" class="px-4 py-2.5 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
             📍 Pengaturan Absensi
         </a>
-        <a href="{{ route('admin.settings.backups.index') }}" class="px-4 py-2.5 rounded-xl font-extrabold text-xs transition-colors bg-slate-900 dark:bg-rose-600 text-white shadow-xs">
+        <a href="{{ route('admin.settings.backups.index') }}" class="px-4 py-2.5 rounded-xl font-extrabold text-xs transition-colors bg-slate-900 dark:bg-rose-600 text-white shadow-xs ui-btn ui-btn-primary">
             💾 Backup & Restore
         </a>
     </div>
@@ -71,12 +71,12 @@
 
         <form action="{{ route('admin.settings.backups.create') }}" method="POST" class="flex flex-wrap items-center gap-3 w-full md:w-auto">
             @csrf
-            <select name="type" class="px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950">
+            <select name="type" class="px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 ui-select">
                 <option value="database">Database Saja (.zip)</option>
                 <option value="full" selected>Full Backup (Database & File Storage)</option>
             </select>
 
-            <button type="submit" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-colors cursor-pointer flex items-center gap-2">
+            <button type="submit" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-colors cursor-pointer flex items-center gap-2 ui-btn ui-btn-primary">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
                 Backup Sekarang
             </button>
@@ -92,8 +92,8 @@
                 Belum ada arsip backup. Klik tombol 'Backup Sekarang' di atas untuk membuat backup pertama.
             </div>
         @else
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-xs">
+            <div class="overflow-x-auto ui-table-container">
+                <table class="w-full text-left border-collapse text-xs ui-table">
                     <thead>
                         <tr class="border-b border-slate-200 dark:border-slate-800 text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800/60">
                             <th class="py-3 px-4">Waktu & File</th>
@@ -206,7 +206,7 @@
                 <!-- Frequency -->
                 <div>
                     <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Frekuensi Backup</label>
-                    <select name="frequency" class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-950">
+                    <select name="frequency" class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 ui-select">
                         <option value="daily" {{ $scheduleSettings['frequency'] === 'daily' ? 'selected' : '' }}>Setiap Hari (Daily)</option>
                         <option value="weekly" {{ $scheduleSettings['frequency'] === 'weekly' ? 'selected' : '' }}>Setiap Minggu (Weekly)</option>
                     </select>
@@ -221,7 +221,7 @@
                 <!-- Day of week -->
                 <div>
                     <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Hari (Jika Weekly)</label>
-                    <select name="day_of_week" class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-950">
+                    <select name="day_of_week" class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 ui-select">
                         <option value="0" {{ $scheduleSettings['day_of_week'] == 0 ? 'selected' : '' }}>Minggu</option>
                         <option value="1" {{ $scheduleSettings['day_of_week'] == 1 ? 'selected' : '' }}>Senin</option>
                         <option value="2" {{ $scheduleSettings['day_of_week'] == 2 ? 'selected' : '' }}>Selasa</option>
@@ -235,7 +235,7 @@
                 <!-- Scheduled Backup Type -->
                 <div>
                     <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Jenis Backup Otomatis</label>
-                    <select name="type" class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-950">
+                    <select name="type" class="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-slate-950 ui-select">
                         <option value="database" {{ $scheduleSettings['type'] === 'database' ? 'selected' : '' }}>Database Saja</option>
                         <option value="full" {{ $scheduleSettings['type'] === 'full' ? 'selected' : '' }}>Full Application Backup</option>
                     </select>
@@ -292,7 +292,7 @@
                     <button type="button" @click="restoreModalOpen = false" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
                         Batal
                     </button>
-                    <button type="submit" class="px-5 py-2.5 bg-rose-600 text-white text-xs font-black rounded-xl hover:bg-rose-700 transition-colors shadow-xs">
+                    <button type="submit" class="px-5 py-2.5 bg-rose-600 text-white text-xs font-black rounded-xl hover:bg-rose-700 transition-colors shadow-xs ui-btn ui-btn-primary">
                         Jalankan Pre-Restore & Restore Sekarang
                     </button>
                 </div>

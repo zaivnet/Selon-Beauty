@@ -24,7 +24,7 @@
         </a>
         <div class="flex items-center gap-2">
             @if($canTransfer)
-                <button type="button" @click="showTransferModal = true" class="px-3.5 py-1.5 bg-rose-600 dark:bg-rose-500 text-white font-extrabold text-xs rounded-lg hover:bg-rose-700 dark:hover:bg-rose-600 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs">
+                <button type="button" @click="showTransferModal = true" class="px-3.5 py-1.5 bg-rose-600 dark:bg-rose-500 text-white font-extrabold text-xs rounded-lg hover:bg-rose-700 dark:hover:bg-rose-600 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs ui-btn ui-btn-primary">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
                     <span>Pindah Outlet</span>
                 </button>
@@ -231,8 +231,8 @@
         @if($employee->outletTransfers->isEmpty())
             <p class="text-xs text-slate-500 dark:text-slate-400 italic py-2">Belum ada riwayat pemindahan outlet untuk karyawan ini.</p>
         @else
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs border-collapse">
+            <div class="overflow-x-auto ui-table-container">
+                <table class="w-full text-left text-xs border-collapse ui-table">
                     <thead>
                         <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/40">
                             <th class="p-2.5">Tanggal Efektif</th>
@@ -288,7 +288,7 @@
 
                     <div>
                         <label for="destination_outlet_id" class="block text-xs font-black text-slate-700 dark:text-slate-300 mb-1">Outlet Tujuan <span class="text-rose-600 dark:text-rose-400">*</span></label>
-                        <select name="destination_outlet_id" id="destination_outlet_id" required class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-bold p-2.5 focus:border-rose-500 focus:ring-rose-500">
+                        <select name="destination_outlet_id" id="destination_outlet_id" required class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-bold p-2.5 focus:border-rose-500 focus:ring-rose-500 ui-input ui-select">
                             <option value="">-- Pilih Outlet Tujuan --</option>
                             @foreach($availableOutlets as $outlet)
                                 <option value="{{ $outlet->id }}">{{ $outlet->name }} ({{ $outlet->code }})</option>
@@ -303,12 +303,12 @@
 
                     <div>
                         <label for="transfer_notes" class="block text-xs font-black text-slate-700 dark:text-slate-300 mb-1">Catatan / Alasan Pemindahan (Opsional)</label>
-                        <textarea name="notes" id="transfer_notes" rows="3" placeholder="Contoh: Rotasi operasional outlet..." class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs p-2.5 focus:border-rose-500 focus:ring-rose-500"></textarea>
+                        <textarea name="notes" id="transfer_notes" rows="3" placeholder="Contoh: Rotasi operasional outlet..." class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs p-2.5 focus:border-rose-500 focus:ring-rose-500 ui-input"></textarea>
                     </div>
 
                     <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                         <button type="button" @click="showTransferModal = false" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">Batal</button>
-                        <button type="submit" class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-xs font-black text-white shadow-xs transition-colors cursor-pointer">Ya, Pindahkan Outlet</button>
+                        <button type="submit" class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-xs font-black text-white shadow-xs transition-colors cursor-pointer ui-btn ui-btn-primary">Ya, Pindahkan Outlet</button>
                     </div>
                 </form>
             </div>

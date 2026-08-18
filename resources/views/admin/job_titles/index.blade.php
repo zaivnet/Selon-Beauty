@@ -48,7 +48,7 @@
                     <label for="is_active" class="text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">Status Aktif</label>
                 </div>
 
-                <button type="submit" class="w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer">
+                <button type="submit" class="w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer ui-btn ui-btn-primary">
                     Simpan Jabatan
                 </button>
             </form>
@@ -65,8 +65,8 @@
                     <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Gunakan formulir di samping untuk menambahkan jabatan pertama.</p>
                 </div>
             @else
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs border-collapse">
+                <div class="overflow-x-auto ui-table-container">
+                    <table class="w-full text-left text-xs border-collapse ui-table">
                         <thead>
                             <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/60">
                                 <th class="p-3">Nama Jabatan</th>

@@ -300,6 +300,235 @@ html.dark main {
 }
 
 /* ==========================================================================
+   UI Components (Buttons, Forms, Tables)
+   ========================================================================== */
+
+/* Buttons */
+.ui-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.875rem; /* text-sm */
+    font-weight: 700;
+    border-radius: 0.75rem; /* rounded-xl */
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+    cursor: pointer;
+    min-height: 2.5rem; /* 40px default */
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+@media (max-width: 639px) { /* sm breakpoint */
+    .ui-btn {
+        min-height: 2.75rem; /* 44px for touch target */
+    }
+}
+
+.ui-btn:disabled, .ui-btn.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.ui-btn:active {
+    transform: scale(0.97);
+}
+
+.ui-btn:focus-visible {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px #f43f5e; /* focus:ring-rose-500 */
+}
+
+.dark .ui-btn:focus-visible {
+    box-shadow: 0 0 0 2px #0f172a, 0 0 0 4px #f43f5e;
+}
+
+.ui-btn-primary {
+    background-color: #be185d; /* brand-primary */
+    color: #ffffff;
+    border: 1px solid transparent;
+}
+.ui-btn-primary:hover {
+    background-color: #9d174d; /* brand-primary-hover */
+}
+
+.ui-btn-secondary {
+    background-color: #ffffff;
+    color: #334155; /* slate-700 */
+    border: 1px solid #cbd5e1; /* slate-300 */
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+.ui-btn-secondary:hover {
+    background-color: #f8fafc; /* slate-50 */
+    color: #0f172a; /* slate-900 */
+    border-color: #94a3b8; /* slate-400 */
+}
+.dark .ui-btn-secondary {
+    background-color: #1e293b; /* slate-800 */
+    color: #e2e8f0; /* slate-200 */
+    border-color: #334155; /* slate-700 */
+}
+.dark .ui-btn-secondary:hover {
+    background-color: #334155; /* slate-700 */
+    color: #f8fafc; /* slate-50 */
+    border-color: #475569; /* slate-600 */
+}
+
+.ui-btn-danger {
+    background-color: #e11d48; /* rose-600 */
+    color: #ffffff;
+    border: 1px solid transparent;
+}
+.ui-btn-danger:hover {
+    background-color: #be123c; /* rose-700 */
+}
+
+.ui-btn-icon {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    border-radius: 0.5rem;
+}
+
+/* Forms */
+.ui-input, .ui-select, .ui-textarea {
+    display: block;
+    width: 100%;
+    border-radius: 0.75rem; /* rounded-xl */
+    border: 1px solid #cbd5e1; /* slate-300 */
+    background-color: #ffffff;
+    color: #0f172a; /* slate-900 */
+    font-size: 0.875rem; /* text-sm */
+    transition-property: border-color, box-shadow;
+    transition-duration: 150ms;
+}
+
+.ui-input, .ui-select {
+    height: 2.75rem; /* 44px */
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+}
+
+.ui-textarea {
+    padding: 0.75rem;
+}
+
+.ui-input:focus, .ui-select:focus, .ui-textarea:focus {
+    outline: none;
+    border-color: #f43f5e; /* rose-500 */
+    box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.25);
+}
+
+.ui-input:disabled, .ui-select:disabled, .ui-textarea:disabled {
+    background-color: #f1f5f9; /* slate-100 */
+    color: #94a3b8; /* slate-400 */
+    cursor: not-allowed;
+}
+
+.dark .ui-input, .dark .ui-select, .dark .ui-textarea {
+    background-color: #0f172a; /* slate-900 */
+    border-color: #334155; /* slate-700 */
+    color: #f8fafc; /* slate-50 */
+}
+
+.dark .ui-input:focus, .dark .ui-select:focus, .dark .ui-textarea:focus {
+    border-color: #f43f5e;
+}
+
+.dark .ui-input:disabled, .dark .ui-select:disabled, .dark .ui-textarea:disabled {
+    background-color: #020617; /* slate-950 */
+    color: #475569; /* slate-600 */
+}
+
+/* Tables */
+.ui-table-container {
+    overflow-x: auto;
+    border-radius: 1rem;
+    border: 1px solid #e2e8f0; /* slate-200 */
+    background-color: #ffffff;
+}
+
+.dark .ui-table-container {
+    border-color: #1e293b; /* slate-800 */
+    background-color: #0f172a; /* slate-900 */
+}
+
+.ui-table {
+    min-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    text-align: left;
+    font-size: 0.875rem; /* text-sm */
+}
+
+.ui-table th {
+    background-color: #f8fafc; /* slate-50 */
+    color: #475569; /* slate-600 */
+    font-weight: 700;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e2e8f0; /* slate-200 */
+}
+
+.dark .ui-table th {
+    background-color: rgba(30, 41, 59, 0.5); /* slate-800/50 */
+    color: #94a3b8; /* slate-400 */
+    border-bottom-color: #1e293b; /* slate-800 */
+}
+
+.ui-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f1f5f9; /* slate-100 */
+    color: #334155; /* slate-700 */
+    vertical-align: middle;
+}
+
+.dark .ui-table td {
+    border-bottom-color: rgba(30, 41, 59, 0.5); /* slate-800/50 */
+    color: #cbd5e1; /* slate-300 */
+}
+
+.ui-table tr:last-child td {
+    border-bottom: none;
+}
+
+.ui-table tbody tr {
+    transition: background-color 150ms;
+}
+
+.ui-table tbody tr:hover {
+    background-color: #f8fafc; /* slate-50 */
+}
+
+.dark .ui-table tbody tr:hover {
+    background-color: rgba(30, 41, 59, 0.3); /* slate-800/30 */
+}
+
+/* Page Headers & Sections */
+.ui-page-header {
+    font-size: 1.125rem; /* text-lg */
+    font-weight: 900; /* font-black */
+    color: #0f172a; /* slate-900 */
+    letter-spacing: -0.025em; /* tracking-tight */
+}
+
+.dark .ui-page-header {
+    color: #f8fafc; /* slate-50 */
+}
+
+.ui-section-title {
+    font-size: 1rem; /* text-base */
+    font-weight: 800; /* font-extrabold */
+    color: #1e293b; /* slate-800 */
+}
+
+.dark .ui-section-title {
+    color: #e2e8f0; /* slate-200 */
+}
+
+/* ==========================================================================
    Skeleton Loading System & Transitions (Sprint 07)
    ========================================================================== */
 
