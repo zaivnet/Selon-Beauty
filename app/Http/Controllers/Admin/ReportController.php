@@ -26,6 +26,7 @@ class ReportController extends Controller
         $employeeId = $request->input('employee_id');
         $status = $request->input('status', 'all');
         $jobTitleId = $request->input('job_title_id');
+        $outletId = $request->has('outlet_id') ? (int) $request->input('outlet_id') : null;
 
         $filters = [
             'start_date' => $startDate,
@@ -34,6 +35,7 @@ class ReportController extends Controller
             'status' => $status,
             'job_title_id' => $jobTitleId,
             'actor' => $request->user(),
+            'outlet_id' => $outletId,
         ];
 
         $reportData = $this->reportService->generateAttendanceReport($filters);
@@ -53,7 +55,7 @@ class ReportController extends Controller
         $employeesQuery = Employee::whereNull('deleted_at')
             ->where('status', 'active')
             ->currentAttendanceWorkforce();
-        $employeesQuery = $this->outletScopeService->scopeEmployeesFor($request->user(), $employeesQuery);
+        $employeesQuery = $this->outletScopeService->scopeByRequestedOutlet($request->user(), $employeesQuery, $outletId);
 
         $employees = $employeesQuery->orderBy('full_name', 'asc')->get();
 
@@ -75,6 +77,7 @@ class ReportController extends Controller
         $employeeId = $request->input('employee_id');
         $status = $request->input('status', 'all');
         $jobTitleId = $request->input('job_title_id');
+        $outletId = $request->has('outlet_id') ? (int) $request->input('outlet_id') : null;
 
         $filters = [
             'start_date' => $startDate,
@@ -83,13 +86,14 @@ class ReportController extends Controller
             'status' => $status,
             'job_title_id' => $jobTitleId,
             'actor' => $request->user(),
+            'outlet_id' => $outletId,
         ];
 
         $reportData = $this->reportService->generateAttendanceReport($filters);
 
         return view('admin.reports.print', [
             'reportData' => $reportData,
-            'printedAt' => now('Asia/Jakarta')->translatedFormat('d F Y H:i:s') . ' WIB',
+            'printedAt' => now('Asia/Jakarta')->translatedFormat('d F Y H:i:s').' WIB',
         ]);
     }
 
@@ -100,6 +104,7 @@ class ReportController extends Controller
         $employeeId = $request->input('employee_id');
         $status = $request->input('status', 'all');
         $jobTitleId = $request->input('job_title_id');
+        $outletId = $request->has('outlet_id') ? (int) $request->input('outlet_id') : null;
 
         $filters = [
             'start_date' => $startDate,
@@ -108,6 +113,7 @@ class ReportController extends Controller
             'status' => $status,
             'job_title_id' => $jobTitleId,
             'actor' => $request->user(),
+            'outlet_id' => $outletId,
         ];
 
         $reportData = $this->reportService->generateAttendanceReport($filters);
@@ -125,7 +131,7 @@ class ReportController extends Controller
             $file = fopen('php://output', 'w');
 
             // Write UTF-8 BOM for Excel compatibility (Requirement 13)
-            fputs($file, "\xEF\xBB\xBF");
+            fwrite($file, "\xEF\xBB\xBF");
 
             // CSV Header Row
             fputcsv($file, [
@@ -149,7 +155,7 @@ class ReportController extends Controller
             foreach ($reportData['detail_rows'] as $row) {
                 $checkInStr = $row['check_in_at'] ? $row['check_in_at']->format('H:i') : '-';
                 $checkOutStr = $row['check_out_at'] ? $row['check_out_at']->format('H:i') : '-';
-                $shiftStr = $row['shift'] ? $row['shift']->name . ' (' . substr($row['shift']->start_time, 0, 5) . '-' . substr($row['shift']->end_time, 0, 5) . ')' : ($row['schedule']?->schedule_type ?? '-');
+                $shiftStr = $row['shift'] ? $row['shift']->name.' ('.substr($row['shift']->start_time, 0, 5).'-'.substr($row['shift']->end_time, 0, 5).')' : ($row['schedule']?->schedule_type ?? '-');
 
                 $csvRow = [
                     $row['date_str'],
@@ -170,8 +176,9 @@ class ReportController extends Controller
 
                 $sanitizedRow = array_map(function ($val) {
                     if (is_string($val) && preg_match('/^[\=\+\-\@\t\r]/', $val)) {
-                        return "'" . $val;
+                        return "'".$val;
                     }
+
                     return $val;
                 }, $csvRow);
 

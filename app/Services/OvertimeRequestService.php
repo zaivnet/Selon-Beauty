@@ -18,9 +18,11 @@ class OvertimeRequestService
     public function __construct(
         protected ?EffectiveScheduleService $effectiveScheduleService = null,
         protected ?AttendancePeriodService $periodService = null,
+        protected ?OutletScopeService $outletScopeService = null,
     ) {
         $this->effectiveScheduleService = $effectiveScheduleService ?? new EffectiveScheduleService;
         $this->periodService = $periodService ?? new AttendancePeriodService;
+        $this->outletScopeService = $outletScopeService ?? app(OutletScopeService::class);
     }
 
     /**
@@ -80,7 +82,9 @@ class OvertimeRequestService
             AuditLog::log('overtime.submitted', $overtimeRequest, null, $overtimeRequest->toArray());
 
             // Send In-App Notifications to Owner & Admin
-            $recipients = User::whereIn('role', ['owner', 'admin'])->where('is_active', true)->get();
+            $recipients = $this->outletScopeService
+                ->scopeNotificationRecipientsForOutlet(User::query(), (int) $employee->outlet_id, ['owner'])
+                ->get();
             foreach ($recipients as $recipient) {
                 $recipient->notify(new OvertimeRequestSubmittedNotification($overtimeRequest));
             }

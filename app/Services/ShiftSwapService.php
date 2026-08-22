@@ -7,8 +7,8 @@ use App\Models\AuditLog;
 use App\Models\Employee;
 use App\Models\EmployeeScheduleOverride;
 use App\Models\LeaveRequest;
-use App\Models\OvertimeRequest;
 use App\Models\OvertimeSession;
+use App\Models\Shift;
 use App\Models\ShiftSwapRequest;
 use App\Models\User;
 use App\Notifications\ShiftSwapNotification;
@@ -21,9 +21,11 @@ class ShiftSwapService
     public function __construct(
         protected ?EffectiveScheduleService $effectiveService = null,
         protected ?AttendancePeriodService $periodService = null,
+        protected ?OutletScopeService $outletScopeService = null,
     ) {
         $this->effectiveService = $effectiveService ?? new EffectiveScheduleService;
         $this->periodService = $periodService ?? new AttendancePeriodService;
+        $this->outletScopeService = $outletScopeService ?? app(OutletScopeService::class);
     }
 
     public function submitRequest(Employee $requester, array $data): ShiftSwapRequest
@@ -114,7 +116,9 @@ class ShiftSwapService
                 }
 
                 // Notify Admins / Owners
-                $admins = User::whereIn('role', ['admin', 'owner', 'superadmin'])->where('is_active', true)->get();
+                $admins = $this->outletScopeService
+                    ->scopeNotificationRecipientsForOutlet(User::query(), (int) $swap->requester->outlet_id, ['owner', 'superadmin'])
+                    ->get();
                 foreach ($admins as $admin) {
                     $admin->notify(new ShiftSwapNotification($swap, 'admin_pending'));
                 }
@@ -274,7 +278,7 @@ class ShiftSwapService
     /**
      * Revalidates eligibility, period locks, date windows, attendance/leave/overtime conflicts, & active swap collisions.
      *
-     * @return array{requester_shift:\App\Models\Shift, target_shift:\App\Models\Shift}
+     * @return array{requester_shift:Shift, target_shift:Shift}
      *
      * @throws ValidationException
      */

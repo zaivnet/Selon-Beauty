@@ -31,6 +31,7 @@ class AttendanceCorrectionRecoveryTest extends TestCase
         $employee = Employee::create(['employee_code' => 'COR-01', 'full_name' => 'Nadia', 'status' => 'active']);
         $this->employeeUser = User::create(['employee_id' => $employee->id, 'name' => 'Nadia', 'email' => 'nadia@example.test', 'password' => Hash::make('password'), 'role' => 'employee', 'is_active' => true]);
         $this->admin = User::create(['name' => 'Admin', 'email' => 'admin-cor@example.test', 'password' => Hash::make('password'), 'role' => 'admin', 'is_active' => true]);
+        $this->admin->assignedOutlets()->sync([$this->admin->outlet_id]);
         $shift = Shift::create([
             'name' => 'Pagi', 'code' => 'COR-PAGI', 'start_time' => '08:00', 'end_time' => '17:00',
             'grace_period_minutes' => 5, 'break_minutes' => 60, 'check_in_open_minutes_before' => 60,

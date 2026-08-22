@@ -17,10 +17,15 @@ class DashboardPerformanceTest extends TestCase
     use RefreshDatabase;
 
     protected Outlet $outletA;
+
     protected Outlet $outletB;
+
     protected User $adminA;
+
     protected User $owner;
+
     protected Employee $employeeA1;
+
     protected Employee $employeeB1;
 
     protected function setUp(): void
@@ -50,6 +55,7 @@ class DashboardPerformanceTest extends TestCase
             'outlet_id' => $this->outletA->id,
             'is_active' => true,
         ]);
+        $this->adminA->assignedOutlets()->sync([$this->outletA->id]);
 
         $this->owner = User::factory()->create([
             'role' => 'owner',

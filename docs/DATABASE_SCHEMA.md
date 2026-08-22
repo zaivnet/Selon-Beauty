@@ -350,6 +350,24 @@ Indexes:
 - `['target_employee_id', 'target_work_date']`
 - `['status']`
 
+## 17. Admin Assigned Outlets
+
+Tambahan pada `users`:
+- `outlet_access_mode` VARCHAR(20), default `selected`; nilai aplikasi: `selected` atau `all`.
+- `outlet_id` tetap nullable FK sebagai primary/default kompatibilitas, bukan sumber otorisasi.
+
+Tabel `admin_outlet_assignments`:
+- `id` BIGINT PK
+- `user_id` FK users, cascade on delete
+- `outlet_id` FK outlets, cascade on delete
+- timestamps
+
+Constraints/indexes:
+- unique `['user_id', 'outlet_id']` (`aoa_user_outlet_uq`)
+- index `['outlet_id', 'user_id']` (`aoa_outlet_user_idx`)
+
+Pivot dipakai untuk Admin mode `selected`. Admin mode `all`, Owner, dan Superadmin tidak memerlukan pivot untuk cakupan globalnya.
+
 ## Indexes Penting
 
 - employees(status)
@@ -371,4 +389,3 @@ Production seed hanya boleh:
 - tidak boleh membuat owner dengan password hardcoded.
 
 Initial owner dibuat melalui proses setup aman atau Artisan command khusus.
-

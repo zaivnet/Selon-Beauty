@@ -67,6 +67,7 @@ class NotificationTest extends TestCase
             'role' => 'admin',
             'is_active' => true,
         ]);
+        $this->adminUser->assignedOutlets()->sync([$this->adminUser->outlet_id]);
 
         $this->employee1 = Employee::create([
             'employee_code' => 'SB-001',

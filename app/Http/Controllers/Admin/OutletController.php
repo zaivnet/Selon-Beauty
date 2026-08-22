@@ -2,21 +2,21 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\OutletAccessMode;
 use App\Http\Controllers\Controller;
 use App\Models\Outlet;
+use App\Models\User;
+use App\Services\GeofenceService;
 use App\Services\OutletScopeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-
-use App\Services\GeofenceService;
 
 class OutletController extends Controller
 {
     public function __construct(
         protected OutletScopeService $outletScopeService,
         protected GeofenceService $geofenceService,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request)
     {
@@ -24,11 +24,17 @@ class OutletController extends Controller
 
         $outlets = Outlet::withCount([
             'employees' => fn ($q) => $q->where('status', 'active'),
-            'users' => fn ($q) => $q->where('role', 'admin')->where('is_active', true),
+            'assignedAdmins as users_count' => fn ($q) => $q->where('role', 'admin')->where('is_active', true),
         ])
             ->orderBy('is_active', 'desc')
             ->orderBy('name', 'asc')
             ->get();
+        $allOutletAdminCount = User::query()
+            ->where('role', 'admin')
+            ->where('is_active', true)
+            ->where('outlet_access_mode', OutletAccessMode::ALL->value)
+            ->count();
+        $outlets->each(fn (Outlet $outlet) => $outlet->setAttribute('users_count', $outlet->users_count + $allOutletAdminCount));
 
         $testResult = null;
         if ($request->filled(['test_outlet_id', 'test_lat', 'test_lon'])) {
@@ -135,7 +141,15 @@ class OutletController extends Controller
 
         if (! $newStatus) {
             $activeEmployeesCount = $outlet->employees()->where('status', 'active')->count();
-            $activeAdminsCount = $outlet->users()->where('role', 'admin')->where('is_active', true)->count();
+            $activeAdminsCount = $outlet->assignedAdmins()
+                ->where('role', 'admin')
+                ->where('is_active', true)
+                ->count()
+                + User::query()
+                    ->where('role', 'admin')
+                    ->where('is_active', true)
+                    ->where('outlet_access_mode', OutletAccessMode::ALL->value)
+                    ->count();
             if ($activeEmployeesCount > 0 || $activeAdminsCount > 0) {
                 return redirect()->back()->with('error', "Outlet {$outlet->name} masih memiliki {$activeEmployeesCount} Karyawan dan {$activeAdminsCount} Admin aktif. Pindahkan pengguna ke outlet aktif lain sebelum menonaktifkan outlet ini.");
             }

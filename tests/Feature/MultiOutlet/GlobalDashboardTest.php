@@ -2,12 +2,10 @@
 
 namespace Tests\Feature\MultiOutlet;
 
-use App\Models\AttendanceRecord;
 use App\Models\Employee;
 use App\Models\JobTitle;
 use App\Models\Outlet;
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -17,11 +15,17 @@ class GlobalDashboardTest extends TestCase
     use RefreshDatabase;
 
     protected User $owner;
+
     protected User $superadmin;
+
     protected User $adminOutlet1;
+
     protected Outlet $outlet1;
+
     protected Outlet $outlet2;
+
     protected Employee $empOutlet1;
+
     protected Employee $empOutlet2;
 
     protected function setUp(): void
@@ -75,6 +79,7 @@ class GlobalDashboardTest extends TestCase
             'outlet_id' => $this->outlet1->id,
             'is_active' => true,
         ]);
+        $this->adminOutlet1->assignedOutlets()->sync([$this->outlet1->id]);
 
         $this->empOutlet1 = Employee::create([
             'employee_code' => 'EMP-001',
@@ -100,7 +105,7 @@ class GlobalDashboardTest extends TestCase
         $response = $this->actingAs($this->owner)->get(route('admin.dashboard'));
         $response->assertOk();
         $response->assertViewIs('admin.dashboard_global');
-        
+
         $response->assertViewHas('globalData', function ($data) {
             $expectedOutletsCount = Outlet::where('is_active', true)->count();
             $expectedEmployeesCount = Employee::where('status', 'active')->count();
@@ -182,7 +187,7 @@ class GlobalDashboardTest extends TestCase
         // The number of queries should be extremely close (or identical) regardless of outlet count
         // Allow a tiny margin of error (+- 3 queries) for internal Laravel framework differences if any.
         $this->assertTrue(
-            abs($queryCountExpanded - $queryCountBase) <= 3, 
+            abs($queryCountExpanded - $queryCountBase) <= 3,
             "Query count increased significantly ($queryCountBase -> $queryCountExpanded), indicating N+1 queries."
         );
     }

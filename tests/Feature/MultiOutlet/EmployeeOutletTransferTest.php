@@ -3,17 +3,18 @@
 namespace Tests\Feature\MultiOutlet;
 
 use App\Models\AttendanceRecord;
-use App\Models\AuditLog;
 use App\Models\Employee;
-use App\Models\EmployeeOutletTransfer;
 use App\Models\JobTitle;
 use App\Models\Outlet;
+use App\Models\OvertimeRequest;
 use App\Models\OvertimeSession;
 use App\Models\Shift;
 use App\Models\ShiftSwapRequest;
 use App\Models\User;
+use App\Services\EmployeeService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class EmployeeOutletTransferTest extends TestCase
@@ -21,19 +22,30 @@ class EmployeeOutletTransferTest extends TestCase
     use RefreshDatabase;
 
     protected User $owner;
+
     protected User $superadmin;
+
     protected User $adminOutlet1;
+
     protected User $adminOutlet2;
+
     protected Outlet $outlet1;
+
     protected Outlet $outlet2;
+
     protected Outlet $inactiveOutlet;
+
     protected Employee $employee;
+
     protected JobTitle $jobTitle;
+
     protected Shift $shift;
 
     protected function setUp(): void
     {
         parent::setUp();
+
+        Carbon::setTestNow('2026-08-22 10:00:00');
 
         $this->outlet1 = Outlet::create([
             'name' => 'Selon Beauty Pusat',
@@ -108,6 +120,8 @@ class EmployeeOutletTransferTest extends TestCase
             'outlet_id' => $this->outlet2->id,
             'is_active' => true,
         ]);
+        $this->adminOutlet1->assignedOutlets()->sync([$this->outlet1->id]);
+        $this->adminOutlet2->assignedOutlets()->sync([$this->outlet2->id]);
 
         $this->employee = Employee::create([
             'employee_code' => 'EMP-100',
@@ -117,6 +131,120 @@ class EmployeeOutletTransferTest extends TestCase
             'outlet_id' => $this->outlet1->id,
             'job_title_id' => $this->jobTitle->id,
         ]);
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+
+        parent::tearDown();
+    }
+
+    public function test_owner_normal_update_cannot_change_home_outlet(): void
+    {
+        $this->actingAs($this->owner)
+            ->put(route('admin.employees.update', $this->employee), $this->updatePayload([
+                'outlet_id' => $this->outlet2->id,
+            ]))
+            ->assertSessionHasErrors('outlet_id');
+
+        $this->assertSame($this->outlet1->id, $this->employee->fresh()->outlet_id);
+        $this->assertDatabaseCount('employee_outlet_transfers', 0);
+
+        $this->actingAs($this->owner)
+            ->get(route('admin.employees.edit', $this->employee))
+            ->assertOk()
+            ->assertSee('Home Outlet')
+            ->assertSee('gunakan fitur Pindah Outlet')
+            ->assertDontSee('name="outlet_id"', false);
+    }
+
+    public function test_superadmin_normal_update_cannot_change_home_outlet(): void
+    {
+        $this->actingAs($this->superadmin)
+            ->put(route('admin.employees.update', $this->employee), $this->updatePayload([
+                'outlet_id' => $this->outlet2->id,
+            ]))
+            ->assertSessionHasErrors('outlet_id');
+
+        $this->assertSame($this->outlet1->id, $this->employee->fresh()->outlet_id);
+        $this->assertDatabaseCount('employee_outlet_transfers', 0);
+    }
+
+    public function test_admin_normal_update_cannot_change_home_outlet(): void
+    {
+        $this->adminOutlet1->assignedOutlets()->sync([$this->outlet1->id, $this->outlet2->id]);
+
+        $this->actingAs($this->adminOutlet1)
+            ->put(route('admin.employees.update', $this->employee), $this->updatePayload([
+                'outlet_id' => $this->outlet2->id,
+            ]))
+            ->assertSessionHasErrors('outlet_id');
+
+        $this->assertSame($this->outlet1->id, $this->employee->fresh()->outlet_id);
+        $this->assertDatabaseCount('employee_outlet_transfers', 0);
+    }
+
+    public function test_normal_update_still_changes_regular_fields_and_tolerates_same_home_outlet(): void
+    {
+        $newJobTitle = JobTitle::create([
+            'name' => 'Senior Hairstylist',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($this->owner)
+            ->put(route('admin.employees.update', $this->employee), $this->updatePayload([
+                'full_name' => 'Dulhaq Updated',
+                'job_title_id' => $newJobTitle->id,
+                'status' => 'inactive',
+                'outlet_id' => $this->outlet1->id,
+            ]))
+            ->assertRedirect(route('admin.employees.index'));
+
+        $employee = $this->employee->fresh();
+        $this->assertSame('Dulhaq Updated', $employee->full_name);
+        $this->assertSame($newJobTitle->id, $employee->job_title_id);
+        $this->assertSame('inactive', $employee->status);
+        $this->assertSame($this->outlet1->id, $employee->outlet_id);
+        $this->assertDatabaseCount('employee_outlet_transfers', 0);
+    }
+
+    public function test_employee_service_rejects_forged_home_outlet_mutation(): void
+    {
+        try {
+            app(EmployeeService::class)->updateEmployee($this->employee, [
+                'full_name' => 'Should Not Persist',
+                'outlet_id' => $this->outlet2->id,
+            ]);
+            $this->fail('EmployeeService should reject direct Home Outlet mutation.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('outlet_id', $exception->errors());
+        }
+
+        $employee = $this->employee->fresh();
+        $this->assertSame('Dulhaq Transferred', $employee->full_name);
+        $this->assertSame($this->outlet1->id, $employee->outlet_id);
+        $this->assertDatabaseCount('employee_outlet_transfers', 0);
+    }
+
+    public function test_employee_creation_still_sets_initial_home_outlet(): void
+    {
+        $this->actingAs($this->owner)
+            ->post(route('admin.employees.store'), [
+                'employee_code' => 'EMP-CREATE-HOME',
+                'full_name' => 'Created Employee',
+                'status' => 'active',
+                'outlet_id' => $this->outlet2->id,
+                'create_user_account' => 0,
+                'role' => 'employee',
+            ])
+            ->assertRedirect(route('admin.employees.index'));
+
+        $this->assertDatabaseHas('employees', [
+            'employee_code' => 'EMP-CREATE-HOME',
+            'outlet_id' => $this->outlet2->id,
+        ]);
+        $this->assertDatabaseCount('employee_outlet_transfers', 0);
     }
 
     public function test_owner_can_transfer_employee_outlet(): void
@@ -279,7 +407,7 @@ class EmployeeOutletTransferTest extends TestCase
 
     public function test_active_overtime_session_blocks_transfer(): void
     {
-        $ovtReq = \App\Models\OvertimeRequest::create([
+        $ovtReq = OvertimeRequest::create([
             'employee_id' => $this->employee->id,
             'work_date' => Carbon::now(config('app.timezone'))->toDateString(),
             'requested_minutes' => 60,
@@ -344,5 +472,21 @@ class EmployeeOutletTransferTest extends TestCase
             'user_id' => $this->owner->id,
             'action' => 'employee.outlet.transferred',
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function updatePayload(array $overrides = []): array
+    {
+        return array_merge([
+            'employee_code' => $this->employee->employee_code,
+            'full_name' => $this->employee->full_name,
+            'email' => $this->employee->email,
+            'job_title_id' => $this->employee->job_title_id,
+            'status' => $this->employee->status,
+            'role' => 'employee',
+        ], $overrides);
     }
 }

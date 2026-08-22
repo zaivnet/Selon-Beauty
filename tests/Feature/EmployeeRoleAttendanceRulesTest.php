@@ -35,6 +35,7 @@ class EmployeeRoleAttendanceRulesTest extends TestCase
             'role' => 'admin',
             'is_active' => true,
         ]);
+        $this->admin->assignedOutlets()->sync([$this->admin->outlet_id]);
     }
 
     public function test_karyawan_role_always_forces_attendance_enabled_to_true(): void

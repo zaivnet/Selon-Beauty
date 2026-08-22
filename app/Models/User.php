@@ -3,19 +3,26 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Notifications\CustomResetPasswordNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['employee_id', 'outlet_id', 'name', 'email', 'phone', 'password', 'role', 'is_active', 'last_login_at'])]
+#[Fillable(['employee_id', 'outlet_id', 'outlet_access_mode', 'name', 'email', 'phone', 'password', 'role', 'is_active', 'last_login_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+    protected $attributes = [
+        'outlet_access_mode' => 'selected',
+    ];
 
     protected static function booted(): void
     {
@@ -47,14 +54,20 @@ class User extends Authenticatable
         ];
     }
 
-    public function employee(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'employee_id');
     }
 
-    public function outlet(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function outlet(): BelongsTo
     {
         return $this->belongsTo(Outlet::class, 'outlet_id');
+    }
+
+    public function assignedOutlets(): BelongsToMany
+    {
+        return $this->belongsToMany(Outlet::class, 'admin_outlet_assignments')
+            ->withTimestamps();
     }
 
     public function getEffectiveOutletId(): ?int
@@ -70,7 +83,6 @@ class User extends Authenticatable
      */
     public function sendPasswordResetNotification($token)
     {
-        $this->notify(new \App\Notifications\CustomResetPasswordNotification($token));
+        $this->notify(new CustomResetPasswordNotification($token));
     }
 }
-

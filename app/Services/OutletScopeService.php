@@ -2,33 +2,128 @@
 
 namespace App\Services;
 
+use App\Enums\OutletAccessMode;
+use App\Models\AttendanceRecord;
 use App\Models\Employee;
+use App\Models\LeaveRequest;
+use App\Models\Outlet;
+use App\Models\OvertimeRequest;
+use App\Models\OvertimeSession;
+use App\Models\ShiftSwapRequest;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Database\Eloquent\Collection;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class OutletScopeService
 {
+    /** @var array<int, array<int, int>> */
+    private array $resolvedOutletIds = [];
+
+    /** @var array<int, Collection<int, Outlet>> */
+    private array $resolvedOutlets = [];
+
     /**
-     * Determine if user has global outlet access scope (Superadmin or Owner).
+     * Global role scope is deliberately limited to Owner and Superadmin.
+     * Admin `all` expands outlet scope only; it does not expand RBAC privileges.
      */
     public function isGlobalScope(User $user): bool
     {
         return in_array($user->role, ['superadmin', 'owner'], true);
     }
 
-    /**
-     * Get the assigned outlet ID for an Admin or User.
-     */
-    public function getAdminOutletId(User $user): ?int
+    public function hasAllOutletAccess(User $user): bool
     {
-        return $user->outlet_id ?? $user->employee?->outlet_id;
+        return $this->isGlobalScope($user)
+            || ($user->role === 'admin' && $user->outlet_access_mode === OutletAccessMode::ALL->value);
     }
 
-    /**
-     * Check if actor is permitted to manage target employee based on role and outlet scope.
-     */
+    /** @return array<int, int> */
+    public function allowedOutletIds(User $actor): array
+    {
+        if (! in_array($actor->role, ['superadmin', 'owner', 'admin'], true)) {
+            return [];
+        }
+
+        if (isset($this->resolvedOutletIds[$actor->id])) {
+            return $this->resolvedOutletIds[$actor->id];
+        }
+
+        if ($this->hasAllOutletAccess($actor)) {
+            $outlets = Outlet::query()
+                ->where('is_active', true)
+                ->orderBy('id')
+                ->get();
+            $this->resolvedOutlets[$actor->id] = $outlets;
+
+            return $this->resolvedOutletIds[$actor->id] = $outlets->pluck('id')->map(static fn ($id): int => (int) $id)->all();
+        }
+
+        if ($actor->role !== 'admin' || $actor->outlet_access_mode !== OutletAccessMode::SELECTED->value) {
+            $this->resolvedOutlets[$actor->id] = new Collection;
+
+            return $this->resolvedOutletIds[$actor->id] = [];
+        }
+
+        $outlets = $actor->assignedOutlets()
+            ->where('is_active', true)
+            ->orderBy('outlets.id')
+            ->get();
+        $this->resolvedOutlets[$actor->id] = $outlets;
+
+        return $this->resolvedOutletIds[$actor->id] = $outlets->pluck('id')->map(static fn ($id): int => (int) $id)->all();
+    }
+
+    public function forgetResolvedAccess(?User $actor = null): void
+    {
+        if ($actor === null) {
+            $this->resolvedOutletIds = [];
+            $this->resolvedOutlets = [];
+
+            return;
+        }
+
+        unset($this->resolvedOutletIds[$actor->id]);
+        unset($this->resolvedOutlets[$actor->id]);
+    }
+
+    public function canAccessOutlet(User $actor, int|Outlet $outlet): bool
+    {
+        $outletId = $outlet instanceof Outlet ? (int) $outlet->id : $outlet;
+
+        if ($this->isGlobalScope($actor)) {
+            return true;
+        }
+
+        return in_array($outletId, $this->allowedOutletIds($actor), true);
+    }
+
+    public function ensureCanAccessOutlet(User $actor, int|Outlet $outlet): void
+    {
+        if (! $this->canAccessOutlet($actor, $outlet)) {
+            throw new AccessDeniedHttpException('Akses ditolak. Outlet ini tidak berada dalam penugasan Anda.');
+        }
+    }
+
+    /** Compatibility/default outlet only. Never use this method as authorization. */
+    public function getAdminOutletId(User $user): ?int
+    {
+        if ($user->role !== 'admin') {
+            return $user->outlet_id ?? $user->employee?->outlet_id;
+        }
+
+        $allowedIds = $this->allowedOutletIds($user);
+        if ($allowedIds === []) {
+            return null;
+        }
+
+        $primaryId = $user->outlet_id ? (int) $user->outlet_id : null;
+
+        return $primaryId !== null && in_array($primaryId, $allowedIds, true)
+            ? $primaryId
+            : $allowedIds[0];
+    }
+
     public function canManageEmployee(User $actor, Employee $employee): bool
     {
         if ($this->isGlobalScope($actor)) {
@@ -36,81 +131,49 @@ class OutletScopeService
         }
 
         if ($actor->role === 'admin') {
-            $adminOutletId = $this->getAdminOutletId($actor);
-            if (! $adminOutletId) {
-                return false; // Fail closed if Admin has no assigned outlet
-            }
-
-            return (int) $employee->outlet_id === (int) $adminOutletId;
+            return in_array((int) $employee->outlet_id, $this->allowedOutletIds($actor), true);
         }
 
-        if ($actor->role === 'employee' && $actor->employee_id && (int) $actor->employee_id === (int) $employee->id) {
-            return true;
-        }
-
-        return false;
+        return $actor->role === 'employee'
+            && $actor->employee_id
+            && (int) $actor->employee_id === (int) $employee->id;
     }
 
-    /**
-     * Scope Employee builder query based on authenticated actor's outlet permission.
-     */
     public function scopeEmployeesFor(User $actor, Builder $query): Builder
     {
         if ($this->isGlobalScope($actor)) {
             return $query;
         }
 
-        if ($actor->role === 'admin') {
-            $adminOutletId = $this->getAdminOutletId($actor);
-            if (! $adminOutletId) {
-                return $query->whereRaw('1 = 0'); // Fail closed
-            }
-
-            return $query->where('employees.outlet_id', $adminOutletId);
+        if ($actor->role !== 'admin') {
+            return $query->whereRaw('1 = 0');
         }
 
-        return $query->whereRaw('1 = 0');
+        $outletIds = $this->allowedOutletIds($actor);
+
+        return $outletIds === []
+            ? $query->whereRaw('1 = 0')
+            : $query->whereIn('employees.outlet_id', $outletIds);
     }
 
-    /**
-     * Reusable scope for operational models (AttendanceRecord, LeaveRequest, OvertimeRequest, etc.).
-     */
     public function scopeQueryFor(User $actor, Builder $query, string $outletColumn = 'outlet_id'): Builder
     {
         if ($this->isGlobalScope($actor)) {
             return $query;
         }
 
-        if ($actor->role === 'admin') {
-            $adminOutletId = $this->getAdminOutletId($actor);
-            if (! $adminOutletId) {
-                return $query->whereRaw('1 = 0'); // Fail closed
-            }
-
-            $model = $query->getModel();
-
-            // Direct outlet_id column on model table
-            if (in_array($outletColumn, $model->getFillable(), true) || $model->getTable() === 'outlets') {
-                return $query->where($model->getTable().'.'.$outletColumn, $adminOutletId);
-            }
-
-            // Relationship to employee
-            if (method_exists($model, 'employee')) {
-                return $query->whereHas('employee', function (Builder $empQuery) use ($adminOutletId) {
-                    $empQuery->where('employees.outlet_id', $adminOutletId);
-                });
-            }
-
-            // Fallback for models without direct outlet or employee relation
+        if ($actor->role !== 'admin') {
             return $query->whereRaw('1 = 0');
         }
 
-        return $query->whereRaw('1 = 0');
+        $outletIds = $this->allowedOutletIds($actor);
+        if ($outletIds === []) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $this->applyOutletConstraint($query, $outletIds, $outletColumn);
     }
 
-    /**
-     * Enforce that actor can manage target employee. Throw 403 AccessDeniedHttpException if unauthorized.
-     */
     public function ensureCanManageEmployee(User $actor, ?Employee $employee): void
     {
         if (! $employee || ! $this->canManageEmployee($actor, $employee)) {
@@ -118,10 +181,7 @@ class OutletScopeService
         }
     }
 
-    /**
-     * Check if actor can access/manage attendance record.
-     */
-    public function canManageAttendance(User $actor, ?\App\Models\AttendanceRecord $record): bool
+    public function canManageAttendance(User $actor, ?AttendanceRecord $record): bool
     {
         if (! $record) {
             return false;
@@ -132,20 +192,14 @@ class OutletScopeService
         return $employee ? $this->canManageEmployee($actor, $employee) : false;
     }
 
-    /**
-     * Enforce authorization for attendance record. Throw 403 if unauthorized.
-     */
-    public function ensureCanManageAttendance(User $actor, ?\App\Models\AttendanceRecord $record): void
+    public function ensureCanManageAttendance(User $actor, ?AttendanceRecord $record): void
     {
         if (! $this->canManageAttendance($actor, $record)) {
             throw new AccessDeniedHttpException('Akses ditolak. Presensi ini tidak berada di outlet penugasan Anda.');
         }
     }
 
-    /**
-     * Check if actor can access/manage leave request.
-     */
-    public function canManageLeave(User $actor, ?\App\Models\LeaveRequest $leave): bool
+    public function canManageLeave(User $actor, ?LeaveRequest $leave): bool
     {
         if (! $leave) {
             return false;
@@ -156,20 +210,14 @@ class OutletScopeService
         return $employee ? $this->canManageEmployee($actor, $employee) : false;
     }
 
-    /**
-     * Enforce authorization for leave request. Throw 403 if unauthorized.
-     */
-    public function ensureCanManageLeave(User $actor, ?\App\Models\LeaveRequest $leave): void
+    public function ensureCanManageLeave(User $actor, ?LeaveRequest $leave): void
     {
         if (! $this->canManageLeave($actor, $leave)) {
             throw new AccessDeniedHttpException('Akses ditolak. Pengajuan izin/cuti ini tidak berada di outlet penugasan Anda.');
         }
     }
 
-    /**
-     * Check if actor can access/manage overtime request.
-     */
-    public function canManageOvertime(User $actor, ?\App\Models\OvertimeRequest $overtime): bool
+    public function canManageOvertime(User $actor, ?OvertimeRequest $overtime): bool
     {
         if (! $overtime) {
             return false;
@@ -180,20 +228,14 @@ class OutletScopeService
         return $employee ? $this->canManageEmployee($actor, $employee) : false;
     }
 
-    /**
-     * Enforce authorization for overtime request. Throw 403 if unauthorized.
-     */
-    public function ensureCanManageOvertime(User $actor, ?\App\Models\OvertimeRequest $overtime): void
+    public function ensureCanManageOvertime(User $actor, ?OvertimeRequest $overtime): void
     {
         if (! $this->canManageOvertime($actor, $overtime)) {
             throw new AccessDeniedHttpException('Akses ditolak. Pengajuan lembur ini tidak berada di outlet penugasan Anda.');
         }
     }
 
-    /**
-     * Check if actor can access/manage overtime session.
-     */
-    public function canManageOvertimeSession(User $actor, ?\App\Models\OvertimeSession $session): bool
+    public function canManageOvertimeSession(User $actor, ?OvertimeSession $session): bool
     {
         if (! $session) {
             return false;
@@ -204,21 +246,14 @@ class OutletScopeService
         return $employee ? $this->canManageEmployee($actor, $employee) : false;
     }
 
-    /**
-     * Enforce authorization for overtime session. Throw 403 if unauthorized.
-     */
-    public function ensureCanManageOvertimeSession(User $actor, ?\App\Models\OvertimeSession $session): void
+    public function ensureCanManageOvertimeSession(User $actor, ?OvertimeSession $session): void
     {
         if (! $this->canManageOvertimeSession($actor, $session)) {
             throw new AccessDeniedHttpException('Akses ditolak. Sesi lembur ini tidak berada di outlet penugasan Anda.');
         }
     }
 
-    /**
-     * Check if actor can access/manage shift swap request.
-     * For Admin, BOTH requester and target employees must belong to Admin outlet.
-     */
-    public function canManageShiftSwap(User $actor, ?\App\Models\ShiftSwapRequest $swap): bool
+    public function canManageShiftSwap(User $actor, ?ShiftSwapRequest $swap): bool
     {
         if (! $swap) {
             return false;
@@ -228,137 +263,181 @@ class OutletScopeService
             return true;
         }
 
-        if ($actor->role === 'admin') {
-            $requester = $swap->requester ?? Employee::withTrashed()->find($swap->requester_employee_id);
-            $target = $swap->target ?? Employee::withTrashed()->find($swap->target_employee_id);
-
-            $canReq = $requester ? $this->canManageEmployee($actor, $requester) : false;
-            $canTarget = $target ? $this->canManageEmployee($actor, $target) : false;
-
-            return $canReq && $canTarget;
+        if ($actor->role !== 'admin') {
+            return false;
         }
 
-        return false;
+        $requester = $swap->requester ?? Employee::withTrashed()->find($swap->requester_employee_id);
+        $target = $swap->target ?? Employee::withTrashed()->find($swap->target_employee_id);
+
+        return $requester && $target
+            && $this->canManageEmployee($actor, $requester)
+            && $this->canManageEmployee($actor, $target);
     }
 
-    /**
-     * Enforce authorization for shift swap request. Throw 403 if unauthorized.
-     */
-    public function ensureCanManageShiftSwap(User $actor, ?\App\Models\ShiftSwapRequest $swap): void
+    public function ensureCanManageShiftSwap(User $actor, ?ShiftSwapRequest $swap): void
     {
         if (! $this->canManageShiftSwap($actor, $swap)) {
             throw new AccessDeniedHttpException('Akses ditolak. Permintaan tukar jadwal ini tidak berada di outlet penugasan Anda.');
         }
     }
 
-    /**
-     * Get list of active outlets for global actors UI filters.
-     *
-     * @return \Illuminate\Database\Eloquent\Collection<int, \App\Models\Outlet>
-     */
-    public function getActiveOutlets(): \Illuminate\Database\Eloquent\Collection
+    /** @return Collection<int, Outlet> */
+    public function getActiveOutlets(): Collection
     {
-        return \App\Models\Outlet::where('is_active', true)->orderBy('name')->get();
+        return Outlet::query()->where('is_active', true)->orderBy('name')->get();
     }
 
-    /**
-     * Resolve the requested active outlet ID for actor with session persistence and security sanitization.
-     *
-     * - Superadmin / Owner: May request '0' / null for All Outlets, or valid active outlet ID.
-     * - Admin: Strictly limited to assigned outlet ID; browser request input is ignored.
-     */
+    /** @return Collection<int, Outlet> */
+    public function getAuthorizedActiveOutlets(User $actor): Collection
+    {
+        $this->allowedOutletIds($actor);
+
+        return ($this->resolvedOutlets[$actor->id] ?? new Collection)
+            ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
+            ->values();
+    }
+
+    /** Resolve one operational context. Only global roles may use null for all outlets. */
     public function resolveRequestedOutlet(User $actor, ?int $inputOutletId = null): ?int
     {
         if ($this->isGlobalScope($actor)) {
-            // Explicit clear request (e.g. 0 or negative) -> All Outlets
-            if ($inputOutletId !== null && $inputOutletId <= 0) {
-                session()->forget('active_outlet_id');
+            return $this->resolveGlobalOutletContext($actor, $inputOutletId);
+        }
 
-                return null;
-            }
-
-            // Explicit valid outlet ID requested
-            if ($inputOutletId !== null && $inputOutletId > 0) {
-                $isValidActive = \App\Models\Outlet::where('id', $inputOutletId)
-                    ->where('is_active', true)
-                    ->exists();
-
-                if ($isValidActive) {
-                    session(['active_outlet_id' => $inputOutletId]);
-
-                    return $inputOutletId;
-                }
-
-                // Invalid or inactive requested outlet ID -> clear session & fallback to All Outlets safely
-                session()->forget('active_outlet_id');
-
-                return null;
-            }
-
-            // No explicit input provided -> check session persistence
-            $sessionOutletId = session('active_outlet_id');
-            if ($sessionOutletId) {
-                $isValidActive = \App\Models\Outlet::where('id', $sessionOutletId)
-                    ->where('is_active', true)
-                    ->exists();
-
-                if ($isValidActive) {
-                    return (int) $sessionOutletId;
-                }
-
-                session()->forget('active_outlet_id');
-            }
+        if ($actor->role !== 'admin') {
+            $this->forgetOutletContext();
 
             return null;
         }
 
-        // Admin role: Always strictly scoped to assigned outlet ID
-        return $this->getAdminOutletId($actor);
+        $allowedIds = $this->allowedOutletIds($actor);
+        if ($allowedIds === []) {
+            $this->forgetOutletContext();
+
+            return null;
+        }
+
+        if ($inputOutletId !== null && $inputOutletId > 0 && in_array($inputOutletId, $allowedIds, true)) {
+            $this->rememberOutletContext($actor, $inputOutletId);
+
+            return $inputOutletId;
+        }
+
+        if ($inputOutletId === null) {
+            $sessionOutletId = (int) session('active_outlet_user_id') === (int) $actor->id
+                ? (int) session('active_outlet_id', 0)
+                : 0;
+            if ($sessionOutletId > 0 && in_array($sessionOutletId, $allowedIds, true)) {
+                return $sessionOutletId;
+            }
+        }
+
+        $fallbackId = $this->getAdminOutletId($actor) ?? $allowedIds[0];
+        $this->rememberOutletContext($actor, $fallbackId);
+
+        return $fallbackId;
     }
 
-    /**
-     * Scope Eloquent query by resolved requested outlet ID.
-     */
     public function scopeByRequestedOutlet(User $actor, Builder $query, ?int $inputOutletId = null, string $outletColumn = 'outlet_id'): Builder
     {
         $targetOutletId = $this->resolveRequestedOutlet($actor, $inputOutletId);
 
         if ($targetOutletId !== null) {
-            $model = $query->getModel();
-
-            if (in_array($outletColumn, $model->getFillable(), true) || $model->getTable() === 'outlets') {
-                return $query->where($model->getTable().'.'.$outletColumn, $targetOutletId);
-            }
-
-            if (method_exists($model, 'employee')) {
-                return $query->whereHas('employee', function (Builder $empQuery) use ($targetOutletId) {
-                    $empQuery->where('employees.outlet_id', $targetOutletId);
-                });
-            }
-
-            if ($model->getTable() === 'employees') {
-                return $query->where('employees.outlet_id', $targetOutletId);
-            }
-
-            return $query->whereRaw('1 = 0');
+            return $this->applyOutletConstraint($query, [$targetOutletId], $outletColumn);
         }
 
-        // Target outlet ID is null (All Outlets for Superadmin/Owner)
-        if ($this->isGlobalScope($actor)) {
-            return $query;
+        return $this->isGlobalScope($actor) ? $query : $query->whereRaw('1 = 0');
+    }
+
+    public function ensureAdminHasOutlet(User $user): void
+    {
+        if ($user->role === 'admin' && $this->allowedOutletIds($user) === []) {
+            throw new AccessDeniedHttpException('Akun Admin belum memiliki penugasan outlet. Hubungi Owner atau Administrator.');
+        }
+    }
+
+    /** @param array<int, string> $globalRoles */
+    public function scopeNotificationRecipientsForOutlet(Builder $query, int $outletId, array $globalRoles): Builder
+    {
+        return $query->where('is_active', true)
+            ->where(function (Builder $roleQuery) use ($outletId, $globalRoles) {
+                $roleQuery->whereIn('role', $globalRoles)
+                    ->orWhere(function (Builder $adminQuery) use ($outletId) {
+                        $adminQuery->where('role', 'admin')
+                            ->where(function (Builder $accessQuery) use ($outletId) {
+                                $accessQuery->where('outlet_access_mode', OutletAccessMode::ALL->value)
+                                    ->orWhere(function (Builder $selectedQuery) use ($outletId) {
+                                        $selectedQuery->where('outlet_access_mode', OutletAccessMode::SELECTED->value)
+                                            ->whereHas('assignedOutlets', fn (Builder $outletQuery) => $outletQuery
+                                                ->where('outlets.id', $outletId)
+                                                ->where('outlets.is_active', true));
+                                    });
+                            });
+                    });
+            });
+    }
+
+    /** @param array<int, int> $outletIds */
+    private function applyOutletConstraint(Builder $query, array $outletIds, string $outletColumn): Builder
+    {
+        $model = $query->getModel();
+
+        if ($model->getTable() === 'employees') {
+            return $query->whereIn('employees.outlet_id', $outletIds);
         }
 
-        // Fail closed for Admin without outlet
+        if (in_array($outletColumn, $model->getFillable(), true) || $model->getTable() === 'outlets') {
+            return $query->whereIn($model->getTable().'.'.$outletColumn, $outletIds);
+        }
+
+        if (method_exists($model, 'employee')) {
+            return $query->whereHas('employee', fn (Builder $employeeQuery) => $employeeQuery
+                ->whereIn('employees.outlet_id', $outletIds));
+        }
+
         return $query->whereRaw('1 = 0');
     }
 
-    /**
-     * Enforce that Admin user has an assigned outlet. Fail closed with 403 if missing.
-     */
-    public function ensureAdminHasOutlet(User $user): void
+    private function resolveGlobalOutletContext(User $actor, ?int $inputOutletId): ?int
     {
-        if ($user->role === 'admin' && ! $this->getAdminOutletId($user)) {
-            throw new AccessDeniedHttpException('Akun Admin belum memiliki penugasan outlet. Hubungi Owner atau Administrator.');
+        if ($inputOutletId !== null && $inputOutletId <= 0) {
+            $this->forgetOutletContext();
+
+            return null;
         }
+
+        if ($inputOutletId !== null) {
+            if (Outlet::query()->whereKey($inputOutletId)->where('is_active', true)->exists()) {
+                $this->rememberOutletContext($actor, $inputOutletId);
+
+                return $inputOutletId;
+            }
+
+            $this->forgetOutletContext();
+
+            return null;
+        }
+
+        $sessionOutletId = (int) session('active_outlet_user_id') === (int) $actor->id
+            ? (int) session('active_outlet_id', 0)
+            : 0;
+        if ($sessionOutletId > 0 && Outlet::query()->whereKey($sessionOutletId)->where('is_active', true)->exists()) {
+            return $sessionOutletId;
+        }
+
+        $this->forgetOutletContext();
+
+        return null;
+    }
+
+    private function rememberOutletContext(User $actor, int $outletId): void
+    {
+        session(['active_outlet_id' => $outletId, 'active_outlet_user_id' => $actor->id]);
+    }
+
+    private function forgetOutletContext(): void
+    {
+        session()->forget(['active_outlet_id', 'active_outlet_user_id']);
     }
 }

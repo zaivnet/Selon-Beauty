@@ -17,9 +17,11 @@ class ReportService
     public function __construct(
         protected ?AttendanceStatusResolver $statusResolver = null,
         protected ?EffectiveScheduleService $effectiveScheduleService = null,
+        protected ?OutletScopeService $outletScopeService = null,
     ) {
         $this->statusResolver = $statusResolver ?? new AttendanceStatusResolver;
         $this->effectiveScheduleService = $effectiveScheduleService ?? new EffectiveScheduleService;
+        $this->outletScopeService = $outletScopeService ?? app(OutletScopeService::class);
     }
 
     /**
@@ -40,9 +42,12 @@ class ReportService
         // 1. Fetch Employees
         $employeesQuery = Employee::with(['jobTitle', 'user'])->whereNull('deleted_at');
 
-        if (! empty($filters['actor']) && $filters['actor']->role === 'admin') {
-            $adminOutletId = $filters['actor']->outlet_id ?? $filters['actor']->employee?->outlet_id;
-            $employeesQuery->where('employees.outlet_id', $adminOutletId);
+        if (! empty($filters['actor'])) {
+            $employeesQuery = $this->outletScopeService->scopeByRequestedOutlet(
+                $filters['actor'],
+                $employeesQuery,
+                isset($filters['outlet_id']) ? (int) $filters['outlet_id'] : null,
+            );
         }
 
         if ($employeeIdFilter) {

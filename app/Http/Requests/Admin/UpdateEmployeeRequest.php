@@ -55,6 +55,9 @@ class UpdateEmployeeRequest extends FormRequest
             'profile_photo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'role' => ['nullable', 'string', 'in:superadmin,owner,admin,employee'],
+            'outlet_access_mode' => ['nullable', 'string', 'in:selected,all'],
+            'assigned_outlet_ids' => ['nullable', 'array'],
+            'assigned_outlet_ids.*' => ['integer', 'distinct', 'exists:outlets,id'],
         ];
     }
 

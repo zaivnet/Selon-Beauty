@@ -37,6 +37,9 @@ class StoreEmployeeRequest extends FormRequest
             'create_user_account' => ['nullable', 'boolean'],
             'account_password' => ['nullable', 'required_if:create_user_account,1', 'string', 'min:6'],
             'role' => ['nullable', 'string', 'in:superadmin,owner,admin,employee'],
+            'outlet_access_mode' => ['nullable', 'string', 'in:selected,all'],
+            'assigned_outlet_ids' => ['nullable', 'array'],
+            'assigned_outlet_ids.*' => ['integer', 'distinct', 'exists:outlets,id'],
         ];
     }
 

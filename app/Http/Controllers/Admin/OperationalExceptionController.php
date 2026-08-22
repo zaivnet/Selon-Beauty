@@ -29,6 +29,7 @@ class OperationalExceptionController extends Controller
             'category' => ['nullable', Rule::in(array_keys($this->exceptionService->categories()))],
             'employee_id' => ['nullable', 'integer', 'exists:employees,id'],
             'job_title_id' => ['nullable', 'integer', 'exists:job_titles,id'],
+            'outlet_id' => ['nullable', 'integer'],
         ]);
         $date = $validated['date'] ?? $now->toDateString();
         $filters = [
@@ -36,6 +37,7 @@ class OperationalExceptionController extends Controller
             'category' => $validated['category'] ?? null,
             'employee_id' => $validated['employee_id'] ?? null,
             'job_title_id' => $validated['job_title_id'] ?? null,
+            'outlet_id' => isset($validated['outlet_id']) ? (int) $validated['outlet_id'] : null,
         ];
         $data = $this->exceptionService->generate($date, [
             ...$filters,
@@ -44,12 +46,6 @@ class OperationalExceptionController extends Controller
         ], $now);
 
         $allItems = collect($data['items']);
-        if ($request->user()->role === 'admin') {
-            $adminOutletId = $this->outletScopeService->getAdminOutletId($request->user());
-            $allItems = $allItems->filter(function ($item) use ($adminOutletId) {
-                return isset($item['employee']) ? ((int) $item['employee']->outlet_id === (int) $adminOutletId) : true;
-            });
-        }
 
         $page = max(1, $request->integer('page', 1));
         $perPage = 30;
@@ -62,7 +58,11 @@ class OperationalExceptionController extends Controller
         );
 
         $employeesQuery = Employee::whereNull('deleted_at')->where('status', 'active')->currentAttendanceWorkforce();
-        $employeesQuery = $this->outletScopeService->scopeEmployeesFor($request->user(), $employeesQuery);
+        $employeesQuery = $this->outletScopeService->scopeByRequestedOutlet(
+            $request->user(),
+            $employeesQuery,
+            $filters['outlet_id'],
+        );
 
         return view('admin.operational_exceptions.index', [
             'exceptions' => $data,

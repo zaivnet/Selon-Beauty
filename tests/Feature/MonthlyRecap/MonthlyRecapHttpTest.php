@@ -30,6 +30,7 @@ class MonthlyRecapHttpTest extends TestCase
             'name' => 'Admin Recap', 'email' => 'admin-http-recap@example.test',
             'password' => Hash::make('password'), 'role' => 'admin', 'is_active' => true,
         ]);
+        $this->admin->assignedOutlets()->sync([$this->admin->outlet_id]);
         $this->employee = Employee::create(['employee_code' => 'HTTP-REC', 'full_name' => 'Maya Rekap', 'status' => 'active']);
         $this->employeeUser = User::create([
             'employee_id' => $this->employee->id, 'name' => 'Maya Rekap', 'email' => 'maya-http-recap@example.test',

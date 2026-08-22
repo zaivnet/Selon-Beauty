@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\OutletAccessMode;
 use App\Enums\UserRole;
 use App\Models\AuditLog;
 use App\Models\User;
@@ -114,6 +115,16 @@ class UserRoleService
             }
             $targetUser->remember_token = Str::random(60);
             $targetUser->save();
+
+            if ($newRole === UserRole::ADMIN->value) {
+                $targetUser->forceFill(['outlet_access_mode' => OutletAccessMode::SELECTED->value])->save();
+                if (! $targetUser->assignedOutlets()->exists() && $targetUser->employee?->outlet_id) {
+                    $targetUser->assignedOutlets()->syncWithoutDetaching([$targetUser->employee->outlet_id]);
+                }
+            } else {
+                $targetUser->assignedOutlets()->sync([]);
+                $targetUser->forceFill(['outlet_access_mode' => OutletAccessMode::SELECTED->value])->save();
+            }
 
             // Revoke target user's active web sessions
             try {

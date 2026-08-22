@@ -30,6 +30,7 @@ class OperationalExceptionHttpTest extends TestCase
         parent::setUp();
         Carbon::setTestNow(Carbon::parse('2026-08-14 09:00:00', config('app.timezone')));
         $this->admin = $this->user('Admin Operasional', 'admin-ops-http@example.test', 'admin');
+        $this->admin->assignedOutlets()->sync([$this->admin->outlet_id]);
         $this->employee = Employee::create([
             'employee_code' => 'OPS-HTTP', 'full_name' => 'Maya Exception', 'status' => 'active',
         ]);

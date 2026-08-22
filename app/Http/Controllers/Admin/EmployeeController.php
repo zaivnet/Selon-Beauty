@@ -9,8 +9,10 @@ use App\Http\Requests\Admin\UpdateEmployeeRequest;
 use App\Models\Employee;
 use App\Models\JobTitle;
 use App\Models\Outlet;
+use App\Services\AdminOutletAccessService;
 use App\Services\AttendanceParticipationService;
 use App\Services\EmployeeService;
+use App\Services\EmployeeTransferService;
 use App\Services\OutletScopeService;
 use App\Services\UserRoleService;
 use Illuminate\Database\QueryException;
@@ -25,9 +27,10 @@ class EmployeeController extends Controller
     public function __construct(
         protected EmployeeService $employeeService,
         protected AttendanceParticipationService $attendanceParticipationService,
+        protected AdminOutletAccessService $adminOutletAccessService,
         protected UserRoleService $userRoleService,
         protected OutletScopeService $outletScopeService,
-        protected \App\Services\EmployeeTransferService $transferService,
+        protected EmployeeTransferService $transferService,
     ) {}
 
     public function index(Request $request): View
@@ -65,11 +68,11 @@ class EmployeeController extends Controller
 
         $suggestedCode = $this->employeeService->generateNextEmployeeCode();
         $jobTitles = JobTitle::where('is_active', true)->orderBy('name')->get();
-        $outlets = Outlet::where('is_active', true)->orderBy('name')->get();
+        $outlets = $this->outletScopeService->getAuthorizedActiveOutlets($request->user());
         $assignableRoles = UserRole::getAssignableRoles($request->user()->role);
-        $adminOutlet = $this->outletScopeService->isGlobalScope($request->user())
-            ? null
-            : Outlet::find($this->outletScopeService->getAdminOutletId($request->user()));
+        $adminOutlet = ! $this->outletScopeService->isGlobalScope($request->user()) && $outlets->count() === 1
+            ? $outlets->first()
+            : null;
 
         return view('admin.employees.create', compact('suggestedCode', 'jobTitles', 'outlets', 'assignableRoles', 'adminOutlet'));
     }
@@ -87,7 +90,18 @@ class EmployeeController extends Controller
             : $request->input('role', UserRole::EMPLOYEE->value);
 
         if ($actorRole === UserRole::ADMIN->value) {
-            $validated['outlet_id'] = $this->outletScopeService->getAdminOutletId($request->user());
+            $allowedOutletIds = $this->outletScopeService->allowedOutletIds($request->user());
+            $requestedOutletId = isset($validated['outlet_id']) ? (int) $validated['outlet_id'] : null;
+
+            if (count($allowedOutletIds) === 1 && $requestedOutletId === null) {
+                $requestedOutletId = $allowedOutletIds[0];
+            }
+            if ($requestedOutletId === null) {
+                throw ValidationException::withMessages(['outlet_id' => 'Pilih outlet karyawan dari outlet yang Anda kelola.']);
+            }
+
+            $this->outletScopeService->ensureCanAccessOutlet($request->user(), $requestedOutletId);
+            $validated['outlet_id'] = $requestedOutletId;
         } elseif (empty($validated['outlet_id'])) {
             $defaultOutlet = Outlet::where('code', 'PUSAT')->first() ?? Outlet::first();
             $validated['outlet_id'] = $defaultOutlet?->id;
@@ -109,10 +123,30 @@ class EmployeeController extends Controller
                 : true;
         }
 
-        unset($validated['profile_photo'], $validated['create_user_account'], $validated['account_password'], $validated['role']);
+        $outletAccessMode = $request->input('outlet_access_mode', 'selected');
+        $assignedOutletIds = $request->has('outlet_access_mode')
+            ? $request->input('assigned_outlet_ids', [])
+            : [$validated['outlet_id']];
+
+        unset(
+            $validated['profile_photo'],
+            $validated['create_user_account'],
+            $validated['account_password'],
+            $validated['role'],
+            $validated['outlet_access_mode'],
+            $validated['assigned_outlet_ids'],
+        );
 
         try {
-            $employee = $this->employeeService->createEmployee($validated, $photoFile, $createUserAccount, $accountPassword, $requestedRole);
+            $employee = DB::transaction(function () use ($validated, $photoFile, $createUserAccount, $accountPassword, $requestedRole, $outletAccessMode, $assignedOutletIds, $request): Employee {
+                $employee = $this->employeeService->createEmployee($validated, $photoFile, $createUserAccount, $accountPassword, $requestedRole);
+
+                if ($createUserAccount && $requestedRole === UserRole::ADMIN->value && $employee->user) {
+                    $this->adminOutletAccessService->update($employee->user, $outletAccessMode, $assignedOutletIds, $request->user());
+                }
+
+                return $employee;
+            });
         } catch (QueryException $e) {
             if (str_contains($e->getMessage(), 'unique') || $e->getCode() == 23000) {
                 throw ValidationException::withMessages(['email' => 'Email tersebut sudah digunakan oleh akun lain.']);
@@ -153,14 +187,15 @@ class EmployeeController extends Controller
         }
 
         $jobTitles = JobTitle::orderBy('name')->get();
-        $outlets = Outlet::where('is_active', true)->orderBy('name')->get();
-        $employee->load(['jobTitle', 'user', 'outlet']);
+        $outlets = $this->outletScopeService->getAuthorizedActiveOutlets($request->user());
+        $employee->load(['jobTitle', 'user.assignedOutlets', 'outlet']);
         $assignableRoles = UserRole::getAssignableRoles($request->user()->role);
-        $adminOutlet = $this->outletScopeService->isGlobalScope($request->user())
-            ? null
-            : Outlet::find($this->outletScopeService->getAdminOutletId($request->user()));
+        $canTransfer = $this->outletScopeService->isGlobalScope($request->user());
+        $adminOutlet = ! $this->outletScopeService->isGlobalScope($request->user()) && $outlets->count() === 1
+            ? $outlets->first()
+            : null;
 
-        return view('admin.employees.edit', compact('employee', 'jobTitles', 'outlets', 'assignableRoles', 'adminOutlet'));
+        return view('admin.employees.edit', compact('employee', 'jobTitles', 'outlets', 'assignableRoles', 'adminOutlet', 'canTransfer'));
     }
 
     public function update(UpdateEmployeeRequest $request, Employee $employee): RedirectResponse
@@ -173,7 +208,14 @@ class EmployeeController extends Controller
         $photoFile = $request->file('profile_photo');
         $actorRole = $request->user()->role;
 
-        if ($actorRole === UserRole::ADMIN->value) {
+        if (array_key_exists('outlet_id', $validated)) {
+            if ((int) $validated['outlet_id'] !== (int) $employee->outlet_id) {
+                throw ValidationException::withMessages([
+                    'outlet_id' => 'Home Outlet tidak dapat diubah melalui Edit Data. Gunakan fitur Pindah Outlet untuk pemindahan permanen.',
+                ]);
+            }
+
+            // Tolerate legacy clients that still submit the unchanged Home Outlet.
             unset($validated['outlet_id']);
         }
 
@@ -194,7 +236,25 @@ class EmployeeController extends Controller
             $attendanceReason = $validated['attendance_participation_reason'] ?? null;
         }
 
-        unset($validated['profile_photo'], $validated['role'], $validated['attendance_enabled'], $validated['attendance_participation_reason']);
+        $outletAccessMode = $request->input('outlet_access_mode');
+        $assignedOutletIds = $request->input('assigned_outlet_ids', []);
+
+        if ($effectiveRole === UserRole::ADMIN->value && $outletAccessMode === 'selected') {
+            $normalizedIds = collect($assignedOutletIds)->map(fn ($id) => (int) $id)->filter()->unique();
+            $activeCount = Outlet::query()->whereIn('id', $normalizedIds)->where('is_active', true)->count();
+            if ($activeCount !== $normalizedIds->count()) {
+                throw ValidationException::withMessages(['assigned_outlet_ids' => 'Salah satu outlet yang dipilih tidak aktif atau tidak valid.']);
+            }
+        }
+
+        unset(
+            $validated['profile_photo'],
+            $validated['role'],
+            $validated['attendance_enabled'],
+            $validated['attendance_participation_reason'],
+            $validated['outlet_access_mode'],
+            $validated['assigned_outlet_ids'],
+        );
 
         $actor = $request->user();
 
@@ -223,6 +283,19 @@ class EmployeeController extends Controller
                 $this->userRoleService->updateUserRole($actor, $employee->user, $requestedRole);
             } catch (\Throwable $e) {
                 return redirect()->back()->withInput()->with('error', $e->getMessage());
+            }
+        }
+
+        if ($employee->user) {
+            $employee->user->refresh();
+            if ($employee->user->role === UserRole::ADMIN->value) {
+                $mode = $outletAccessMode ?? ($employee->user->outlet_access_mode ?: 'selected');
+                $ids = $outletAccessMode !== null
+                    ? $assignedOutletIds
+                    : ($employee->user->assignedOutlets()->pluck('outlets.id')->all() ?: [$employee->outlet_id]);
+                $this->adminOutletAccessService->update($employee->user, $mode, $ids, $actor);
+            } else {
+                $this->adminOutletAccessService->clear($employee->user, $actor);
             }
         }
 

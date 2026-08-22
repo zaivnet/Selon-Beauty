@@ -9,12 +9,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class EmployeeService
 {
     public function __construct(protected ?UserRoleService $userRoleService = null)
     {
-        $this->userRoleService = $userRoleService ?? new UserRoleService();
+        $this->userRoleService = $userRoleService ?? new UserRoleService;
     }
 
     /**
@@ -56,7 +57,7 @@ class EmployeeService
 
             if ($createAccount) {
                 $password = $accountPassword ?: 'password123';
-                User::create([
+                $user = User::create([
                     'employee_id' => $employee->id,
                     'outlet_id' => $employee->outlet_id,
                     'name' => $employee->full_name,
@@ -66,6 +67,10 @@ class EmployeeService
                     'role' => $accountRole ?: 'employee',
                     'is_active' => $employee->status === 'active',
                 ]);
+
+                if ($user->role === 'admin') {
+                    $user->assignedOutlets()->sync([$employee->outlet_id]);
+                }
             }
 
             return $employee;
@@ -78,6 +83,16 @@ class EmployeeService
     public function updateEmployee(Employee $employee, array $data, ?UploadedFile $photoFile = null): Employee
     {
         return DB::transaction(function () use ($employee, $data, $photoFile) {
+            if (array_key_exists('outlet_id', $data)) {
+                if ((int) $data['outlet_id'] !== (int) $employee->outlet_id) {
+                    throw ValidationException::withMessages([
+                        'outlet_id' => 'Home Outlet tidak dapat diubah melalui Edit Data. Gunakan fitur Pindah Outlet untuk pemindahan permanen.',
+                    ]);
+                }
+
+                unset($data['outlet_id']);
+            }
+
             if (array_key_exists('email', $data) && $data['email'] !== null) {
                 $data['email'] = strtolower(trim((string) $data['email']));
             }
@@ -99,7 +114,6 @@ class EmployeeService
                     'name' => $employee->full_name,
                     'email' => $employee->email,
                     'phone' => $employee->phone,
-                    'outlet_id' => $employee->user->role === 'admin' ? ($data['outlet_id'] ?? $employee->outlet_id) : $employee->user->outlet_id,
                     'is_active' => $employee->status === 'active',
                 ]);
             }
@@ -127,6 +141,9 @@ class EmployeeService
                 'role' => $accountRole ?: 'employee',
                 'is_active' => $employee->status === 'active',
             ]);
+            if ($user->role === 'admin') {
+                $user->assignedOutlets()->sync([$employee->outlet_id]);
+            }
         } else {
             $user->update([
                 'password' => Hash::make($newPassword),

@@ -5,6 +5,7 @@ namespace Tests\Feature\Backup;
 use App\Models\AppSetting;
 use App\Models\BackupRecord;
 use App\Models\Employee;
+use App\Models\Outlet;
 use App\Models\User;
 use App\Services\BackupService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -153,5 +154,36 @@ class RestoreTest extends TestCase
         $this->backupService->restoreBackup($backup, 'password123', $this->superadminUser);
 
         $this->assertFalse(Employee::findOrFail($employee->id)->attendance_enabled);
+    }
+
+    public function test_restore_preserves_admin_outlet_access_mode_and_assignments(): void
+    {
+        $outletA = Outlet::create([
+            'name' => 'Backup Outlet A', 'code' => 'BA', 'latitude' => -7.1,
+            'longitude' => 113.4, 'radius_meters' => 100, 'is_active' => true,
+        ]);
+        $outletB = Outlet::create([
+            'name' => 'Backup Outlet B', 'code' => 'BB', 'latitude' => -7.2,
+            'longitude' => 113.5, 'radius_meters' => 100, 'is_active' => true,
+        ]);
+        $admin = User::create([
+            'name' => 'Backup Admin', 'email' => 'backup-admin@example.test',
+            'password' => Hash::make('password123'), 'role' => 'admin', 'is_active' => true,
+            'outlet_id' => $outletA->id, 'outlet_access_mode' => 'selected',
+        ]);
+        $admin->assignedOutlets()->sync([$outletA->id, $outletB->id]);
+
+        $backup = $this->backupService->createBackup('database', $this->superadminUser);
+        $admin->update(['outlet_access_mode' => 'all']);
+        $admin->assignedOutlets()->sync([]);
+
+        $this->backupService->restoreBackup($backup, 'password123', $this->superadminUser);
+
+        $restored = User::findOrFail($admin->id);
+        $this->assertSame('selected', $restored->outlet_access_mode);
+        $this->assertEqualsCanonicalizing(
+            [$outletA->id, $outletB->id],
+            $restored->assignedOutlets()->pluck('outlets.id')->all(),
+        );
     }
 }

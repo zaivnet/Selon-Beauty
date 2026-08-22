@@ -13,8 +13,11 @@ class AdminOutletScopeTest extends TestCase
     use RefreshDatabase;
 
     protected Outlet $outletA;
+
     protected Outlet $outletB;
+
     protected User $adminA;
+
     protected User $adminB;
 
     protected function setUp(): void
@@ -48,6 +51,8 @@ class AdminOutletScopeTest extends TestCase
             'is_active' => true,
             'outlet_id' => $this->outletB->id,
         ]);
+        $this->adminA->assignedOutlets()->sync([$this->outletA->id]);
+        $this->adminB->assignedOutlets()->sync([$this->outletB->id]);
     }
 
     public function test_admin_only_sees_employees_in_their_assigned_outlet(): void

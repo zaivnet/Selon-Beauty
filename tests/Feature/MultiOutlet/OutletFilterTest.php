@@ -16,13 +16,21 @@ class OutletFilterTest extends TestCase
     use RefreshDatabase;
 
     protected User $owner;
+
     protected User $superadmin;
+
     protected User $adminOutlet1;
+
     protected User $adminOutlet2;
+
     protected Outlet $outlet1;
+
     protected Outlet $outlet2;
+
     protected Outlet $inactiveOutlet;
+
     protected Employee $empOutlet1;
+
     protected Employee $empOutlet2;
 
     protected function setUp(): void
@@ -94,6 +102,8 @@ class OutletFilterTest extends TestCase
             'outlet_id' => $this->outlet2->id,
             'is_active' => true,
         ]);
+        $this->adminOutlet1->assignedOutlets()->sync([$this->outlet1->id]);
+        $this->adminOutlet2->assignedOutlets()->sync([$this->outlet2->id]);
 
         $this->empOutlet1 = Employee::create([
             'employee_code' => 'EMP-001',

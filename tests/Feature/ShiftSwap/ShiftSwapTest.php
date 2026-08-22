@@ -2,10 +2,7 @@
 
 namespace Tests\Feature\ShiftSwap;
 
-use App\Models\AttendanceLocation;
-use App\Models\AttendancePeriod;
 use App\Models\AttendanceRecord;
-use App\Models\AuditLog;
 use App\Models\Employee;
 use App\Models\EmployeeSchedule;
 use App\Models\EmployeeScheduleOverride;
@@ -19,7 +16,6 @@ use App\Models\User;
 use App\Services\AttendancePeriodService;
 use App\Services\BackupService;
 use App\Services\EffectiveScheduleService;
-use App\Services\MonthlyAttendanceRecapService;
 use App\Services\ShiftSwapService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -91,6 +87,7 @@ class ShiftSwapTest extends TestCase
             'role' => 'admin',
             'is_active' => true,
         ]);
+        $this->admin->assignedOutlets()->sync([$this->admin->outlet_id]);
 
         $this->reqEmp = Employee::create([
             'employee_code' => 'EMP-AYU',
@@ -842,7 +839,7 @@ class ShiftSwapTest extends TestCase
     {
         $response = $this->actingAs($this->reqUser)->get(route('employee.dashboard'));
         $response->assertStatus(200);
-        
+
         // Assert bottom nav bar has exactly 5 main item slots
         $content = $response->getContent();
         $this->assertStringContainsString('Bottom Navigation Bar (5 Items Max', $content);

@@ -3,16 +3,11 @@
 @section('title', 'Kelola Karyawan')
 @php
     $pageTitle = 'Daftar Karyawan';
-    if (request('outlet_id')) {
-        $selectedOutlet = \App\Models\Outlet::find(request('outlet_id'));
+    if (request()->has('outlet_id') || !\app(\App\Services\OutletScopeService::class)->isGlobalScope(auth()->user())) {
+        $resolvedOutletId = \app(\App\Services\OutletScopeService::class)->resolveRequestedOutlet(auth()->user(), request()->has('outlet_id') ? (int) request('outlet_id') : null);
+        $selectedOutlet = $resolvedOutletId ? \App\Models\Outlet::find($resolvedOutletId) : null;
         if ($selectedOutlet) {
             $pageTitle .= ' — ' . $selectedOutlet->name;
-        }
-    } elseif (!\app(\App\Services\OutletScopeService::class)->isGlobalScope(auth()->user())) {
-        $adminOutletId = \app(\App\Services\OutletScopeService::class)->getAdminOutletId(auth()->user());
-        $adminOutlet = \App\Models\Outlet::find($adminOutletId);
-        if ($adminOutlet) {
-            $pageTitle .= ' — ' . $adminOutlet->name;
         }
     }
 @endphp

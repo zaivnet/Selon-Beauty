@@ -71,21 +71,18 @@
                     @enderror
                 </div>
 
-                <!-- Outlet Penugasan -->
+                <!-- Home Outlet -->
                 <div>
-                    <label for="outlet_id" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Outlet Penugasan *</label>
-                    @if(Auth::user()->role === 'admin')
-                        <div class="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold flex items-center gap-2">
-                            <svg class="w-4 h-4 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h4m-4 0V11a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002-2v-2a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 002 2"/></svg>
-                            <span>{{ $employee->outlet?->name ?? 'Outlet Utama' }} ({{ $employee->outlet?->code ?? 'PUSAT' }})</span>
-                            <span class="text-[10px] font-normal text-slate-500 ml-auto">(Terikat Admin)</span>
-                        </div>
-                    @else
-                        <select name="outlet_id" id="outlet_id" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-semibold ui-select">
-                            @foreach($outlets as $o)
-                                <option value="{{ $o->id }}" {{ old('outlet_id', $employee->outlet_id) == $o->id ? 'selected' : '' }}>{{ $o->name }} ({{ $o->code }})</option>
-                            @endforeach
-                        </select>
+                    <span class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Home Outlet</span>
+                    <div class="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold flex items-center gap-2">
+                        <svg class="w-4 h-4 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h4m-4 0V11a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002-2v-2a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 002 2"/></svg>
+                        <span>{{ $employee->outlet?->name ?? 'Outlet Belum Dikonfigurasi' }} ({{ $employee->outlet?->code ?? '-' }})</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1.5">Untuk memindahkan karyawan secara permanen ke outlet lain, gunakan fitur Pindah Outlet.</p>
+                    @if($canTransfer)
+                        <a href="{{ route('admin.employees.show', $employee) }}#pindah-outlet" class="inline-flex items-center mt-2 text-xs font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300">
+                            Buka Pindah Outlet &rarr;
+                        </a>
                     @endif
                     @error('outlet_id')
                         <p class="text-xs text-rose-600 dark:text-rose-400 font-semibold mt-1">{{ $message }}</p>
@@ -127,6 +124,7 @@
                         <p class="text-xs text-rose-600 dark:text-rose-400 font-semibold mt-1">{{ $message }}</p>
                     @enderror
                 </div>
+
             </div>
 
             <!-- Catatan -->
@@ -249,6 +247,13 @@
                         @enderror
                     </div>
                 </div>
+
+                @if(count($assignableRoles) > 1)
+                    @include('admin.employees._admin-outlet-access', [
+                        'selectedMode' => $employee->user?->outlet_access_mode ?? 'selected',
+                        'selectedIds' => $employee->user?->assignedOutlets?->pluck('id')->all() ?? [],
+                    ])
+                @endif
             </div>
 
             <div class="flex items-center justify-end gap-3 pt-2">
@@ -298,6 +303,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const editableAttendanceSection = document.getElementById('attendance-editable-section');
     const mandatoryAttendanceSection = document.getElementById('attendance-mandatory-section');
     const attendanceCheckbox = document.getElementById('attendance_enabled_checkbox');
+    const outletAccessSection = document.getElementById('admin-outlet-access-section');
+    const assignedOutletsSection = document.getElementById('assigned-outlets-section');
 
     function toggleAttendanceUI() {
         const selectedRole = roleSelect ? roleSelect.value : '{{ $employee->user?->role ?? "employee" }}';
@@ -309,11 +316,19 @@ document.addEventListener('DOMContentLoaded', function () {
             if (editableAttendanceSection) editableAttendanceSection.classList.remove('hidden');
             if (mandatoryAttendanceSection) mandatoryAttendanceSection.classList.add('hidden');
         }
+        if (outletAccessSection) outletAccessSection.classList.toggle('hidden', selectedRole !== 'admin');
+        toggleOutletAccessMode();
+    }
+
+    function toggleOutletAccessMode() {
+        const mode = document.querySelector('input[name="outlet_access_mode"]:checked')?.value;
+        if (assignedOutletsSection) assignedOutletsSection.classList.toggle('hidden', mode === 'all');
     }
 
     if (roleSelect && roleSelect.tagName === 'SELECT') {
         roleSelect.addEventListener('change', toggleAttendanceUI);
     }
+    document.querySelectorAll('input[name="outlet_access_mode"]').forEach((input) => input.addEventListener('change', toggleOutletAccessMode));
     toggleAttendanceUI();
 });
 </script>

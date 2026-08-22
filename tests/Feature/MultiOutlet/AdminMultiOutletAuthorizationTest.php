@@ -21,14 +21,23 @@ class AdminMultiOutletAuthorizationTest extends TestCase
     use RefreshDatabase;
 
     protected Outlet $outletA;
+
     protected Outlet $outletB;
+
     protected User $adminA;
+
     protected User $adminB;
+
     protected User $owner;
+
     protected User $superadmin;
+
     protected User $adminNoOutlet;
+
     protected Employee $employeeA;
+
     protected Employee $employeeB;
+
     protected Shift $shift;
 
     protected function setUp(): void
@@ -82,6 +91,8 @@ class AdminMultiOutletAuthorizationTest extends TestCase
             'is_active' => true,
             'outlet_id' => null,
         ]);
+        $this->adminA->assignedOutlets()->sync([$this->outletA->id]);
+        $this->adminB->assignedOutlets()->sync([$this->outletB->id]);
 
         $this->employeeA = Employee::create([
             'employee_code' => 'EMP-A',
@@ -114,7 +125,7 @@ class AdminMultiOutletAuthorizationTest extends TestCase
     }
 
     /* -------------------------------------------------------------------------- */
-    /* 1. ATTENDANCE AUTHORIZATION TESTS                                         */
+    /* 1. ATTENDANCE AUTHORIZATION TESTS */
     /* -------------------------------------------------------------------------- */
 
     public function test_admin_a_can_view_and_correct_attendance_a_but_forbidden_on_attendance_b(): void
@@ -169,7 +180,7 @@ class AdminMultiOutletAuthorizationTest extends TestCase
     }
 
     /* -------------------------------------------------------------------------- */
-    /* 2. LEAVE AUTHORIZATION TESTS                                               */
+    /* 2. LEAVE AUTHORIZATION TESTS */
     /* -------------------------------------------------------------------------- */
 
     public function test_admin_a_cannot_approve_or_reject_leave_request_b(): void
@@ -202,7 +213,7 @@ class AdminMultiOutletAuthorizationTest extends TestCase
     }
 
     /* -------------------------------------------------------------------------- */
-    /* 3. OVERTIME AUTHORIZATION TESTS                                            */
+    /* 3. OVERTIME AUTHORIZATION TESTS */
     /* -------------------------------------------------------------------------- */
 
     public function test_admin_a_cannot_approve_or_mutate_overtime_b(): void
@@ -248,11 +259,12 @@ class AdminMultiOutletAuthorizationTest extends TestCase
     }
 
     /* -------------------------------------------------------------------------- */
-    /* 4. SHIFT SWAP AUTHORIZATION TESTS                                          */
+    /* 4. SHIFT SWAP AUTHORIZATION TESTS */
     /* -------------------------------------------------------------------------- */
 
     public function test_admin_a_cannot_show_or_approve_shift_swap_b(): void
     {
+        Carbon::setTestNow(Carbon::parse('2026-08-19 10:00:00', config('app.timezone')));
         $employeeB2 = Employee::create([
             'employee_code' => 'EMP-B2',
             'full_name' => 'Karyawan Outlet B2',
@@ -302,10 +314,11 @@ class AdminMultiOutletAuthorizationTest extends TestCase
         $response = $this->actingAs($this->adminB)->post(route('admin.shift-swaps.approve', $swapB));
         $response->assertRedirect();
         $this->assertEquals(ShiftSwapRequest::STATUS_APPROVED, $swapB->fresh()->status);
+        Carbon::setTestNow();
     }
 
     /* -------------------------------------------------------------------------- */
-    /* 5. DASHBOARD & EXCEPTION SCOPING TESTS                                     */
+    /* 5. DASHBOARD & EXCEPTION SCOPING TESTS */
     /* -------------------------------------------------------------------------- */
 
     public function test_admin_a_dashboard_kpi_and_employee_table_are_scoped_to_outlet_a(): void
@@ -345,7 +358,7 @@ class AdminMultiOutletAuthorizationTest extends TestCase
     }
 
     /* -------------------------------------------------------------------------- */
-    /* 6. MONTHLY RECAP & EXPORT AUTHORIZATION TESTS                              */
+    /* 6. MONTHLY RECAP & EXPORT AUTHORIZATION TESTS */
     /* -------------------------------------------------------------------------- */
 
     public function test_admin_a_monthly_recap_and_csv_exports_contain_no_outlet_b_data(): void
@@ -372,7 +385,7 @@ class AdminMultiOutletAuthorizationTest extends TestCase
     }
 
     /* -------------------------------------------------------------------------- */
-    /* 7. SCHEDULE MANAGEMENT AUTHORIZATION TESTS                                 */
+    /* 7. SCHEDULE MANAGEMENT AUTHORIZATION TESTS */
     /* -------------------------------------------------------------------------- */
 
     public function test_admin_a_cannot_assign_update_or_delete_schedule_for_employee_b(): void

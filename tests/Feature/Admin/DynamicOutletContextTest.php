@@ -16,7 +16,7 @@ class DynamicOutletContextTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->artisan('db:seed', ['--class' => 'DatabaseSeeder']);
     }
 
@@ -54,9 +54,10 @@ class DynamicOutletContextTest extends TestCase
     public function test_employee_index_for_single_outlet_admin_uses_dynamic_name()
     {
         $outletAlpha = Outlet::create(['name' => 'Outlet Alpha', 'code' => 'ALPHA', 'timezone' => 'Asia/Jakarta', 'latitude' => 0, 'longitude' => 0, 'radius_meters' => 10]);
-        
+
         $admin = User::factory()->create(['role' => UserRole::ADMIN->value, 'is_active' => true, 'outlet_id' => $outletAlpha->id]);
-        
+        $admin->assignedOutlets()->sync([$outletAlpha->id]);
+
         // Setup admin outlet context
         $adminEmployee = Employee::create([
             'employee_code' => 'EMP-001',
@@ -64,7 +65,7 @@ class DynamicOutletContextTest extends TestCase
             'email' => 'admin@example.com',
             'user_id' => $admin->id,
             'outlet_id' => $outletAlpha->id,
-            'join_date' => now()->format('Y-m-d')
+            'join_date' => now()->format('Y-m-d'),
         ]);
 
         $response = $this->actingAs($admin)->get(route('admin.employees.index'));

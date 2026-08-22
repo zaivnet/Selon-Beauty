@@ -35,6 +35,7 @@ class BackupService
         'employee_schedule_overrides',
         'attendance_periods',
         'outlets',
+        'admin_outlet_assignments',
         'employee_outlet_transfers',
         'shift_swap_requests',
         'backup_records',

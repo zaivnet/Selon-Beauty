@@ -343,5 +343,15 @@ Jangan hanya menampilkan "Terjadi kesalahan".
   - Absence of Attendance/Leave/Overtime conflicts.
   - Direct rejection jika terdapat `EmployeeScheduleOverride` manual sebelumnya.
   - Revalidasi perubahan jadwal (*stale schedule*) sebelum persetujuan akhir.
-- **Audit Trail & Real-time Notifications**: Semua transisi status dicatat di `audit_logs` (`shift_swap.requested`, `target_approved`, `target_rejected`, `admin_approved`, `admin_rejected`, `cancelled`) dan notifikasi database real-time dikirimkan ke Pemohon, Tujuan, dan seluruh Admin.
+- **Audit Trail & Real-time Notifications**: Semua transisi status dicatat di `audit_logs` (`shift_swap.requested`, `target_approved`, `target_rejected`, `admin_approved`, `admin_rejected`, `cancelled`) dan notifikasi database real-time dikirimkan ke Pemohon, Tujuan, Owner/Superadmin, serta Admin yang berwenang atas HOME outlet terkait.
 
+## 19. Admin Assigned Outlets
+
+- `OutletScopeService` adalah satu-satunya otoritas cakupan outlet untuk operasi Admin.
+- Owner dan Superadmin tetap memiliki global role scope. Admin mode `all` hanya memperluas cakupan outlet pada izin role Admin dan tidak memberikan kemampuan Owner/Superadmin.
+- Admin mode `selected` menggunakan pivot `admin_outlet_assignments`; tanpa assignment aktif Admin gagal tertutup.
+- Admin mode `all` tidak menyimpan satu pivot per outlet sehingga outlet aktif baru otomatis termasuk.
+- `users.outlet_id` dipertahankan sebagai primary/default context kompatibilitas. Field ini bukan sumber otorisasi dan tidak dapat memberikan akses bila pivot kosong.
+- Filter/session outlet adalah konteks query/UI per-user, bukan bukti otorisasi. Input outlet selalu disanitasi terhadap cakupan authoritative.
+- `employees.outlet_id` adalah HOME outlet permanen. Nilai awal ditetapkan saat karyawan dibuat; perubahan setelahnya hanya melalui `EmployeeTransferService` agar blocker, histori transfer, transaksi, dan audit trail selalu dijalankan. Form Edit Data tidak dapat memindahkan HOME outlet.
+- Sprint ini tidak menambahkan WORK outlet atau mengubah resolusi geofence/histori attendance.

@@ -278,3 +278,13 @@ Minimal satu akun Superadmin yang aktif (`is_active = true`) WAJIB selalu tersed
    - Jadwal mengalami perubahan sebelum admin memberikan persetujuan (*stale schedule protection* &rarr; status `invalidated`).
 6. Seluruh aksi dan perubahan status swap wajib dicatat di `audit_logs` (`shift_swap.requested`, `target_approved`, `target_rejected`, `admin_approved`, `admin_rejected`, `cancelled`) dan notifikasi database dikirimkan ke pihak terkait.
 
+## RULE 042 — Admin Assigned Outlets
+
+1. Owner dan Superadmin memiliki global outlet scope berdasarkan role. Admin tetap role Admin walaupun `outlet_access_mode = all`; mode tersebut tidak memberikan izin Owner/Superadmin.
+2. Admin mode `selected` hanya berwenang atas outlet aktif yang tercatat pada `admin_outlet_assignments`. Nol assignment wajib gagal tertutup.
+3. Admin mode `all` berwenang atas seluruh outlet aktif, termasuk outlet yang dibuat kemudian, tanpa pivot massal.
+4. `users.outlet_id` hanya primary/default outlet kompatibilitas dan DILARANG dipakai sebagai sumber otorisasi.
+5. `employees.outlet_id` adalah HOME outlet permanen. Nilai awal ditetapkan saat pembuatan karyawan dan perubahan setelahnya WAJIB melalui `EmployeeTransferService`; normal Employee Edit dilarang memutasinya. Penjadwalan, attendance, izin, lembur, laporan, dan shift swap pada sprint ini tetap memakai semantik HOME outlet yang sudah ada.
+6. Selector outlet hanya konteks UI/query. Setiap ID employee/outlet yang dikirim client wajib divalidasi ulang melalui `OutletScopeService` untuk mencegah IDOR.
+7. Perubahan akses outlet Admin wajib membuat audit before/after, mengganti remember token, dan mencabut sesi database yang aktif.
+8. Assignment ke outlet inactive/soft-deleted tidak memberikan akses operasional dan tidak boleh dialihkan otomatis ke outlet lain.
