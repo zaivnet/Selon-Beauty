@@ -173,4 +173,103 @@ class EmployeeService
 
         return $employee;
     }
+
+    /**
+     * Safely soft-delete an employee, anonymize active PII (email/phone), revoke linked User login, and preserve operational history.
+     *
+     * @throws ValidationException
+     */
+    public function deleteEmployee(Employee $employee, User $actor): void
+    {
+        // 1. Safety check for superadmin user linked to employee
+        if ($employee->user) {
+            $this->userRoleService->ensureSuperadminSafety($employee->user, newRole: null, newIsActive: false);
+        }
+
+        // 2. Active Operation Safety Blockers
+        // Blocker A: Active Attendance Session (checked in today, not checked out)
+        $activeAttendanceExists = \App\Models\AttendanceRecord::where('employee_id', $employee->id)
+            ->whereNotNull('check_in_at')
+            ->whereNull('check_out_at')
+            ->exists();
+
+        if ($activeAttendanceExists) {
+            throw ValidationException::withMessages([
+                'employee' => ['Karyawan masih memiliki sesi presensi aktif. Lakukan check-out terlebih dahulu sebelum menghapus data karyawan.'],
+            ]);
+        }
+
+        // Blocker B: Active Overtime Session
+        $activeOvertimeExists = \App\Models\OvertimeSession::where('employee_id', $employee->id)
+            ->where(function ($q) {
+                $q->where('status', 'active')
+                    ->orWhere(function ($subQ) {
+                        $subQ->whereNotNull('check_in_at')
+                            ->whereNull('check_out_at')
+                            ->where('status', '!=', 'cancelled');
+                    });
+            })
+            ->exists();
+
+        if ($activeOvertimeExists) {
+            throw ValidationException::withMessages([
+                'employee' => ['Karyawan sedang memiliki sesi lembur aktif. Selesaikan sesi lembur terlebih dahulu sebelum menghapus data karyawan.'],
+            ]);
+        }
+
+        // Blocker C: Pending Shift Swap Request
+        $pendingSwapExists = \App\Models\ShiftSwapRequest::where(function ($q) use ($employee) {
+            $q->where('requester_employee_id', $employee->id)
+                ->orWhere('target_employee_id', $employee->id);
+        })
+            ->whereIn('status', [\App\Models\ShiftSwapRequest::STATUS_PENDING_TARGET, \App\Models\ShiftSwapRequest::STATUS_PENDING_ADMIN])
+            ->exists();
+
+        if ($pendingSwapExists) {
+            throw ValidationException::withMessages([
+                'employee' => ['Karyawan memiliki permohonan tukar jadwal yang belum selesai. Selesaikan atau batalkan permohonan tukar jadwal terlebih dahulu.'],
+            ]);
+        }
+
+        // 3. Atomic Transaction: Revoke User login access, anonymize PII, and soft-delete Employee
+        DB::transaction(function () use ($employee, $actor) {
+            $user = $employee->user;
+
+            if ($user) {
+                // Immediately revoke active web sessions for the linked user
+                DB::table('sessions')->where('user_id', $user->id)->delete();
+
+                // Deactivate login account and release PII on User (releasing email & phone for future reuse)
+                $user->update([
+                    'email' => null,
+                    'phone' => null,
+                    'is_active' => false,
+                    'remember_token' => null,
+                ]);
+            }
+
+            // Anonymize active PII on Employee and set status inactive before soft delete
+            $employee->update([
+                'email' => null,
+                'phone' => null,
+                'status' => 'inactive',
+            ]);
+
+            // Execute Soft Delete on Employee (preserves ID, employee_code, full_name, outlet_id, timestamps)
+            $employee->delete();
+
+            // Record Audit Trail
+            \App\Models\AuditLog::create([
+                'user_id' => $actor->id,
+                'action' => 'employee.deleted',
+                'description' => "Menghapus data karyawan {$employee->full_name} ({$employee->employee_code})",
+                'metadata' => [
+                    'employee_id' => $employee->id,
+                    'employee_code' => $employee->employee_code,
+                    'outlet_id' => $employee->outlet_id,
+                    'user_access_revoked' => $user !== null,
+                ],
+            ]);
+        });
+    }
 }

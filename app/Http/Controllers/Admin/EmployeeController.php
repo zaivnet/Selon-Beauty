@@ -357,20 +357,19 @@ class EmployeeController extends Controller
 
         $name = $employee->full_name;
 
-        if ($employee->user) {
-            try {
-                $this->userRoleService->ensureSuperadminSafety($employee->user, newRole: null, newIsActive: false);
-            } catch (\Throwable $e) {
-                return redirect()->back()->with('error', $e->getMessage());
-            }
+        try {
+            $this->employeeService->deleteEmployee($employee, $request->user());
 
-            $employee->user->delete();
+            return redirect()->route('admin.employees.index')
+                ->with('success', "Data karyawan {$name} berhasil dihapus. Akun login telah dinonaktifkan dan email/nomor HP telah dilepas agar dapat digunakan kembali.");
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->errors();
+            $firstError = reset($errors)[0] ?? 'Gagal menghapus data karyawan.';
+
+            return redirect()->back()->with('error', $firstError);
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', $e->getMessage());
         }
-
-        $employee->delete();
-
-        return redirect()->route('admin.employees.index')
-            ->with('success', "Data karyawan {$name} berhasil dihapus (soft delete).");
     }
 
     public function transfer(Request $request, Employee $employee): RedirectResponse

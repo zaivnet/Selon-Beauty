@@ -56,7 +56,7 @@ class User extends Authenticatable
 
     public function employee(): BelongsTo
     {
-        return $this->belongsTo(Employee::class, 'employee_id');
+        return $this->belongsTo(Employee::class, 'employee_id')->withTrashed();
     }
 
     public function outlet(): BelongsTo

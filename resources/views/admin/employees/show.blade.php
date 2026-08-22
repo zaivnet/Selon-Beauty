@@ -207,7 +207,7 @@
         @endif
 
         <div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
-            <form action="{{ route('admin.employees.destroy', $employee) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data karyawan ini (soft delete)?')">
+            <form action="{{ route('admin.employees.destroy', $employee) }}" method="POST" onsubmit="return confirm('Hapus karyawan ini?\n\nAkun login akan dinonaktifkan dan email/nomor HP akan dilepas agar dapat digunakan kembali. Riwayat absensi dan data historis tetap disimpan.')">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="text-xs font-bold text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 underline cursor-pointer">
