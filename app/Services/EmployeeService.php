@@ -262,7 +262,7 @@ class EmployeeService
             \App\Models\AuditLog::create([
                 'user_id' => $actor->id,
                 'action' => 'employee.deleted',
-                'description' => "Menghapus data karyawan {$employee->full_name} ({$employee->employee_code})",
+                'reason' => "Menghapus data karyawan {$employee->full_name} ({$employee->employee_code})",
                 'metadata' => [
                     'employee_id' => $employee->id,
                     'employee_code' => $employee->employee_code,
@@ -271,5 +271,102 @@ class EmployeeService
                 ],
             ]);
         });
+    }
+
+    /**
+     * Safely anonymize PII and revoke linked login for a legacy soft-deleted employee.
+     *
+     * @return array{success: bool, status: string, user_revoked: bool, message?: string}
+     */
+    public function cleanupLegacyDeletedEmployeePii(Employee $employee): array
+    {
+        // 1. Must be soft-deleted
+        if (! $employee->trashed()) {
+            return [
+                'success' => false,
+                'status' => 'skipped',
+                'user_revoked' => false,
+                'message' => 'Employee is active (not soft-deleted).',
+            ];
+        }
+
+        // 2. Must contain at least email or phone to clean
+        if (is_null($employee->email) && is_null($employee->phone)) {
+            return [
+                'success' => false,
+                'status' => 'skipped',
+                'user_revoked' => false,
+                'message' => 'Employee PII is already cleaned.',
+            ];
+        }
+
+        // 3. Check genuinely linked User via relationship
+        $user = $employee->user;
+
+        // 4. Check for Privileged User Conflict
+        if ($user && in_array($user->role, ['superadmin', 'owner', 'admin'], true)) {
+            return [
+                'success' => false,
+                'status' => 'conflict',
+                'user_revoked' => false,
+                'message' => "Linked to privileged User (ID: {$user->id}, Role: {$user->role}). Requires manual review.",
+            ];
+        }
+
+        // 5. Execute Atomic Cleanup
+        try {
+            $userRevoked = false;
+
+            DB::transaction(function () use ($employee, $user, &$userRevoked) {
+                if ($user) {
+                    // Revoke active web sessions
+                    DB::table('sessions')->where('user_id', $user->id)->delete();
+
+                    // Revoke user account & release PII
+                    $user->update([
+                        'email' => null,
+                        'phone' => null,
+                        'is_active' => false,
+                        'remember_token' => null,
+                    ]);
+
+                    $userRevoked = true;
+                }
+
+                // Clear PII on Employee without altering status, outlet_id, or deleted_at
+                Employee::withTrashed()->where('id', $employee->id)->update([
+                    'email' => null,
+                    'phone' => null,
+                ]);
+
+                // Create Audit Trail Log
+                \App\Models\AuditLog::create([
+                    'user_id' => null,
+                    'action' => 'employee.deleted_pii.cleaned',
+                    'reason' => "Pembersihan data PII karyawan terdahulu yang telah dihapus (soft-deleted): {$employee->full_name} ({$employee->employee_code})",
+                    'metadata' => [
+                        'employee_id' => $employee->id,
+                        'employee_code' => $employee->employee_code,
+                        'source' => 'legacy_backfill',
+                        'linked_user_revoked' => $userRevoked,
+                        'timestamp' => now()->toIso8601String(),
+                    ],
+                    'created_at' => now(),
+                ]);
+            });
+
+            return [
+                'success' => true,
+                'status' => 'cleaned',
+                'user_revoked' => $userRevoked,
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'status' => 'failed',
+                'user_revoked' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
     }
 }
