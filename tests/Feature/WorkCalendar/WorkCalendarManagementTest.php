@@ -33,6 +33,7 @@ class WorkCalendarManagementTest extends TestCase
         parent::setUp();
         $this->admin = User::create(['name' => 'Admin Kalender', 'email' => 'admin-cal@example.test', 'password' => Hash::make('password'), 'role' => 'admin', 'is_active' => true]);
         $this->employee = Employee::create(['employee_code' => 'CAL-M-01', 'full_name' => 'Maya', 'status' => 'active']);
+        $this->admin->assignedOutlets()->sync([$this->employee->outlet_id]);
         $this->employeeUser = User::create([
             'employee_id' => $this->employee->id, 'name' => 'Maya', 'email' => 'maya-cal@example.test',
             'password' => Hash::make('password'), 'role' => 'employee', 'is_active' => true,
@@ -95,6 +96,7 @@ class WorkCalendarManagementTest extends TestCase
         $this->assertSame('Jadwal Anda berubah', $notification->data['title']);
         $this->assertStringContainsString('/app/schedules', $notification->data['target_url']);
         $this->assertSame('work', $override->override_type);
+        $this->assertSame($this->employee->outlet_id, $override->work_outlet_id);
     }
 
     public function test_admin_can_preview_current_effective_schedule_before_override(): void
@@ -137,6 +139,8 @@ class WorkCalendarManagementTest extends TestCase
         $this->assertContains('holidays', $tables);
         $this->assertContains('employee_schedule_overrides', $tables);
         $this->assertTrue(Schema::hasColumns('holidays', ['type', 'is_working_day', 'created_by']));
+        $this->assertTrue(Schema::hasColumns('work_schedules', ['work_outlet_id']));
+        $this->assertTrue(Schema::hasColumns('employee_schedule_overrides', ['work_outlet_id']));
         $this->assertTrue(Schema::hasTable('employee_schedule_overrides'));
     }
 

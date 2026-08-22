@@ -2,17 +2,19 @@
 
 namespace App\Services;
 
+use App\Models\Outlet;
+use Illuminate\Database\Eloquent\Collection;
+
 class MultiOutletDashboardService
 {
     /**
      * Generate global overview metrics grouped by outlet.
      *
-     * @param \Illuminate\Database\Eloquent\Collection<\App\Models\Outlet> $activeOutlets
-     * @param array $attendanceItems (from AttendanceMonitoringService->getAttendanceMonitoringList)
-     * @param array $exceptions (from OperationalExceptionService->generate)
-     * @return array
+     * @param  Collection<Outlet>  $activeOutlets
+     * @param  array  $attendanceItems  (from AttendanceMonitoringService->getAttendanceMonitoringList)
+     * @param  array  $exceptions  (from OperationalExceptionService->generate)
      */
-    public function generateOverview(\Illuminate\Database\Eloquent\Collection $activeOutlets, array $attendanceItems, array $exceptions): array
+    public function generateOverview(Collection $activeOutlets, array $attendanceItems, array $exceptions): array
     {
         $outletsSummary = [];
         $globalKpi = [
@@ -27,15 +29,17 @@ class MultiOutletDashboardService
         ];
 
         // Group Attendance Items by Outlet
-        $attendanceByOutlet = collect($attendanceItems)->groupBy(fn ($item) => $item['employee']->outlet_id);
+        $attendanceByOutlet = collect($attendanceItems)->groupBy(fn ($item) => $item['effective_schedule']['work_outlet_id'] ?? $item['employee']->outlet_id);
 
         // Group Exceptions by Outlet
         $exceptionsByOutlet = [];
         foreach ($exceptions['items'] ?? [] as $exItem) {
-            $outletId = $exItem['employee']?->outlet_id;
+            $outletId = $exItem['data']['attendance_outlet_id']
+                ?? $exItem['data']['work_outlet_id']
+                ?? $exItem['employee']?->outlet_id;
             // Handle exceptions without employee (e.g. backup health) by assigning to "global" or skip
             if ($outletId) {
-                if (!isset($exceptionsByOutlet[$outletId])) {
+                if (! isset($exceptionsByOutlet[$outletId])) {
                     $exceptionsByOutlet[$outletId] = [];
                 }
                 $exceptionsByOutlet[$outletId][] = $exItem;
@@ -88,6 +92,7 @@ class MultiOutletDashboardService
             if ($a['needs_attention'] !== $b['needs_attention']) {
                 return $b['needs_attention'] <=> $a['needs_attention'];
             }
+
             return strcmp($a['outlet']->name, $b['outlet']->name);
         });
 

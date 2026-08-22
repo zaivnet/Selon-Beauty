@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\AuditLog;
 use App\Models\Employee;
 use App\Models\EmployeeSchedule;
+use App\Models\Outlet;
 use App\Models\Shift;
 use App\Models\User;
 use Carbon\Carbon;
@@ -27,6 +28,8 @@ class EmployeeScheduleService
     {
         $employee = Employee::findOrFail($data['employee_id']);
         $this->outletScopeService->ensureCanManageEmployee($actor, $employee);
+
+        $data['work_outlet_id'] = $this->resolveAuthorizedWorkOutletId($data, $employee, $actor);
 
         return DB::transaction(function () use ($data, $actor) {
             $this->periodService->assertPeriodOpen($data['work_date']);
@@ -58,6 +61,7 @@ class EmployeeScheduleService
                 'employee_id' => $data['employee_id'],
                 'work_date' => $data['work_date'],
                 'shift_id' => $data['shift_id'],
+                'work_outlet_id' => $scheduleType === 'work' ? $data['work_outlet_id'] : null,
                 'schedule_type' => $scheduleType,
                 'notes' => $data['notes'] ?? null,
                 'created_by' => $actor->id,
@@ -86,6 +90,11 @@ class EmployeeScheduleService
             $targetEmployee = Employee::findOrFail($data['employee_id']);
             $this->outletScopeService->ensureCanManageEmployee($actor, $targetEmployee);
         }
+
+        $targetEmployee = isset($data['employee_id'])
+            ? Employee::findOrFail($data['employee_id'])
+            : $schedule->employee;
+        $data['work_outlet_id'] = $this->resolveAuthorizedWorkOutletId($data, $targetEmployee, $actor, $schedule);
 
         return DB::transaction(function () use ($schedule, $data, $actor) {
             $this->periodService->assertPeriodOpen($data['work_date'] ?? $schedule->work_date);
@@ -129,6 +138,7 @@ class EmployeeScheduleService
                 'employee_id' => $data['employee_id'] ?? $schedule->employee_id,
                 'work_date' => $data['work_date'] ?? $schedule->work_date,
                 'shift_id' => $data['shift_id'],
+                'work_outlet_id' => $scheduleType === 'work' ? $data['work_outlet_id'] : null,
                 'schedule_type' => $scheduleType,
                 'notes' => array_key_exists('notes', $data) ? $data['notes'] : $schedule->notes,
                 'updated_by' => $actor->id,
@@ -269,6 +279,7 @@ class EmployeeScheduleService
                 'target_date' => $newTargetDate,
                 'schedule_type' => $prev->schedule_type,
                 'shift_id' => $prev->shift_id,
+                'work_outlet_id' => $prev->work_outlet_id,
                 'shift_code' => $prev->shift?->code ?? '-',
                 'has_conflict' => $hasConflict,
             ];
@@ -306,6 +317,7 @@ class EmployeeScheduleService
                         $this->updateSchedule($existing, [
                             'shift_id' => $item['shift_id'],
                             'schedule_type' => $item['schedule_type'],
+                            'work_outlet_id' => $item['work_outlet_id'],
                         ], $actor);
                         $copied++;
                     } else {
@@ -317,6 +329,7 @@ class EmployeeScheduleService
                         'work_date' => $item['target_date'],
                         'shift_id' => $item['shift_id'],
                         'schedule_type' => $item['schedule_type'],
+                        'work_outlet_id' => $item['work_outlet_id'],
                     ], $actor);
                     $copied++;
                 }
@@ -335,5 +348,26 @@ class EmployeeScheduleService
         if (! $employee->isCurrentAttendanceWorkforceMember()) {
             throw new \InvalidArgumentException('Karyawan tidak terdaftar sebagai peserta sistem kehadiran.');
         }
+    }
+
+    protected function resolveAuthorizedWorkOutletId(array $data, Employee $employee, User $actor, ?EmployeeSchedule $existing = null): ?int
+    {
+        $scheduleType = $data['schedule_type'] ?? $existing?->schedule_type ?? 'work';
+        if ($scheduleType !== 'work') {
+            return null;
+        }
+
+        $requestedWorkOutletId = array_key_exists('work_outlet_id', $data) && $data['work_outlet_id'] !== null
+            ? (int) $data['work_outlet_id']
+            : null;
+        $workOutletId = $requestedWorkOutletId ?: ($existing?->work_outlet_id ?: $employee->outlet_id);
+
+        if (! $workOutletId || ! Outlet::query()->whereKey($workOutletId)->where('is_active', true)->exists()) {
+            throw new \InvalidArgumentException('Outlet Kerja harus berupa outlet aktif yang valid.');
+        }
+
+        $this->outletScopeService->ensureCanAccessOutlet($actor, $workOutletId);
+
+        return $workOutletId;
     }
 }

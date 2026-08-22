@@ -18,6 +18,7 @@ class StoreScheduleRequest extends FormRequest
             'work_date' => ['required', 'date'],
             'schedule_type' => ['required', 'in:work,off,holiday'],
             'shift_id' => ['required_if:schedule_type,work', 'nullable', 'exists:shifts,id'],
+            'work_outlet_id' => ['nullable', 'integer', 'exists:outlets,id'],
             'notes' => ['nullable', 'string', 'max:500'],
         ];
     }
@@ -30,6 +31,7 @@ class StoreScheduleRequest extends FormRequest
             'schedule_type.required' => 'Jenis jadwal wajib dipilih.',
             'shift_id.required_if' => 'Shift wajib dipilih untuk jenis jadwal Kerja.',
             'shift_id.exists' => 'Shift yang dipilih tidak valid.',
+            'work_outlet_id.exists' => 'Outlet Kerja yang dipilih tidak valid.',
         ];
     }
 }

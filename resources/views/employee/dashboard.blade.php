@@ -318,7 +318,7 @@
                     <div>
                         <h5 class="text-xs font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                             <svg class="w-4 h-4 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                            <span>{{ $outlet?->name ?? 'Lokasi Belum Dikonfigurasi' }}</span>
+                            <span>Outlet Kerja Hari Ini: {{ $todayWorkOutlet?->name ?? 'Lokasi Belum Dikonfigurasi' }}</span>
                         </h5>
                         <p id="gps-status-text" class="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 font-medium">Mendeteksi lokasi perangkat...</p>
                     </div>
@@ -1079,13 +1079,13 @@ function detectGPSLocation() {
             if (checkoutLng) checkoutLng.value = lng;
             if (checkoutAcc) checkoutAcc.value = acc;
 
-            // Fetch outlet location metadata from Employee outlet context
-            @if(isset($outlet) && $outlet && $outlet->latitude !== null && $outlet->longitude !== null)
-                const storeLat = {{ (float) $outlet->latitude }};
-                const storeLng = {{ (float) $outlet->longitude }};
-                const maxRadius = {{ (int) $outlet->radius_meters }};
-                const maxAccuracy = {{ (int) $outlet->max_accuracy_meters }};
-                const targetOutletName = @json($outlet->name);
+            // Fetch outlet location metadata from the effective work outlet context.
+            @if(isset($todayWorkOutlet) && $todayWorkOutlet && $todayWorkOutlet->latitude !== null && $todayWorkOutlet->longitude !== null)
+                const storeLat = {{ (float) $todayWorkOutlet->latitude }};
+                const storeLng = {{ (float) $todayWorkOutlet->longitude }};
+                const maxRadius = {{ (int) $todayWorkOutlet->radius_meters }};
+                const maxAccuracy = {{ (int) $todayWorkOutlet->max_accuracy_meters }};
+                const targetOutletName = @json($todayWorkOutlet->name);
 
                 const distance = calculateHaversineMeters(lat, lng, storeLat, storeLng);
 

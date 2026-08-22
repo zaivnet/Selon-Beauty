@@ -49,10 +49,10 @@ class ScheduleController extends Controller
         }
 
         // Privacy Enforcement: Query ONLY schedules belonging to the authenticated employee
-        $regular = EmployeeSchedule::with('shift')->where('employee_id', $employee->id)
+        $regular = EmployeeSchedule::with(['shift', 'workOutlet'])->where('employee_id', $employee->id)
             ->whereBetween('work_date', [$startDate->toDateString(), $endDate->toDateString()])
             ->get()->keyBy(fn ($item) => $item->work_date->format('Y-m-d'));
-        $overrides = EmployeeScheduleOverride::with('shift')->where('employee_id', $employee->id)
+        $overrides = EmployeeScheduleOverride::with(['shift', 'workOutlet'])->where('employee_id', $employee->id)
             ->whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()])
             ->get()->keyBy(fn ($item) => $item->date->format('Y-m-d'));
         $calendarDays = Holiday::whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()])

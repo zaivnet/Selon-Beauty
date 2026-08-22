@@ -6,6 +6,7 @@ use App\Models\Employee;
 use App\Models\EmployeeSchedule;
 use App\Models\Shift;
 use App\Models\User;
+use App\Services\EmployeeScheduleService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -16,10 +17,15 @@ class ScheduleViewTest extends TestCase
     use RefreshDatabase;
 
     protected User $employeeUser1;
+
     protected Employee $employee1;
+
     protected User $employeeUser2;
+
     protected Employee $employee2;
+
     protected Shift $shiftPagi;
+
     protected Shift $shiftNight;
 
     protected function setUp(): void
@@ -200,11 +206,15 @@ class ScheduleViewTest extends TestCase
         $initialId = $schedule->id;
 
         // Service update
-        $service = app(\App\Services\EmployeeScheduleService::class);
+        $service = app(EmployeeScheduleService::class);
+        $owner = User::create([
+            'name' => 'Owner Schedule Test', 'email' => 'owner-schedule-test@example.test',
+            'password' => Hash::make('password123'), 'role' => 'owner', 'is_active' => true,
+        ]);
         $updated = $service->updateSchedule($schedule, [
             'shift_id' => $this->shiftNight->id,
             'schedule_type' => 'work',
-        ], $this->employeeUser1);
+        ], $owner);
 
         $this->assertEquals($initialId, $updated->id);
         $this->assertEquals(1, EmployeeSchedule::where('employee_id', $this->employee1->id)->count());

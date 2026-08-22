@@ -72,6 +72,7 @@
 
                 <div class="mt-3 border-t border-current/10 pt-3">
                     @if($effective['is_working_day'] && $shift)
+                        <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Outlet Kerja: {{ $effective['work_outlet']?->name ?? $employee->outlet?->name ?? '-' }}</p>
                         <div class="flex items-end justify-between gap-3">
                             <div class="min-w-0"><p class="truncate text-sm font-black text-slate-900 dark:text-slate-100">{{ $shift->name }}</p><p class="mt-0.5 text-[10px] font-bold text-slate-500 dark:text-slate-400">{{ $shift->code }}</p></div>
                             <p class="shrink-0 font-mono text-xs font-black text-slate-800 dark:text-slate-200">{{ substr($shift->start_time, 0, 5) }}–{{ substr($shift->end_time, 0, 5) }}</p>

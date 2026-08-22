@@ -59,9 +59,10 @@ class ScheduleController extends Controller
 
         $shifts = Shift::orderBy('name')->get();
         $activeShifts = $shifts->where('is_active', true);
+        $workOutlets = $this->outletScopeService->getAuthorizedActiveOutlets($request->user());
 
         // Fetch existing schedules for the week
-        $schedulesRaw = EmployeeSchedule::with(['shift'])
+        $schedulesRaw = EmployeeSchedule::with(['shift', 'workOutlet'])
             ->whereBetween('work_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->get();
 
@@ -72,7 +73,7 @@ class ScheduleController extends Controller
             $scheduleMatrix[$key] = $sch;
         }
 
-        $overrides = EmployeeScheduleOverride::with('shift')
+        $overrides = EmployeeScheduleOverride::with(['shift', 'workOutlet'])
             ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->get()->keyBy(fn ($item) => $item->employee_id.'_'.$item->date->format('Y-m-d'));
         $calendarDays = Holiday::whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
@@ -105,6 +106,7 @@ class ScheduleController extends Controller
             'employees',
             'shifts',
             'activeShifts',
+            'workOutlets',
             'scheduleMatrix',
             'effectiveScheduleMatrix',
             'prevWeekDate',

@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\Employee;
 use App\Models\EmployeeScheduleOverride;
 use App\Models\Holiday;
+use App\Models\Outlet;
 use App\Models\Shift;
 use App\Models\User;
 use App\Notifications\ScheduleOverrideNotification;
@@ -14,10 +15,12 @@ use Illuminate\Support\Facades\DB;
 
 class WorkCalendarService
 {
-    public function __construct(protected ?AttendancePeriodService $periodService = null)
+    public function __construct(protected ?AttendancePeriodService $periodService = null, protected ?OutletScopeService $outletScopeService = null)
     {
         $this->periodService = $periodService ?? new AttendancePeriodService;
+        $this->outletScopeService = $outletScopeService ?? new OutletScopeService;
     }
+
     public function createCalendarDay(array $data, User $actor): Holiday
     {
         $this->ensureManager($actor);
@@ -89,13 +92,18 @@ class WorkCalendarService
         return DB::transaction(function () use ($data, $actor, $override) {
             $this->periodService->assertPeriodOpen($data['date']);
             $employee = Employee::findOrFail($data['employee_id']);
+            $this->outletScopeService->ensureCanManageEmployee($actor, $employee);
             if (! $employee->isCurrentAttendanceWorkforceMember()) {
                 throw new \InvalidArgumentException('Karyawan tidak terdaftar sebagai peserta sistem kehadiran.');
             }
 
             if ($override) {
                 $this->periodService->assertPeriodOpen($override->date->format('Y-m-d'));
-                $override = EmployeeScheduleOverride::with(['employee.user', 'shift'])->lockForUpdate()->findOrFail($override->id);
+                $override = EmployeeScheduleOverride::with(['employee.user', 'shift', 'workOutlet'])->lockForUpdate()->findOrFail($override->id);
+                // Authorize the persisted record as well as the requested employee below.
+                // A crafted employee_id must not turn an authorized update into an update
+                // of an override belonging to a different Home Outlet.
+                $this->outletScopeService->ensureCanManageEmployee($actor, $override->employee);
                 $conflict = EmployeeScheduleOverride::where('employee_id', $data['employee_id'])
                     ->whereDate('date', $data['date'])->where('id', '!=', $override->id)->exists();
                 if ($conflict) {
@@ -116,6 +124,18 @@ class WorkCalendarService
                     throw new \InvalidArgumentException('Override Masuk Kerja wajib memilih shift aktif.');
                 }
             }
+            $requestedWorkOutletId = array_key_exists('work_outlet_id', $data) && $data['work_outlet_id'] !== null
+                ? (int) $data['work_outlet_id']
+                : null;
+            $workOutletId = $data['override_type'] === 'work'
+                ? ($requestedWorkOutletId ?: ($override?->work_outlet_id ?: $employee->outlet_id))
+                : null;
+            if ($workOutletId && ! Outlet::query()->whereKey($workOutletId)->where('is_active', true)->exists()) {
+                throw new \InvalidArgumentException('Outlet Kerja harus berupa outlet aktif yang valid.');
+            }
+            if ($workOutletId) {
+                $this->outletScopeService->ensureCanAccessOutlet($actor, $workOutletId);
+            }
 
             $before = $override?->getAttributes();
             $event = $override ? 'updated' : 'created';
@@ -123,6 +143,7 @@ class WorkCalendarService
                 $override->fill([
                     'employee_id' => $data['employee_id'], 'date' => $data['date'],
                     'override_type' => $data['override_type'], 'shift_id' => $shiftId,
+                    'work_outlet_id' => $workOutletId,
                     'reason' => trim($data['reason']),
                 ]);
                 if (! $override->isDirty()) {
@@ -133,10 +154,11 @@ class WorkCalendarService
                 $override = EmployeeScheduleOverride::create([
                     'employee_id' => $data['employee_id'], 'date' => $data['date'],
                     'override_type' => $data['override_type'], 'shift_id' => $shiftId,
+                    'work_outlet_id' => $workOutletId,
                     'reason' => trim($data['reason']), 'created_by' => $actor->id,
                 ]);
             }
-            $override->load(['employee.user', 'shift']);
+            $override->load(['employee.user', 'shift', 'workOutlet']);
             $this->audit(
                 "schedule_override.{$event}", $override, $before, $override->getAttributes(),
                 $data['reason'], $actor, ['employee_id' => $override->employee_id, 'date' => $override->date->format('Y-m-d')],
@@ -153,7 +175,8 @@ class WorkCalendarService
         $this->ensureReason($reason);
         DB::transaction(function () use ($override, $reason, $actor) {
             $this->periodService->assertPeriodOpen($override->date->format('Y-m-d'));
-            $override = EmployeeScheduleOverride::with(['employee.user', 'shift'])->lockForUpdate()->findOrFail($override->id);
+            $override = EmployeeScheduleOverride::with(['employee.user', 'shift', 'workOutlet'])->lockForUpdate()->findOrFail($override->id);
+            $this->outletScopeService->ensureCanManageEmployee($actor, $override->employee);
             $before = $override->getAttributes();
             $metadata = ['employee_id' => $override->employee_id, 'date' => $override->date->format('Y-m-d')];
             $notificationSnapshot = clone $override;

@@ -8,6 +8,7 @@ use App\Models\EmployeeScheduleOverride;
 use App\Models\Holiday;
 use App\Models\Shift;
 use App\Services\EffectiveScheduleService;
+use App\Services\OutletScopeService;
 use App\Services\WorkCalendarService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -20,6 +21,7 @@ class WorkCalendarController extends Controller
     public function __construct(
         protected WorkCalendarService $calendarService,
         protected EffectiveScheduleService $effectiveScheduleService,
+        protected OutletScopeService $outletScopeService,
     ) {}
 
     public function index(Request $request): View
@@ -32,8 +34,11 @@ class WorkCalendarController extends Controller
             $query->whereDate('date', $request->string('date'));
         }
 
-        $employees = Employee::where('status', 'active')->currentAttendanceWorkforce()->orderBy('full_name')->get();
-        $overrides = EmployeeScheduleOverride::with(['employee', 'shift', 'creator'])
+        $employeesQuery = Employee::with('outlet')->where('status', 'active')->currentAttendanceWorkforce();
+        $this->outletScopeService->scopeEmployeesFor($request->user(), $employeesQuery);
+        $employees = $employeesQuery->orderBy('full_name')->get();
+        $overrides = EmployeeScheduleOverride::with(['employee.outlet', 'shift', 'workOutlet', 'creator'])
+            ->whereIn('employee_id', $employees->pluck('id'))
             ->orderByDesc('date')->limit(50)->get();
 
         return view('admin.work_calendar.index', [
@@ -41,6 +46,7 @@ class WorkCalendarController extends Controller
             'overrides' => $overrides,
             'employees' => $employees,
             'activeShifts' => Shift::where('is_active', true)->orderBy('name')->get(),
+            'workOutlets' => $this->outletScopeService->getAuthorizedActiveOutlets($request->user()),
             'today' => Carbon::now(config('app.timezone'))->toDateString(),
         ]);
     }
@@ -51,8 +57,10 @@ class WorkCalendarController extends Controller
             'employee_id' => ['required', 'exists:employees,id'],
             'date' => ['required', 'date_format:Y-m-d'],
         ]);
+        $employee = Employee::findOrFail($data['employee_id']);
+        $this->outletScopeService->ensureCanManageEmployee($request->user(), $employee);
         $effective = $this->effectiveScheduleService->resolve(
-            Employee::findOrFail($data['employee_id']),
+            $employee,
             $data['date'],
         );
 
@@ -69,6 +77,10 @@ class WorkCalendarController extends Controller
             'effective_shift' => $effective['shift'] ? [
                 'name' => $effective['shift']->name,
                 'hours' => $effective['shift']->formatted_work_hours,
+            ] : null,
+            'work_outlet' => $effective['work_outlet'] ? [
+                'id' => $effective['work_outlet']->id,
+                'name' => $effective['work_outlet']->name,
             ] : null,
         ]);
     }
@@ -133,6 +145,7 @@ class WorkCalendarController extends Controller
             'date' => ['required', 'date'],
             'override_type' => ['required', 'in:work,off'],
             'shift_id' => ['nullable', 'required_if:override_type,work', 'exists:shifts,id'],
+            'work_outlet_id' => ['nullable', 'integer', 'exists:outlets,id'],
             'reason' => ['required', 'string', 'min:5', 'max:1000'],
         ]);
     }

@@ -149,11 +149,11 @@
                                         @elseif($effective && $effective['source'] === 'special_working_day')
                                             <div class="rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/60 p-2 text-emerald-900 dark:text-emerald-300">
                                                 <span class="block text-[10px] font-black">{{ $effective['shift']?->code ?? 'SHIFT?' }}</span><span class="mt-1 block text-[8px] font-black">KERJA KHUSUS</span>
-                                                @if($sch)<button type="button" onclick="openEditModal('{{ $sch->id }}', '{{ $emp->id }}', '{{ $day['date'] }}', '{{ $sch->schedule_type }}', '{{ $sch->shift_id }}', '{{ e($sch->notes) }}')" class="mt-1 min-h-[24px] text-[8px] font-bold underline">Ubah reguler</button>@endif
+                                                @if($sch)<button type="button" onclick="openEditModal('{{ $sch->id }}', '{{ $emp->id }}', '{{ $day['date'] }}', '{{ $sch->schedule_type }}', '{{ $sch->shift_id }}', '{{ e($sch->notes) }}', '{{ $sch->work_outlet_id ?? $emp->outlet_id }}')" class="mt-1 min-h-[24px] text-[8px] font-bold underline">Ubah reguler</button>@endif
                                             </div>
                                         @elseif($sch)
                                             @if($sch->schedule_type === 'work' && $sch->shift)
-                                                <div onclick="openEditModal('{{ $sch->id }}', '{{ $emp->id }}', '{{ $day['date'] }}', '{{ $sch->schedule_type }}', '{{ $sch->shift_id }}', '{{ e($sch->notes) }}')"
+                                                <div onclick="openEditModal('{{ $sch->id }}', '{{ $emp->id }}', '{{ $day['date'] }}', '{{ $sch->schedule_type }}', '{{ $sch->shift_id }}', '{{ e($sch->notes) }}', '{{ $sch->work_outlet_id ?? $emp->outlet_id }}')"
                                                      class="p-2 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 hover:border-rose-300 dark:hover:border-rose-800 hover:shadow-xs text-rose-900 dark:text-rose-300 transition-all cursor-pointer space-y-0.5 group">
                                                     <div class="flex items-center justify-between">
                                                         <span class="font-bold font-mono text-[11px] uppercase block">{{ $sch->shift->code }}</span>
@@ -162,13 +162,13 @@
                                                     <span class="text-[10px] block text-slate-600 dark:text-slate-400 font-medium">{{ substr($sch->shift->start_time, 0, 5) }} - {{ substr($sch->shift->end_time, 0, 5) }}</span>
                                                 </div>
                                             @elseif($sch->schedule_type === 'off')
-                                                <div onclick="openEditModal('{{ $sch->id }}', '{{ $emp->id }}', '{{ $day['date'] }}', '{{ $sch->schedule_type }}', '', '{{ e($sch->notes) }}')"
+                                                <div onclick="openEditModal('{{ $sch->id }}', '{{ $emp->id }}', '{{ $day['date'] }}', '{{ $sch->schedule_type }}', '', '{{ e($sch->notes) }}', '{{ $sch->work_outlet_id ?? $emp->outlet_id }}')"
                                                      class="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200/70 dark:hover:bg-slate-700/70 hover:border-slate-300 hover:shadow-xs text-slate-700 dark:text-slate-300 font-extrabold text-[11px] transition-all cursor-pointer flex items-center justify-between group">
                                                     <span>OFF / LIBUR</span>
                                                     <svg class="w-3 h-3 text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300 hidden group-hover:inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                                 </div>
                                             @elseif($sch->schedule_type === 'holiday')
-                                                <div onclick="openEditModal('{{ $sch->id }}', '{{ $emp->id }}', '{{ $day['date'] }}', '{{ $sch->schedule_type }}', '', '{{ e($sch->notes) }}')"
+                                                <div onclick="openEditModal('{{ $sch->id }}', '{{ $emp->id }}', '{{ $day['date'] }}', '{{ $sch->schedule_type }}', '', '{{ e($sch->notes) }}', '{{ $sch->work_outlet_id ?? $emp->outlet_id }}')"
                                                      class="p-2 rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 hover:border-amber-300 hover:shadow-xs text-amber-900 dark:text-amber-300 font-extrabold text-[11px] transition-all cursor-pointer flex items-center justify-between group">
                                                     <span>HOLIDAY</span>
                                                     <svg class="w-3 h-3 text-amber-500 dark:text-amber-400 group-hover:text-amber-700 dark:group-hover:text-amber-300 hidden group-hover:inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
@@ -222,17 +222,17 @@
                                             <span class="inline-flex min-h-[44px] max-w-full items-center rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/60 px-3 text-[10px] font-black text-emerald-900 dark:text-emerald-300">KERJA KHUSUS · {{ $effective['shift']?->code ?? 'SHIFT BELUM ADA' }}</span>
                                         @elseif($sch)
                                             @if($sch->schedule_type === 'work' && $sch->shift)
-                                                <button type="button" onclick="openEditModal('{{ $sch->id }}', '{{ $emp->id }}', '{{ $day['date'] }}', '{{ $sch->schedule_type }}', '{{ $sch->shift_id }}', '{{ e($sch->notes) }}')"
+                                                <button type="button" onclick="openEditModal('{{ $sch->id }}', '{{ $emp->id }}', '{{ $day['date'] }}', '{{ $sch->schedule_type }}', '{{ $sch->shift_id }}', '{{ e($sch->notes) }}', '{{ $sch->work_outlet_id ?? $emp->outlet_id }}')"
                                                         class="min-h-[44px] px-2.5 py-1 bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60 font-mono font-extrabold text-[11px] rounded-lg active:scale-95 transition-transform cursor-pointer">
                                                     {{ $sch->shift->code }} ({{ substr($sch->shift->start_time, 0, 5) }}-{{ substr($sch->shift->end_time, 0, 5) }})
                                                 </button>
                                             @elseif($sch->schedule_type === 'off')
-                                                <button type="button" onclick="openEditModal('{{ $sch->id }}', '{{ $emp->id }}', '{{ $day['date'] }}', '{{ $sch->schedule_type }}', '', '{{ e($sch->notes) }}')"
+                                                <button type="button" onclick="openEditModal('{{ $sch->id }}', '{{ $emp->id }}', '{{ $day['date'] }}', '{{ $sch->schedule_type }}', '', '{{ e($sch->notes) }}', '{{ $sch->work_outlet_id ?? $emp->outlet_id }}')"
                                                         class="min-h-[44px] px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-extrabold text-[11px] rounded-lg active:scale-95 transition-transform cursor-pointer">
                                                     OFF / LIBUR
                                                 </button>
                                             @elseif($sch->schedule_type === 'holiday')
-                                                <button type="button" onclick="openEditModal('{{ $sch->id }}', '{{ $emp->id }}', '{{ $day['date'] }}', '{{ $sch->schedule_type }}', '', '{{ e($sch->notes) }}')"
+                                                <button type="button" onclick="openEditModal('{{ $sch->id }}', '{{ $emp->id }}', '{{ $day['date'] }}', '{{ $sch->schedule_type }}', '', '{{ e($sch->notes) }}', '{{ $sch->work_outlet_id ?? $emp->outlet_id }}')"
                                                         class="min-h-[44px] px-2.5 py-1 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 font-extrabold text-[11px] rounded-lg active:scale-95 transition-transform cursor-pointer">
                                                     HOLIDAY
                                                 </button>
@@ -271,7 +271,7 @@
                 <select name="employee_id" id="modal_employee_id" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 ui-select">
                     <option value="">-- Pilih Karyawan --</option>
                     @foreach($employees as $emp)
-                        <option value="{{ $emp->id }}">{{ $emp->full_name }} ({{ $emp->employee_code }})</option>
+                        <option value="{{ $emp->id }}" data-home-outlet-id="{{ $emp->outlet_id }}">{{ $emp->full_name }} ({{ $emp->employee_code }})</option>
                     @endforeach
                 </select>
             </div>
@@ -298,6 +298,17 @@
                         <option value="{{ $sf->id }}">{{ $sf->name }} ({{ $sf->code }} • {{ substr($sf->start_time, 0, 5) }}-{{ substr($sf->end_time, 0, 5) }}) {{ !$sf->is_active ? '[NONAKTIF]' : '' }}</option>
                     @endforeach
                 </select>
+            </div>
+
+            <div id="container-work-outlet-select">
+                <label for="modal_work_outlet_id" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Outlet Kerja *</label>
+                <select name="work_outlet_id" id="modal_work_outlet_id" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 ui-select">
+                    <option value="">-- Pilih Outlet Kerja --</option>
+                    @foreach($workOutlets as $outlet)
+                        <option value="{{ $outlet->id }}">{{ $outlet->name }} ({{ $outlet->code }})</option>
+                    @endforeach
+                </select>
+                <p class="mt-1 text-[10px] text-slate-500 dark:text-slate-400">Home Outlet adalah outlet induk karyawan. Outlet Kerja adalah lokasi kerja pada tanggal ini.</p>
             </div>
 
             <div>
@@ -338,6 +349,7 @@ function openAssignModal(employeeId, dateStr) {
     document.getElementById('modal_work_date').value = dateStr || "{{ date('Y-m-d') }}";
     document.getElementById('modal_schedule_type').value = "work";
     document.getElementById('modal_shift_id').value = "";
+    setDefaultWorkOutlet();
     document.getElementById('modal_notes').value = "";
     document.getElementById('btn_delete_schedule').classList.add('hidden');
     document.getElementById('btn_submit_schedule').innerText = "Simpan Jadwal";
@@ -345,7 +357,7 @@ function openAssignModal(employeeId, dateStr) {
     document.getElementById('modal-assign-schedule').classList.remove('hidden');
 }
 
-function openEditModal(scheduleId, employeeId, dateStr, scheduleType, shiftId, notes) {
+function openEditModal(scheduleId, employeeId, dateStr, scheduleType, shiftId, notes, workOutletId = '') {
     document.getElementById('schedule-form').action = "/admin/schedules/" + scheduleId;
     document.getElementById('form_method').value = "PUT";
     document.getElementById('modal_title').innerText = "Ubah Jadwal Kerja Karyawan";
@@ -353,6 +365,7 @@ function openEditModal(scheduleId, employeeId, dateStr, scheduleType, shiftId, n
     document.getElementById('modal_work_date').value = dateStr;
     document.getElementById('modal_schedule_type').value = scheduleType;
     document.getElementById('modal_shift_id').value = shiftId || "";
+    document.getElementById('modal_work_outlet_id').value = workOutletId || "";
     document.getElementById('modal_notes').value = notes || "";
     document.getElementById('btn_delete_schedule').classList.remove('hidden');
     document.getElementById('btn_submit_schedule').innerText = "Simpan Perubahan";
@@ -374,13 +387,30 @@ function confirmDeleteSchedule() {
 function toggleShiftSelect(type) {
     const container = document.getElementById('container-shift-select');
     const shiftSelect = document.getElementById('modal_shift_id');
+    const outletContainer = document.getElementById('container-work-outlet-select');
+    const outletSelect = document.getElementById('modal_work_outlet_id');
     if (type === 'work') {
         container.classList.remove('hidden');
         shiftSelect.required = true;
+        outletContainer.classList.remove('hidden');
+        outletSelect.required = true;
     } else {
         container.classList.add('hidden');
         shiftSelect.required = false;
+        outletContainer.classList.add('hidden');
+        outletSelect.required = false;
     }
 }
+
+function setDefaultWorkOutlet() {
+    const employeeSelect = document.getElementById('modal_employee_id');
+    const workOutletSelect = document.getElementById('modal_work_outlet_id');
+    const homeOutletId = employeeSelect.options[employeeSelect.selectedIndex]?.dataset.homeOutletId;
+    if (homeOutletId && [...workOutletSelect.options].some((option) => option.value === homeOutletId)) {
+        workOutletSelect.value = homeOutletId;
+    }
+}
+
+document.getElementById('modal_employee_id').addEventListener('change', setDefaultWorkOutlet);
 </script>
 @endsection

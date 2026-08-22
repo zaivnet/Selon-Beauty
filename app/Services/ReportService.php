@@ -78,20 +78,20 @@ class ReportService
         $schedules = EmployeeSchedule::whereIn('employee_id', $employeeIds)
             ->whereDate('work_date', '>=', $startDateStr)
             ->whereDate('work_date', '<=', $endDateStr)
-            ->with('shift')
+            ->with(['shift', 'workOutlet'])
             ->get()
             ->groupBy(fn ($s) => $s->employee_id.'_'.$s->work_date->format('Y-m-d'));
 
         $attendances = AttendanceRecord::whereIn('employee_id', $employeeIds)
             ->whereDate('work_date', '>=', $startDateStr)
             ->whereDate('work_date', '<=', $endDateStr)
-            ->with('location')
+            ->with(['location', 'outlet'])
             ->get()
             ->groupBy(fn ($a) => $a->employee_id.'_'.$a->work_date->format('Y-m-d'));
 
         $overrides = EmployeeScheduleOverride::whereIn('employee_id', $employeeIds)
             ->whereDate('date', '>=', $startDateStr)->whereDate('date', '<=', $endDateStr)
-            ->with('shift')->get()->keyBy(fn ($item) => $item->employee_id.'_'.$item->date->format('Y-m-d'));
+            ->with(['shift', 'workOutlet'])->get()->keyBy(fn ($item) => $item->employee_id.'_'.$item->date->format('Y-m-d'));
         $calendarDays = Holiday::whereDate('date', '>=', $startDateStr)
             ->whereDate('date', '<=', $endDateStr)->get()->keyBy(fn ($item) => $item->date->format('Y-m-d'));
 
@@ -280,6 +280,7 @@ class ReportService
                     'shift' => $effective['shift'],
                     'effective_schedule' => $effective,
                     'attendance' => $att,
+                    'work_outlet' => $att?->outlet ?? $effective['work_outlet'],
                     'leave_request' => $leave,
                     'overtime_request' => $ovt,
                     'status' => $statusKey,

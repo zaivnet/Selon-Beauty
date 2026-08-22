@@ -10,7 +10,7 @@ class EmployeeScheduleOverride extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['employee_id', 'date', 'override_type', 'shift_id', 'reason', 'created_by'];
+    protected $fillable = ['employee_id', 'date', 'override_type', 'shift_id', 'work_outlet_id', 'reason', 'created_by'];
 
     protected function casts(): array
     {
@@ -25,6 +25,11 @@ class EmployeeScheduleOverride extends Model
     public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class);
+    }
+
+    public function workOutlet(): BelongsTo
+    {
+        return $this->belongsTo(Outlet::class, 'work_outlet_id');
     }
 
     public function creator(): BelongsTo

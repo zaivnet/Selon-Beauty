@@ -37,6 +37,7 @@ class DashboardController extends Controller
         $todayOvertime = null;
         $correctedAttendance = null;
         $todayEffective = null;
+        $todayWorkOutlet = null;
 
         if ($employee) {
             if ($request->filled('attendance')) {
@@ -45,6 +46,7 @@ class DashboardController extends Controller
                     ->first();
             }
             $todayEffective = $this->effectiveScheduleService->resolve($employee, $todayStr);
+            $todayWorkOutlet = $todayEffective['work_outlet'] ?? $outlet;
 
             if ($employee->participatesInAttendance()) {
                 $todayLeave = LeaveRequest::where('employee_id', $employee->id)
@@ -82,6 +84,7 @@ class DashboardController extends Controller
             'today' => $todayFormatted,
             'todaySchedule' => $todaySchedule,
             'todayEffective' => $todayEffective,
+            'todayWorkOutlet' => $todayWorkOutlet,
             'todayAttendance' => $todayAttendance,
             'todayLeave' => $todayLeave,
             'requireSelfie' => (bool) AppSetting::get('attendance_require_selfie', true),

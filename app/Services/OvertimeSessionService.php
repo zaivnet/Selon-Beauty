@@ -7,6 +7,7 @@ use App\Models\AttendanceRecord;
 use App\Models\AuditLog;
 use App\Models\Employee;
 use App\Models\EmployeeSchedule;
+use App\Models\Outlet;
 use App\Models\OvertimeRequest;
 use App\Models\OvertimeSession;
 use App\Models\User;
@@ -67,7 +68,8 @@ class OvertimeSessionService
                     throw ValidationException::withMessages(['overtime' => 'Selesaikan absensi kerja reguler terlebih dahulu.']);
                 }
 
-                $gps = $this->validatedGps($evidence, 'mulai lembur', $employee);
+                $workOutlet = $attendance?->outlet ?? $effective['work_outlet'];
+                $gps = $this->validatedGps($evidence, 'mulai lembur', $employee, $workOutlet);
                 $newSelfiePath = $this->storeSelfie($evidence, $employee->id, 'check_in');
                 $now = Carbon::now(config('app.timezone'));
 
@@ -116,7 +118,12 @@ class OvertimeSessionService
                     throw ValidationException::withMessages(['overtime' => 'Sesi lembur ini sudah selesai atau tidak aktif.']);
                 }
 
-                $gps = $this->validatedGps($evidence, 'selesai lembur', $employee);
+                $attendance = AttendanceRecord::with('outlet')
+                    ->where('employee_id', $employee->id)
+                    ->whereDate('work_date', $session->work_date)
+                    ->first();
+                $effective = $this->effectiveScheduleService->resolve($employee, $session->work_date);
+                $gps = $this->validatedGps($evidence, 'selesai lembur', $employee, $attendance?->outlet ?? $effective['work_outlet']);
                 $newSelfiePath = $this->storeSelfie($evidence, $employee->id, 'check_out');
                 $now = Carbon::now(config('app.timezone'));
                 $actualMinutes = max(0, (int) floor($session->check_in_at->diffInMinutes($now, false)));
@@ -367,7 +374,7 @@ class OvertimeSessionService
     }
 
     /** @return array{latitude: float, longitude: float, accuracy: float, distance: float} */
-    protected function validatedGps(array $evidence, string $action, ?Employee $employee = null): array
+    protected function validatedGps(array $evidence, string $action, ?Employee $employee = null, ?Outlet $workOutlet = null): array
     {
         $latitude = $evidence['latitude'] ?? null;
         $longitude = $evidence['longitude'] ?? null;
@@ -376,7 +383,7 @@ class OvertimeSessionService
             throw ValidationException::withMessages(['gps' => "Data GPS wajib disertakan untuk {$action}."]);
         }
 
-        $result = $this->attendanceService->validateGeofence((float) $latitude, (float) $longitude, (float) $accuracy, $employee);
+        $result = $this->attendanceService->validateGeofence((float) $latitude, (float) $longitude, (float) $accuracy, $employee, $workOutlet);
 
         return [
             'latitude' => (float) $latitude,

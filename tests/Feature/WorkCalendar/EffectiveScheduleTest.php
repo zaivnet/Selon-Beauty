@@ -7,6 +7,7 @@ use App\Models\Employee;
 use App\Models\EmployeeSchedule;
 use App\Models\EmployeeScheduleOverride;
 use App\Models\Holiday;
+use App\Models\Outlet;
 use App\Models\Shift;
 use App\Services\AttendanceStatusResolver;
 use App\Services\EffectiveScheduleService;
@@ -56,6 +57,53 @@ class EffectiveScheduleTest extends TestCase
         $this->assertSame('regular_schedule', $effective['source']);
         $this->assertTrue($effective['regular_schedule']->is($schedule));
         $this->assertTrue($effective['shift']->is($this->dayShift));
+    }
+
+    public function test_legacy_schedule_without_work_outlet_falls_back_to_home_outlet(): void
+    {
+        $this->schedule('2026-08-17', 'work', $this->dayShift);
+
+        $effective = $this->service->resolve($this->employee, '2026-08-17');
+
+        $this->assertSame($this->employee->outlet_id, $effective['work_outlet_id']);
+        $this->assertTrue($effective['uses_home_outlet_fallback']);
+    }
+
+    public function test_regular_schedule_can_resolve_a_work_outlet_different_from_home_outlet(): void
+    {
+        $cabang = Outlet::create([
+            'name' => 'Cabang Kalender', 'code' => 'CAL-CABANG', 'latitude' => -6.21, 'longitude' => 106.81,
+            'radius_meters' => 100, 'is_active' => true,
+        ]);
+        $this->schedule('2026-08-17', 'work', $this->dayShift, $cabang);
+
+        $effective = $this->service->resolve($this->employee, '2026-08-17');
+
+        $this->assertSame($cabang->id, $effective['work_outlet_id']);
+        $this->assertTrue($effective['work_outlet']->is($cabang));
+        $this->assertFalse($effective['uses_home_outlet_fallback']);
+    }
+
+    public function test_work_override_outlet_has_priority_over_regular_schedule_outlet(): void
+    {
+        $regularOutlet = Outlet::create([
+            'name' => 'Regular Outlet', 'code' => 'CAL-REG', 'latitude' => -6.21, 'longitude' => 106.81,
+            'radius_meters' => 100, 'is_active' => true,
+        ]);
+        $overrideOutlet = Outlet::create([
+            'name' => 'Override Outlet', 'code' => 'CAL-OVR', 'latitude' => -6.22, 'longitude' => 106.82,
+            'radius_meters' => 100, 'is_active' => true,
+        ]);
+        $this->schedule('2026-08-17', 'work', $this->dayShift, $regularOutlet);
+        EmployeeScheduleOverride::create([
+            'employee_id' => $this->employee->id, 'date' => '2026-08-17', 'override_type' => 'work',
+            'shift_id' => $this->dayShift->id, 'work_outlet_id' => $overrideOutlet->id, 'reason' => 'Bantuan cabang',
+        ]);
+
+        $effective = $this->service->resolve($this->employee, '2026-08-17');
+
+        $this->assertSame('employee_override', $effective['source']);
+        $this->assertSame($overrideOutlet->id, $effective['work_outlet_id']);
     }
 
     public function test_company_and_public_holidays_resolve_to_libur_not_absent(): void
@@ -149,11 +197,11 @@ class EffectiveScheduleTest extends TestCase
         $this->assertDatabaseHas('attendance_records', ['id' => $holidayAttendance->id]);
     }
 
-    private function schedule(string $date, string $type, ?Shift $shift = null): EmployeeSchedule
+    private function schedule(string $date, string $type, ?Shift $shift = null, ?Outlet $workOutlet = null): EmployeeSchedule
     {
         return EmployeeSchedule::create([
             'employee_id' => $this->employee->id, 'work_date' => $date,
-            'schedule_type' => $type, 'shift_id' => $shift?->id,
+            'schedule_type' => $type, 'shift_id' => $shift?->id, 'work_outlet_id' => $workOutlet?->id,
         ]);
     }
 }

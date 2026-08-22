@@ -47,9 +47,9 @@ class OvertimeRequestController extends Controller
             ->get()
             ->keyBy(fn ($a) => $a->work_date->format('Y-m-d'));
 
-        $requestRegular = EmployeeSchedule::with('shift')->where('employee_id', $employee->id)
+        $requestRegular = EmployeeSchedule::with(['shift', 'workOutlet'])->where('employee_id', $employee->id)
             ->whereIn('work_date', $workDates)->get()->keyBy(fn ($item) => $item->work_date->format('Y-m-d'));
-        $requestOverrides = EmployeeScheduleOverride::with('shift')->where('employee_id', $employee->id)
+        $requestOverrides = EmployeeScheduleOverride::with(['shift', 'workOutlet'])->where('employee_id', $employee->id)
             ->whereIn('date', $workDates)->get()->keyBy(fn ($item) => $item->date->format('Y-m-d'));
         $requestCalendars = Holiday::whereIn('date', $workDates)->get()->keyBy(fn ($item) => $item->date->format('Y-m-d'));
         $schedules = collect($workDates)->mapWithKeys(function (string $date) use ($employee, $requestRegular, $requestOverrides, $requestCalendars) {
@@ -63,10 +63,10 @@ class OvertimeRequestController extends Controller
         // Available work schedules for new requests (WORK type, last 30 days to next 7 days)
         $rangeStart = now(config('app.timezone'))->subDays(30)->startOfDay();
         $rangeEnd = now(config('app.timezone'))->addDays(7)->startOfDay();
-        $regularRange = EmployeeSchedule::with('shift')->where('employee_id', $employee->id)
+        $regularRange = EmployeeSchedule::with(['shift', 'workOutlet'])->where('employee_id', $employee->id)
             ->whereBetween('work_date', [$rangeStart->toDateString(), $rangeEnd->toDateString()])
             ->get()->keyBy(fn ($item) => $item->work_date->format('Y-m-d'));
-        $overrideRange = EmployeeScheduleOverride::with('shift')->where('employee_id', $employee->id)
+        $overrideRange = EmployeeScheduleOverride::with(['shift', 'workOutlet'])->where('employee_id', $employee->id)
             ->whereBetween('date', [$rangeStart->toDateString(), $rangeEnd->toDateString()])
             ->get()->keyBy(fn ($item) => $item->date->format('Y-m-d'));
         $calendarRange = Holiday::whereBetween('date', [$rangeStart->toDateString(), $rangeEnd->toDateString()])

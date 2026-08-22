@@ -284,7 +284,14 @@ Minimal satu akun Superadmin yang aktif (`is_active = true`) WAJIB selalu tersed
 2. Admin mode `selected` hanya berwenang atas outlet aktif yang tercatat pada `admin_outlet_assignments`. Nol assignment wajib gagal tertutup.
 3. Admin mode `all` berwenang atas seluruh outlet aktif, termasuk outlet yang dibuat kemudian, tanpa pivot massal.
 4. `users.outlet_id` hanya primary/default outlet kompatibilitas dan DILARANG dipakai sebagai sumber otorisasi.
-5. `employees.outlet_id` adalah HOME outlet permanen. Nilai awal ditetapkan saat pembuatan karyawan dan perubahan setelahnya WAJIB melalui `EmployeeTransferService`; normal Employee Edit dilarang memutasinya. Penjadwalan, attendance, izin, lembur, laporan, dan shift swap pada sprint ini tetap memakai semantik HOME outlet yang sudah ada.
+5. `employees.outlet_id` adalah HOME outlet permanen. Nilai awal ditetapkan saat pembuatan karyawan dan perubahan setelahnya WAJIB melalui `EmployeeTransferService`; normal Employee Edit dilarang memutasinya.
 6. Selector outlet hanya konteks UI/query. Setiap ID employee/outlet yang dikirim client wajib divalidasi ulang melalui `OutletScopeService` untuk mencegah IDOR.
 7. Perubahan akses outlet Admin wajib membuat audit before/after, mengganti remember token, dan mencabut sesi database yang aktif.
 8. Assignment ke outlet inactive/soft-deleted tidak memberikan akses operasional dan tidak boleh dialihkan otomatis ke outlet lain.
+
+## RULE 043 — Work Outlet per Work Date
+
+1. Work Outlet adalah konteks fisik per employee + work date, tersimpan opsional pada jadwal reguler/override dan diresolusikan hanya oleh `EffectiveScheduleService`: override WORK eksplisit, jadwal WORK eksplisit, lalu HOME Outlet sebagai fallback legacy.
+2. Admin hanya boleh mengubah jadwal employee yang HOME Outlet-nya berada dalam scope dan hanya boleh memilih Work Outlet aktif yang juga berada dalam scope. HOME Outlet tidak berubah oleh penjadwalan.
+3. Check-in memakai Work Outlet efektif dan wajib menyimpan snapshot itu di `attendance_records.outlet_id`. Check-out memakai snapshot tersebut; legacy record tanpa snapshot menggunakan Work Outlet efektif lalu HOME Outlet.
+4. KPI operasional berbasis tanggal menggunakan Work Outlet; headcount organisasi tetap memakai HOME Outlet. Shift swap lintas outlet tetap dilarang sampai domain rule khusus disetujui.

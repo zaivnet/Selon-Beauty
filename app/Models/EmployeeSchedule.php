@@ -17,6 +17,7 @@ class EmployeeSchedule extends Model
         'employee_id',
         'work_date',
         'shift_id',
+        'work_outlet_id',
         'schedule_type',
         'notes',
         'created_by',
@@ -38,6 +39,11 @@ class EmployeeSchedule extends Model
     public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class, 'shift_id');
+    }
+
+    public function workOutlet(): BelongsTo
+    {
+        return $this->belongsTo(Outlet::class, 'work_outlet_id');
     }
 
     public function creator(): BelongsTo

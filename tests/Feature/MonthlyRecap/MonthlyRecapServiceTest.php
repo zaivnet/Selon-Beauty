@@ -256,7 +256,10 @@ class MonthlyRecapServiceTest extends TestCase
         DB::disableQueryLog();
 
         $this->assertCount(2, $data['recaps']);
-        $this->assertLessThanOrEqual(10, $queryCount);
+        // Work Outlet eager loading adds one bounded relation query for regular
+        // schedules and one for overrides; the total must remain independent of
+        // employee and date cardinality.
+        $this->assertLessThanOrEqual(12, $queryCount);
     }
 
     private function shift(string $name, string $code, string $start, string $end, bool $crossesMidnight = false): Shift

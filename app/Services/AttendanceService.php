@@ -10,6 +10,7 @@ use App\Models\AuditLog;
 use App\Models\Employee;
 use App\Models\EmployeeSchedule;
 use App\Models\LeaveRequest;
+use App\Models\Outlet;
 use App\Models\User;
 use App\Notifications\AdminCorrectionNotification;
 use Carbon\Carbon;
@@ -80,11 +81,11 @@ class AttendanceService
     }
 
     /**
-     * Validate GPS geofence position against employee outlet / active AttendanceLocation server-side.
+     * Validate GPS geofence position against the resolved work outlet server-side.
      *
      * @return array{location: AttendanceLocation, distance: float}
      */
-    public function validateGeofence(float $latitude, float $longitude, float $accuracy, ?Employee $employee = null): array
+    public function validateGeofence(float $latitude, float $longitude, float $accuracy, ?Employee $employee = null, ?Outlet $workOutlet = null): array
     {
         if ($latitude < -90.0 || $latitude > 90.0) {
             throw new \InvalidArgumentException('Nilai Latitude GPS tidak valid.');
@@ -103,9 +104,9 @@ class AttendanceService
         }
 
         $employee->loadMissing('outlet');
-        $outlet = $employee->outlet;
+        $outlet = $workOutlet ?? $employee->outlet;
 
-        if (! $employee->outlet_id || ! $outlet) {
+        if (! $outlet) {
             throw new \InvalidArgumentException('Lokasi outlet Anda belum dikonfigurasi. Hubungi Admin/Owner.');
         }
 
@@ -180,6 +181,11 @@ class AttendanceService
 
                 $workDateStr = is_string($schedule->work_date) ? substr($schedule->work_date, 0, 10) : $schedule->work_date->format('Y-m-d');
                 $this->periodService->assertPeriodOpen($workDateStr);
+                $effective = $this->effectiveScheduleService->resolve($employee, $workDateStr);
+                $workOutlet = $effective['work_outlet'];
+                if (! $workOutlet) {
+                    throw new \InvalidArgumentException('Outlet Kerja untuk jadwal ini belum dikonfigurasi. Hubungi Admin/Owner.');
+                }
 
                 // Check duplicate check-in for this work date
                 $existingRecord = AttendanceRecord::where('employee_id', $employee->id)
@@ -226,7 +232,7 @@ class AttendanceService
                 $lng = (float) $rawLng;
                 $acc = (float) $rawAcc;
 
-                $geofenceResult = $this->validateGeofence($lat, $lng, $acc, $employee);
+                $geofenceResult = $this->validateGeofence($lat, $lng, $acc, $employee, $workOutlet);
                 $location = $geofenceResult['location'];
                 $distance = $geofenceResult['distance'];
 
@@ -254,7 +260,7 @@ class AttendanceService
                     'work_schedule_id' => $schedule->exists ? $schedule->id : null,
                     'work_date' => $workDateStr,
                     'attendance_location_id' => $legacyLocationId,
-                    'outlet_id' => $employee->outlet_id,
+                    'outlet_id' => $workOutlet->id,
                     'status' => $status,
                     'check_in_at' => $serverNow,
                     'check_in_latitude' => $lat,
@@ -325,6 +331,16 @@ class AttendanceService
                     throw new \InvalidArgumentException('Anda sudah melakukan absensi keluar untuk jadwal kerja ini.');
                 }
 
+                $record->loadMissing('outlet');
+                $checkoutOutlet = $record->outlet;
+                if (! $checkoutOutlet) {
+                    $legacyEffective = $this->effectiveScheduleService->resolve($employee, $workDateStr);
+                    $checkoutOutlet = $legacyEffective['work_outlet'];
+                }
+                if (! $checkoutOutlet) {
+                    throw new \InvalidArgumentException('Outlet Kerja untuk checkout belum dikonfigurasi. Hubungi Admin/Owner.');
+                }
+
                 // Fetch checkout geofence setting from app_settings
                 $settingRaw = DB::table('app_settings')->where('key', 'attendance_require_checkout_geofence')->first();
                 $requireCheckoutGeofence = ($settingRaw?->value ?? '1') === '1';
@@ -347,7 +363,7 @@ class AttendanceService
                     $lng = (float) $rawLng;
                     $acc = (float) $rawAcc;
 
-                    $geofenceResult = $this->validateGeofence($lat, $lng, $acc, $record->employee);
+                    $geofenceResult = $this->validateGeofence($lat, $lng, $acc, $employee, $checkoutOutlet);
                     $outLat = $lat;
                     $outLng = $lng;
                     $outAcc = $acc;
@@ -359,8 +375,7 @@ class AttendanceService
                         $lng = (float) $rawLng;
                         $acc = (float) $rawAcc;
 
-                        $record->loadMissing('employee.outlet');
-                        $outlet = $record->employee?->outlet;
+                        $outlet = $checkoutOutlet;
                         if ($outlet && $outlet->is_active && $outlet->latitude !== null && $outlet->longitude !== null) {
                             $outDist = $this->geofenceService->calculateDistanceMeters($lat, $lng, (float) $outlet->latitude, (float) $outlet->longitude);
                         }

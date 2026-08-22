@@ -112,6 +112,7 @@ Tabel existing ini menjadi kalender kerja global. Satu tanggal mempunyai maksima
 - employee_id FK INDEX
 - work_date DATE INDEX
 - shift_id FK NULL
+- work_outlet_id FK outlets.id NULL
 - schedule_type VARCHAR(30) INDEX
 - notes TEXT NULL
 - created_by FK users.id
@@ -128,6 +129,7 @@ schedule_type:
 
 Aturan:
 - `work` wajib memiliki shift_id.
+- `work_outlet_id` adalah Work Outlet eksplisit untuk tanggal tersebut; nilai NULL kompatibel dengan fallback ke `employees.outlet_id` (HOME Outlet) melalui `EffectiveScheduleService`.
 - `off` tidak perlu shift_id.
 - `work_schedules` adalah jadwal reguler; hasil final selalu dihitung oleh `EffectiveScheduleService`.
 
@@ -138,11 +140,12 @@ Aturan:
 - date DATE INDEX
 - override_type VARCHAR(20) INDEX (`work`, `off`)
 - shift_id FK NULL (wajib untuk `work`)
+- work_outlet_id FK outlets.id NULL
 - reason TEXT
 - created_by FK users.id NULL
 - timestamps
 
-Unique: `employee_id + date`. Override tidak mengubah atau menghapus template/jadwal reguler.
+Unique: `employee_id + date`. Override tidak mengubah atau menghapus template/jadwal reguler. Untuk override `work`, Work Outlet eksplisit mengalahkan Work Outlet jadwal reguler; nilai NULL tetap meneruskan resolusi reguler/HOME secara kompatibel.
 
 ## 8. attendance_records
 
@@ -372,6 +375,8 @@ Pivot dipakai untuk Admin mode `selected`. Admin mode `all`, Owner, dan Superadm
 
 - employees(status)
 - work_schedules(employee_id, work_date)
+- work_schedules(work_date, work_outlet_id, employee_id)
+- employee_schedule_overrides(date, work_outlet_id, employee_id)
 - attendance_records(employee_id, work_date)
 - attendance_records(work_date, status)
 - leave_requests(status, start_date, end_date)

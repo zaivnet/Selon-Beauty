@@ -199,6 +199,7 @@ class ShiftSwapService
                     'date' => $swap->requester_work_date->format('Y-m-d'),
                     'override_type' => 'work',
                     'shift_id' => $swap->target_original_shift_id,
+                    'work_outlet_id' => $reqEffective['work_outlet_id'],
                     'reason' => "Shift swap #{$swap->id}",
                     'created_by' => $adminActor->id,
                 ]);
@@ -208,6 +209,7 @@ class ShiftSwapService
                     'date' => $swap->target_work_date->format('Y-m-d'),
                     'override_type' => 'work',
                     'shift_id' => $swap->requester_original_shift_id,
+                    'work_outlet_id' => $targetEffective['work_outlet_id'],
                     'reason' => "Shift swap #{$swap->id}",
                     'created_by' => $adminActor->id,
                 ]);

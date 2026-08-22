@@ -186,6 +186,12 @@ Regular Employee Schedule
 
 Attendance resolver, monitoring, weekly schedule, leave validation, overtime start, dan report mengonsumsi hasil yang sama. Company/public holiday serta OFF tidak masuk denominator kehadiran. Actual attendance yang sudah ada tetap dipertahankan ketika kalender historis berubah. Global holiday tidak melakukan mass notification; perubahan override employee mengirim notification database dengan deep link ke jadwal mingguan.
 
+### Home Outlet dan Work Outlet
+
+`employees.outlet_id` adalah **HOME Outlet** permanen: outlet induk organisasi, batas pengelolaan employee, dan satu-satunya nilai yang boleh berubah melalui `EmployeeTransferService`. `work_schedules.work_outlet_id` dan `employee_schedule_overrides.work_outlet_id` menyimpan **Work Outlet** per tanggal; `EffectiveScheduleService` memilih override eksplisit, lalu jadwal reguler eksplisit, lalu HOME Outlet sebagai fallback kompatibilitas.
+
+Check-in memakai Work Outlet efektif untuk geofence dan menyimpannya sebagai snapshot `attendance_records.outlet_id`. Check-out memakai snapshot record tersebut agar perubahan jadwal maupun Home Outlet sesudah check-in tidak mengubah sesi historis. Admin harus berwenang atas HOME Outlet employee sekaligus Work Outlet yang dipilih; selector outlet tidak pernah menjadi otorisasi.
+
 ### Attendance Participation / Current Workforce
 
 `employees.attendance_enabled` menentukan kewajiban workforce saat ini dan tidak menentukan permission aplikasi. Role `owner`, `admin`, dan `employee` masing-masing dapat berpartisipasi atau tidak; Superadmin tetap mengikuti arsitektur existing dan dikecualikan oleh scope `currentAttendanceWorkforce()`.

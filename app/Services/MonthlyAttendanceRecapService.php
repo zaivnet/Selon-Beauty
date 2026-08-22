@@ -72,12 +72,12 @@ class MonthlyAttendanceRecapService
             return ['period' => $period, 'recaps' => []];
         }
 
-        $regularSchedules = EmployeeSchedule::with('shift')
+        $regularSchedules = EmployeeSchedule::with(['shift', 'workOutlet'])
             ->whereIn('employee_id', $employeeIds)
             ->whereDate('work_date', '>=', $period['start_date'])
             ->whereDate('work_date', '<=', $period['end_date'])
             ->get()->keyBy(fn ($item) => $this->key($item->employee_id, $item->work_date));
-        $overrides = EmployeeScheduleOverride::with('shift')
+        $overrides = EmployeeScheduleOverride::with(['shift', 'workOutlet'])
             ->whereIn('employee_id', $employeeIds)
             ->whereDate('date', '>=', $period['start_date'])
             ->whereDate('date', '<=', $period['end_date'])

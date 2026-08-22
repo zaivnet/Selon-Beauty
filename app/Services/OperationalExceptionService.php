@@ -56,9 +56,15 @@ class OperationalExceptionService
         $lookbackStart = $target->copy()->subDays(max(1, (int) config('operations.review_lookback_days', 31)));
 
         $employeesQuery = Employee::with('jobTitle')->whereNull('deleted_at')->where('status', 'active')->currentAttendanceWorkforce();
+        $targetOutletId = null;
         if (! empty($filters['actor'])) {
             $requestedOutletId = isset($filters['outlet_id']) ? (int) $filters['outlet_id'] : null;
-            $employeesQuery = $this->outletScopeService->scopeByRequestedOutlet($filters['actor'], $employeesQuery, $requestedOutletId);
+            $targetOutletId = $this->outletScopeService->resolveRequestedOutlet($filters['actor'], $requestedOutletId);
+            // Home Outlet remains the management boundary. The operational outlet
+            // filter is applied after effective schedule resolution below.
+            $this->outletScopeService->scopeEmployeesFor($filters['actor'], $employeesQuery);
+        } elseif (! empty($filters['outlet_id'])) {
+            $targetOutletId = (int) $filters['outlet_id'];
         }
         if (! empty($filters['employee_id'])) {
             $employeesQuery->whereKey((int) $filters['employee_id']);
@@ -70,12 +76,12 @@ class OperationalExceptionService
         $employeeIds = $employees->pluck('id');
         $employeeMap = $employees->keyBy('id');
 
-        $schedules = EmployeeSchedule::with('shift')
+        $schedules = EmployeeSchedule::with(['shift', 'workOutlet'])
             ->whereIn('employee_id', $employeeIds)
             ->whereDate('work_date', '>=', $lookbackStart->toDateString())
             ->whereDate('work_date', '<=', $targetDate)
             ->get()->keyBy(fn ($model) => $this->key($model->employee_id, $model->work_date));
-        $overrides = EmployeeScheduleOverride::with('shift')
+        $overrides = EmployeeScheduleOverride::with(['shift', 'workOutlet'])
             ->whereIn('employee_id', $employeeIds)
             ->whereDate('date', '>=', $lookbackStart->toDateString())
             ->whereDate('date', '<=', $targetDate)
@@ -119,6 +125,9 @@ class OperationalExceptionService
             $effective = $this->effectiveScheduleService->resolveFromModels(
                 $employee, $targetDate, $schedule, $override, $calendar->get($targetDate),
             );
+            if ($targetOutletId !== null && (int) $effective['work_outlet_id'] !== $targetOutletId) {
+                continue;
+            }
             $effectiveSchedule = $this->effectiveScheduleService->scheduleContext($effective);
             $resolved = $this->statusResolver->resolveEffective($effective, $attendance, $leave, $operationalNow);
 
@@ -177,6 +186,10 @@ class OperationalExceptionService
                 $overrides->get($this->key($attendance->employee_id, $dateString)),
                 $calendar->get($dateString),
             );
+            $attendanceOutletId = $attendance->outlet_id ?: $effective['work_outlet_id'];
+            if ($targetOutletId !== null && (int) $attendanceOutletId !== $targetOutletId) {
+                continue;
+            }
             $effectiveSchedule = $this->effectiveScheduleService->scheduleContext($effective);
             if (! $effectiveSchedule?->shift) {
                 continue;
@@ -405,6 +418,8 @@ class OperationalExceptionService
 
         return $this->item($category, $severity, $employee, $message, $url, 'Buka monitoring', [
             'work_date' => $date,
+            'work_outlet_id' => $schedule?->work_outlet_id ?? $employee->outlet_id,
+            'attendance_outlet_id' => $attendance?->outlet_id,
             'shift_name' => $schedule?->shift?->name,
             'shift_start' => $schedule?->shift?->start_time,
             'shift_end' => $schedule?->shift?->end_time,

@@ -6,6 +6,7 @@ use App\Models\Employee;
 use App\Models\EmployeeSchedule;
 use App\Models\EmployeeScheduleOverride;
 use App\Models\Holiday;
+use App\Models\Outlet;
 use Carbon\Carbon;
 
 class EffectiveScheduleService
@@ -22,9 +23,9 @@ class EffectiveScheduleService
                 label: 'TIDAK IKUT SISTEM KEHADIRAN', reason: null,
             );
         }
-        $regular = EmployeeSchedule::with('shift')
+        $regular = EmployeeSchedule::with(['shift', 'workOutlet'])
             ->where('employee_id', $employee->id)->whereDate('work_date', $date)->first();
-        $override = EmployeeScheduleOverride::with('shift')
+        $override = EmployeeScheduleOverride::with(['shift', 'workOutlet'])
             ->where('employee_id', $employee->id)->whereDate('date', $date)->first();
         $calendar = Holiday::whereDate('date', $date)->first();
 
@@ -111,10 +112,14 @@ class EffectiveScheduleService
             'employee_id' => $effective['employee']->id,
             'work_date' => $effective['date'],
             'shift_id' => $effective['shift']->id,
+            'work_outlet_id' => $effective['work_outlet_id'],
             'schedule_type' => 'work',
             'notes' => $effective['reason'],
         ]);
         $schedule->setRelation('shift', $effective['shift']);
+        if ($effective['work_outlet']) {
+            $schedule->setRelation('workOutlet', $effective['work_outlet']);
+        }
 
         return $schedule;
     }
@@ -128,6 +133,10 @@ class EffectiveScheduleService
             'shift_id' => $effective['shift']?->id,
         ]);
         $schedule->setRelation('shift', $effective['shift']);
+        $schedule->setAttribute('work_outlet_id', $effective['work_outlet_id']);
+        if ($effective['work_outlet']) {
+            $schedule->setRelation('workOutlet', $effective['work_outlet']);
+        }
         $schedule->setAttribute('effective_source', $effective['source']);
         $schedule->setAttribute('effective_label', $effective['label']);
         $schedule->setAttribute('effective_is_working_day', $effective['is_working_day']);
@@ -156,12 +165,34 @@ class EffectiveScheduleService
         string $label,
         ?string $reason,
     ): array {
+        $workOutlet = $this->resolveWorkOutlet($employee, $regular, $override);
+
         return [
             'employee' => $employee, 'date' => $date, 'is_working_day' => $working,
             'participates_in_attendance' => $employee->participatesInAttendance(),
             'source' => $source, 'regular_schedule' => $regular, 'override' => $override,
             'calendar_day' => $calendar, 'shift' => $shift, 'holiday_name' => $calendar?->name,
             'label' => $label, 'reason' => $reason,
+            'work_outlet_id' => $workOutlet?->id,
+            'work_outlet' => $workOutlet,
+            'uses_home_outlet_fallback' => $workOutlet?->id === $employee->outlet_id
+                && ! ($override?->override_type === 'work' && $override->work_outlet_id)
+                && ! ($regular?->schedule_type === 'work' && $regular->work_outlet_id),
         ];
+    }
+
+    protected function resolveWorkOutlet(Employee $employee, ?EmployeeSchedule $regular, ?EmployeeScheduleOverride $override): ?Outlet
+    {
+        if ($override?->override_type === 'work' && $override->work_outlet_id) {
+            return $override->workOutlet;
+        }
+
+        if ($regular?->schedule_type === 'work' && $regular->work_outlet_id) {
+            return $regular->workOutlet;
+        }
+
+        $employee->loadMissing('outlet');
+
+        return $employee->outlet;
     }
 }
