@@ -21,10 +21,12 @@ class ScheduleOverrideNotification extends Notification
     {
         $date = $this->override->date->format('d/m/Y');
         $isWork = $this->override->override_type === 'work';
+        $outletName = $this->override->workOutlet?->name;
+        $outletInfo = $outletName ? " di {$outletName}" : '';
         $message = $this->event === 'deleted'
-            ? "Override jadwal {$date} dibatalkan. Jadwal efektif kembali mengikuti kalender/regular schedule."
+            ? "Override penugasan jadwal {$date} dibatalkan. Jadwal efektif kembali mengikuti kalender/regular schedule."
             : ($isWork
-                ? "Anda dijadwalkan bekerja pada {$date} — Shift {$this->override->shift?->name}."
+                ? "Anda dijadwalkan bekerja pada {$date} — Shift {$this->override->shift?->name}{$outletInfo}."
                 : "Jadwal {$date} diubah menjadi Libur Khusus.");
 
         return [

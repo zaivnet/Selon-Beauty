@@ -72,8 +72,15 @@
 
                 <div class="mt-3 border-t border-current/10 pt-3">
                     @if($effective['is_working_day'] && $shift)
-                        <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Outlet Kerja: {{ $effective['work_outlet']?->name ?? $employee->outlet?->name ?? '-' }}</p>
-                        <div class="flex items-end justify-between gap-3">
+                        @php($isCrossOutlet = $effective['work_outlet_id'] && (int) $effective['work_outlet_id'] !== (int) $employee->outlet_id)
+                        <div class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                            <span>Outlet Kerja: <strong class="{{ $isCrossOutlet ? 'text-indigo-700 dark:text-indigo-300' : '' }}">{{ $effective['work_outlet']?->name ?? $employee->outlet?->name ?? '-' }}</strong></span>
+                            @if($isCrossOutlet)
+                                <span class="ml-1.5 inline-flex rounded bg-indigo-100 dark:bg-indigo-950 px-1.5 py-0.5 text-[9px] font-black text-indigo-800 dark:text-indigo-300">PENUGASAN OUTLET</span>
+                                <p class="mt-0.5 text-[10px] italic text-slate-400 dark:text-slate-500">Home Outlet Anda tetap {{ $employee->outlet?->name ?? '-' }}.</p>
+                            @endif
+                        </div>
+                        <div class="flex items-end justify-between gap-3 mt-1.5">
                             <div class="min-w-0"><p class="truncate text-sm font-black text-slate-900 dark:text-slate-100">{{ $shift->name }}</p><p class="mt-0.5 text-[10px] font-bold text-slate-500 dark:text-slate-400">{{ $shift->code }}</p></div>
                             <p class="shrink-0 font-mono text-xs font-black text-slate-800 dark:text-slate-200">{{ substr($shift->start_time, 0, 5) }}–{{ substr($shift->end_time, 0, 5) }}</p>
                         </div>

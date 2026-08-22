@@ -100,15 +100,20 @@ class WorkCalendarService
             if ($override) {
                 $this->periodService->assertPeriodOpen($override->date->format('Y-m-d'));
                 $override = EmployeeScheduleOverride::with(['employee.user', 'shift', 'workOutlet'])->lockForUpdate()->findOrFail($override->id);
-                // Authorize the persisted record as well as the requested employee below.
-                // A crafted employee_id must not turn an authorized update into an update
-                // of an override belonging to a different Home Outlet.
+                // Authorize the persisted record (HOME outlet and WORK outlet) as well as the requested employee/outlet.
                 $this->outletScopeService->ensureCanManageEmployee($actor, $override->employee);
+                if ($override->work_outlet_id) {
+                    $this->outletScopeService->ensureCanAccessOutlet($actor, $override->work_outlet_id);
+                }
+
                 $conflict = EmployeeScheduleOverride::where('employee_id', $data['employee_id'])
                     ->whereDate('date', $data['date'])->where('id', '!=', $override->id)->exists();
                 if ($conflict) {
                     throw new \InvalidArgumentException('Karyawan sudah memiliki override pada tanggal tersebut.');
                 }
+
+                // Check mutation blockers on persisted override date/employee
+                $this->assertNoMutationBlockers($override->employee_id, $override->date->format('Y-m-d'));
             } else {
                 $existing = EmployeeScheduleOverride::where('employee_id', $data['employee_id'])
                     ->whereDate('date', $data['date'])->lockForUpdate()->first();
@@ -116,6 +121,9 @@ class WorkCalendarService
                     throw new \InvalidArgumentException('Karyawan sudah memiliki override pada tanggal tersebut.');
                 }
             }
+
+            // Check mutation blockers on target date/employee
+            $this->assertNoMutationBlockers((int) $data['employee_id'], (string) $data['date']);
 
             $shiftId = $data['override_type'] === 'work' ? ($data['shift_id'] ?? null) : null;
             if ($data['override_type'] === 'work') {
@@ -177,6 +185,12 @@ class WorkCalendarService
             $this->periodService->assertPeriodOpen($override->date->format('Y-m-d'));
             $override = EmployeeScheduleOverride::with(['employee.user', 'shift', 'workOutlet'])->lockForUpdate()->findOrFail($override->id);
             $this->outletScopeService->ensureCanManageEmployee($actor, $override->employee);
+            if ($override->work_outlet_id) {
+                $this->outletScopeService->ensureCanAccessOutlet($actor, $override->work_outlet_id);
+            }
+
+            $this->assertNoMutationBlockers($override->employee_id, $override->date->format('Y-m-d'));
+
             $before = $override->getAttributes();
             $metadata = ['employee_id' => $override->employee_id, 'date' => $override->date->format('Y-m-d')];
             $notificationSnapshot = clone $override;
@@ -184,6 +198,24 @@ class WorkCalendarService
             $this->audit('schedule_override.deleted', $override, $before, null, $reason, $actor, $metadata);
             $notificationSnapshot->employee?->user?->notify(new ScheduleOverrideNotification($notificationSnapshot, 'deleted'));
         });
+    }
+
+    protected function assertNoMutationBlockers(int $employeeId, string $dateStr): void
+    {
+        $hasAttendance = \App\Models\AttendanceRecord::where('employee_id', $employeeId)
+            ->whereDate('work_date', $dateStr)
+            ->exists();
+        if ($hasAttendance) {
+            throw new \InvalidArgumentException('Penugasan sementara tidak dapat diubah/dihapus karena karyawan sudah memiliki absensi pada tanggal tersebut.');
+        }
+
+        $hasActiveOt = \App\Models\OvertimeSession::where('employee_id', $employeeId)
+            ->whereDate('work_date', $dateStr)
+            ->where('status', 'active')
+            ->exists();
+        if ($hasActiveOt) {
+            throw new \InvalidArgumentException('Penugasan sementara tidak dapat diubah/dihapus karena terdapat sesi lembur aktif pada tanggal tersebut.');
+        }
     }
 
     protected function ensureManager(User $actor): void
