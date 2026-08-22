@@ -103,9 +103,9 @@ Route::middleware(['auth', 'role:superadmin,owner,admin', 'prevent.private.cache
     Route::post('/employees/{employee}/toggle-status', [EmployeeController::class, 'toggleStatus'])->name('employees.toggle-status');
     Route::post('/employees/{employee}/transfer', [EmployeeController::class, 'transfer'])->name('employees.transfer');
 
-    // Superadmin Administrative Reset Password (Sprint 18.6)
+    // Administrative password reset: role gate here, employee/outlet scope in controller.
     Route::post('/employees/{employee}/reset-password', [\App\Http\Controllers\Admin\AdminPasswordResetController::class, 'reset'])
-        ->middleware('role:superadmin')
+        ->middleware('role:superadmin,owner,admin')
         ->name('employees.reset-password');
 
     // Attendance Settings & Store Locations (Sprint 03)

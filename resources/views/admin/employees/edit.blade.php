@@ -264,34 +264,29 @@
 
         </form>
 
-        <hr class="border-slate-200 dark:border-slate-800">
+        @if($canResetPassword)
+            <hr class="border-slate-200 dark:border-slate-800">
 
-        <!-- Form Reset Password User -->
-        <div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-3">
+            <!-- Form Reset Password User -->
+            <div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-3">
             <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Reset Password Akun Login Employee</h4>
             <p class="text-xs text-slate-500 dark:text-slate-400">
-                @if($employee->user)
-                    Karyawan ini memiliki akun login terhubung (Email: <strong>{{ $employee->user->email ?: $employee->user->phone }}</strong>). Masukkan password baru jika ingin meresetnya.
-                @else
-                    Karyawan ini belum memiliki akun login terhubung. Memasukkan password di bawah ini akan otomatis membuatkan akun login karyawan.
-                @endif
+                Karyawan ini memiliki akun login terhubung (Email: <strong>{{ $employee->user->email ?: $employee->user->phone }}</strong>). Masukkan password baru jika ingin meresetnya.
             </p>
 
-            <form action="{{ route('admin.employees.reset-password', $employee) }}" method="POST" class="flex flex-col sm:flex-row items-center gap-3">
+            <form action="{{ route('admin.employees.reset-password', $employee) }}" method="POST" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 @csrf
-                <input type="password" name="new_password" required placeholder="Password baru (min 6 karakter)" class="w-full sm:flex-1 px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500">
-                @if(count($assignableRoles) > 1)
-                    <select name="role" class="w-full sm:w-auto px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-bold ui-select">
-                        @foreach($assignableRoles as $rVal => $rLabel)
-                            <option value="{{ $rVal }}" {{ old('role', $employee->user?->role ?? 'employee') === $rVal ? 'selected' : '' }}>{{ $rLabel }}</option>
-                        @endforeach
-                    </select>
+                @if(auth()->user()->role === 'superadmin')
+                    <input type="password" name="superadmin_password" required autocomplete="current-password" placeholder="Password Superadmin Anda" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 sm:col-span-2">
                 @endif
-                <button type="submit" class="w-full sm:w-auto px-4 py-2 bg-slate-800 dark:bg-slate-700 text-white text-xs font-bold rounded-xl hover:bg-slate-900 dark:hover:bg-slate-600 transition-colors cursor-pointer">
+                <input type="password" name="new_password" required autocomplete="new-password" placeholder="Password baru (min 8 karakter)" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500">
+                <input type="password" name="new_password_confirmation" required autocomplete="new-password" placeholder="Konfirmasi password baru" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500">
+                <button type="submit" class="w-full sm:w-auto sm:col-span-2 sm:justify-self-end px-4 py-2 bg-slate-800 dark:bg-slate-700 text-white text-xs font-bold rounded-xl hover:bg-slate-900 dark:hover:bg-slate-600 transition-colors cursor-pointer">
                     Reset Password
                 </button>
             </form>
-        </div>
+            </div>
+        @endif
 
     </div>
 

@@ -191,11 +191,13 @@ class EmployeeController extends Controller
         $employee->load(['jobTitle', 'user.assignedOutlets', 'outlet']);
         $assignableRoles = UserRole::getAssignableRoles($request->user()->role);
         $canTransfer = $this->outletScopeService->isGlobalScope($request->user());
+        $canResetPassword = $employee->user !== null
+            && $this->userRoleService->canActorManageUser($request->user(), $employee->user);
         $adminOutlet = ! $this->outletScopeService->isGlobalScope($request->user()) && $outlets->count() === 1
             ? $outlets->first()
             : null;
 
-        return view('admin.employees.edit', compact('employee', 'jobTitles', 'outlets', 'assignableRoles', 'adminOutlet', 'canTransfer'));
+        return view('admin.employees.edit', compact('employee', 'jobTitles', 'outlets', 'assignableRoles', 'adminOutlet', 'canTransfer', 'canResetPassword'));
     }
 
     public function update(UpdateEmployeeRequest $request, Employee $employee): RedirectResponse

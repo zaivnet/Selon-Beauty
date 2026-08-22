@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Security;
 
-use App\Models\AuditLog;
 use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -111,7 +110,7 @@ class AdminPasswordResetTest extends TestCase
         $this->assertTrue(Hash::check('olduserpass123', $targetUser->password));
     }
 
-    public function test_owner_cannot_directly_reset_another_user_password(): void
+    public function test_owner_can_reset_an_employee_password(): void
     {
         $owner = User::create([
             'name' => 'Owner User',
@@ -127,7 +126,7 @@ class AdminPasswordResetTest extends TestCase
             'status' => 'active',
         ]);
 
-        User::create([
+        $targetUser = User::create([
             'employee_id' => $employee->id,
             'name' => 'Employee Three',
             'email' => 'emp3@selonbeauty.com',
@@ -143,7 +142,9 @@ class AdminPasswordResetTest extends TestCase
                 'new_password_confirmation' => 'newpass123',
             ]);
 
-        $response->assertStatus(403);
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $this->assertTrue(Hash::check('newpass123', $targetUser->fresh()->password));
     }
 
     public function test_admin_cannot_directly_reset_another_user_password(): void
