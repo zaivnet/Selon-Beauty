@@ -29,7 +29,7 @@ class EmployeeScheduleOverride extends Model
 
     public function workOutlet(): BelongsTo
     {
-        return $this->belongsTo(Outlet::class, 'work_outlet_id');
+        return $this->belongsTo(Outlet::class, 'work_outlet_id')->withTrashed();
     }
 
     public function creator(): BelongsTo

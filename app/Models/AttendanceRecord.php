@@ -85,7 +85,7 @@ class AttendanceRecord extends Model
 
     public function outlet(): BelongsTo
     {
-        return $this->belongsTo(Outlet::class, 'outlet_id');
+        return $this->belongsTo(Outlet::class, 'outlet_id')->withTrashed();
     }
 
     public function correctedBy(): BelongsTo

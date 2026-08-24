@@ -34,7 +34,7 @@ class EmployeeTransferService
         }
 
         // 2. Validate destination outlet status
-        if (! $destinationOutlet->is_active) {
+        if ($destinationOutlet->trashed() || ! $destinationOutlet->is_active) {
             throw ValidationException::withMessages([
                 'destination_outlet_id' => ['Outlet tujuan tidak aktif.'],
             ]);
