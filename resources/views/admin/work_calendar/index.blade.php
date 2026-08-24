@@ -199,16 +199,23 @@
             <div class="mt-4 grid gap-3 lg:grid-cols-2">
                 @foreach($overrides as $override)
                     <article class="min-w-0 rounded-xl border border-slate-200 dark:border-slate-800 p-4 bg-slate-50/50 dark:bg-slate-800/50">
-                        <div class="flex flex-wrap items-start justify-between gap-2"><div class="min-w-0"><p class="truncate text-xs font-black text-slate-900 dark:text-slate-100">{{ $override->employee?->full_name }}</p><p class="mt-0.5 text-[11px] font-mono text-slate-500 dark:text-slate-400">{{ $override->date->format('d/m/Y') }} · {{ $override->employee?->employee_code }}</p></div><span class="rounded-lg border px-2 py-1 text-[9px] font-black {{ $override->override_type === 'work' ? 'border-indigo-200 dark:border-indigo-800/60 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300' : 'border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300' }}">{{ $override->override_type === 'work' ? 'JADWAL KHUSUS' : 'LIBUR KHUSUS' }}</span></div>
+                        @php($isCrossOutlet = $override->override_type === 'work' && $override->work_outlet_id && (int) $override->work_outlet_id !== (int) $override->employee?->outlet_id)
+                        <div class="flex flex-wrap items-start justify-between gap-2">
+                            <div class="min-w-0">
+                                <p class="truncate text-xs font-black text-slate-900 dark:text-slate-100">{{ $override->employee?->full_name }}</p>
+                                <p class="mt-0.5 text-[11px] font-mono text-slate-500 dark:text-slate-400">{{ $override->date->format('d/m/Y') }} · {{ $override->employee?->employee_code }}</p>
+                            </div>
+                            <span class="rounded-lg border px-2 py-1 text-[9px] font-black {{ $override->override_type === 'work' ? 'border-indigo-200 dark:border-indigo-800/60 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300' : 'border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300' }}">
+                                {{ $override->override_type === 'work' ? ($isCrossOutlet ? 'PENUGASAN SEMENTARA' : 'JADWAL KHUSUS') : 'LIBUR KHUSUS' }}
+                            </span>
+                        </div>
                         <p class="mt-3 text-[11px] font-bold text-slate-700 dark:text-slate-300">{{ $override->override_type === 'work' ? ($override->shift?->name.' · '.substr($override->shift?->start_time ?? '', 0, 5).'–'.substr($override->shift?->end_time ?? '', 0, 5)) : 'Tidak ada kewajiban check-in' }}</p>
                         @if($override->override_type === 'work')
-                            @php($isCrossOutlet = $override->work_outlet_id && (int) $override->work_outlet_id !== (int) $override->employee?->outlet_id)
                             <div class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
                                 <span>Home: {{ $override->employee?->outlet?->name ?? '-' }}</span>
                                 <span class="mx-1">·</span>
                                 <span>Kerja: <strong class="{{ $isCrossOutlet ? 'text-indigo-700 dark:text-indigo-300' : '' }}">{{ $override->workOutlet?->name ?? $override->employee?->outlet?->name ?? '-' }}</strong></span>
                                 @if($isCrossOutlet)
-                                    <span class="ml-1 inline-flex rounded bg-indigo-100 dark:bg-indigo-950 px-1.5 py-0.5 text-[9px] font-black text-indigo-800 dark:text-indigo-300">PENUGASAN SEMENTARA</span>
                                     <p class="mt-0.5 text-[10px] italic text-slate-400 dark:text-slate-500">Penugasan ini tidak mengubah Home Outlet karyawan.</p>
                                 @endif
                             </div>

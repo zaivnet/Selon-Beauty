@@ -129,7 +129,7 @@ class TemporaryCrossOutletAssignmentTest extends TestCase
 
     protected function fakeSelfie(): UploadedFile
     {
-        return UploadedFile::fake()->image('selfie.jpg', 600, 600);
+        return UploadedFile::fake()->image('selfie.jpg');
     }
 
     public function test_1_admin_pusat_and_cabang_assigns_pusat_employee_to_cabang(): void
@@ -742,5 +742,64 @@ class TemporaryCrossOutletAssignmentTest extends TestCase
         // Cabang organizational headcount does NOT gain employeePusat permanently
         $metricsCabang = $monitoringService->getSummaryMetrics('2026-08-25', $admin, null, $this->outletCabang->id);
         $this->assertEquals(0, $metricsCabang['total_employees']);
+    }
+
+    public function test_26_same_outlet_schedule_shows_reguler_badge(): void
+    {
+        EmployeeSchedule::create([
+            'employee_id' => $this->employeePusat->id,
+            'work_date' => '2026-08-25',
+            'schedule_type' => 'work',
+            'shift_id' => $this->shiftPagi->id,
+            'work_outlet_id' => $this->outletPusat->id,
+        ]);
+
+        $response = $this->actingAs($this->userPusat->fresh())->get(route('employee.schedules.index', ['start_date' => '2026-08-25']));
+        $response->assertStatus(200);
+        $response->assertSee('REGULER');
+        $response->assertDontSee('PENUGASAN');
+    }
+
+    public function test_27_cross_outlet_assignment_shows_penugasan_badge_and_not_reguler(): void
+    {
+        $admin = $this->createAdmin('admin', 'all');
+        $calendarService = app(WorkCalendarService::class);
+
+        $override = $calendarService->saveOverride([
+            'employee_id' => $this->employeePusat->id,
+            'date' => '2026-08-25',
+            'override_type' => 'work',
+            'shift_id' => $this->shiftPagi->id,
+            'work_outlet_id' => $this->outletCabang->id,
+            'reason' => 'Penugasan sementara ke cabang',
+        ], $admin);
+
+        $this->assertNotNull($override);
+
+        $response = $this->actingAs($this->userPusat)->get(route('employee.schedules.index', ['start_date' => '2026-08-25']));
+        $response->assertStatus(200);
+        $response->assertSee('PENUGASAN');
+        $response->assertSee('Outlet Kerja:');
+        $response->assertSee('Kopi Selon Cabang');
+        $response->assertSee('Home Outlet Anda tetap');
+    }
+
+    public function test_28_admin_work_calendar_shows_penugasan_sementara_badge(): void
+    {
+        $admin = $this->createAdmin('admin', 'all');
+        $calendarService = app(WorkCalendarService::class);
+
+        $calendarService->saveOverride([
+            'employee_id' => $this->employeePusat->id,
+            'date' => '2026-08-25',
+            'override_type' => 'work',
+            'shift_id' => $this->shiftPagi->id,
+            'work_outlet_id' => $this->outletCabang->id,
+            'reason' => 'Penugasan sementara ke cabang',
+        ], $admin);
+
+        $response = $this->actingAs($admin)->get(route('admin.work-calendar.index'));
+        $response->assertStatus(200);
+        $response->assertSee('PENUGASAN SEMENTARA');
     }
 }

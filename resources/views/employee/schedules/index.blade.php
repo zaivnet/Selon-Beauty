@@ -44,7 +44,8 @@
                 $isOverride = $source === 'employee_override';
                 $isHoliday = in_array($source, ['public_holiday', 'company_holiday'], true);
                 $isSpecial = $source === 'special_working_day';
-                $cardTone = $isOverride ? 'border-indigo-200 dark:border-indigo-800/60 bg-indigo-50/40 dark:bg-indigo-950/30' : ($isHoliday ? 'border-amber-200 dark:border-amber-800/60 bg-amber-50/40 dark:bg-amber-950/30' : ($isSpecial ? 'border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/40 dark:bg-emerald-950/30' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'));
+                $isCrossOutlet = $effective['is_working_day'] && $effective['work_outlet_id'] && (int) $effective['work_outlet_id'] !== (int) $employee->outlet_id;
+                $cardTone = $isCrossOutlet ? 'border-indigo-200 dark:border-indigo-800/60 bg-indigo-50/40 dark:bg-indigo-950/30' : ($isOverride ? 'border-indigo-200 dark:border-indigo-800/60 bg-indigo-50/40 dark:bg-indigo-950/30' : ($isHoliday ? 'border-amber-200 dark:border-amber-800/60 bg-amber-50/40 dark:bg-amber-950/30' : ($isSpecial ? 'border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/40 dark:bg-emerald-950/30' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900')));
             @endphp
             <article class="rounded-2xl border p-4 shadow-xs {{ $cardTone }} {{ $isToday ? 'ring-2 ring-rose-500 ring-offset-1 dark:ring-offset-slate-950' : '' }}">
                 <div class="flex flex-wrap items-start justify-between gap-2">
@@ -55,7 +56,9 @@
                         </div>
                         <p class="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">{{ $date->isoFormat('YYYY') }}</p>
                     </div>
-                    @if($isOverride && $effective['is_working_day'])
+                    @if($isCrossOutlet)
+                        <span class="rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/50 px-2 py-1 text-[9px] font-black text-indigo-800 dark:text-indigo-300">PENUGASAN</span>
+                    @elseif($isOverride && $effective['is_working_day'])
                         <span class="rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/50 px-2 py-1 text-[9px] font-black text-indigo-800 dark:text-indigo-300">JADWAL KHUSUS</span>
                     @elseif($isOverride)
                         <span class="rounded-lg border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-950/50 px-2 py-1 text-[9px] font-black text-violet-800 dark:text-violet-300">LIBUR KHUSUS</span>
@@ -72,11 +75,9 @@
 
                 <div class="mt-3 border-t border-current/10 pt-3">
                     @if($effective['is_working_day'] && $shift)
-                        @php($isCrossOutlet = $effective['work_outlet_id'] && (int) $effective['work_outlet_id'] !== (int) $employee->outlet_id)
                         <div class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
                             <span>Outlet Kerja: <strong class="{{ $isCrossOutlet ? 'text-indigo-700 dark:text-indigo-300' : '' }}">{{ $effective['work_outlet']?->name ?? $employee->outlet?->name ?? '-' }}</strong></span>
                             @if($isCrossOutlet)
-                                <span class="ml-1.5 inline-flex rounded bg-indigo-100 dark:bg-indigo-950 px-1.5 py-0.5 text-[9px] font-black text-indigo-800 dark:text-indigo-300">PENUGASAN OUTLET</span>
                                 <p class="mt-0.5 text-[10px] italic text-slate-400 dark:text-slate-500">Home Outlet Anda tetap {{ $employee->outlet?->name ?? '-' }}.</p>
                             @endif
                         </div>
