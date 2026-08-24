@@ -11,12 +11,14 @@
         <a href="{{ route('admin.settings.branding.index') }}" class="px-4 py-2.5 rounded-xl font-extrabold text-xs transition-colors bg-slate-900 dark:bg-rose-600 text-white shadow-xs ui-btn ui-btn-primary">
             🎨 Profil & Branding
         </a>
-        <a href="{{ route('admin.settings.locations.index') }}" class="px-4 py-2.5 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
-            📍 Pengaturan Absensi
+        <a href="{{ route('admin.settings.attendance') }}" class="px-4 py-2.5 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
+            ⚙️ Pengaturan Absensi Global
         </a>
-        <a href="{{ route('admin.settings.backups.index') }}" class="px-4 py-2.5 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
-            💾 Backup & Restore
-        </a>
+        @if(in_array(Auth::user()?->role, ['superadmin', 'owner'], true))
+            <a href="{{ route('admin.settings.backups.index') }}" class="px-4 py-2.5 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
+                💾 Backup & Restore
+            </a>
+        @endif
     </div>
 
     <!-- Alert Messages -->

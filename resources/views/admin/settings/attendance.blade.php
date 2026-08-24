@@ -8,15 +8,19 @@
 
     <!-- Settings Sub-Navigation Tabs -->
     <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 overflow-x-auto ui-table-container">
-        <a href="{{ route('admin.settings.branding.index') }}" class="px-4 py-2.5 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
-            🎨 Profil & Branding
-        </a>
+        @if(in_array(Auth::user()?->role, ['superadmin', 'owner'], true))
+            <a href="{{ route('admin.settings.branding.index') }}" class="px-4 py-2.5 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
+                🎨 Profil & Branding
+            </a>
+        @endif
         <a href="{{ route('admin.settings.attendance') }}" class="px-4 py-2.5 rounded-xl font-extrabold text-xs transition-colors bg-slate-900 dark:bg-rose-600 text-white shadow-xs ui-btn ui-btn-primary">
             ⚙️ Pengaturan Absensi Global
         </a>
-        <a href="{{ route('admin.settings.backups.index') }}" class="px-4 py-2.5 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
-            💾 Backup & Restore
-        </a>
+        @if(in_array(Auth::user()?->role, ['superadmin', 'owner'], true))
+            <a href="{{ route('admin.settings.backups.index') }}" class="px-4 py-2.5 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-colors">
+                💾 Backup & Restore
+            </a>
+        @endif
     </div>
 
     <!-- Flash Alerts -->
@@ -44,12 +48,14 @@
                 <p class="text-xs text-slate-300">Setiap karyawan terikat ke outlet tertentu dan divalidasi berdasarkan koordinat & radius geofence outlet tersebut.</p>
             </div>
         </div>
-        <div class="pt-2 border-t border-slate-700/60 flex items-center justify-between text-xs">
-            <span class="text-slate-300">Untuk mengelola lokasi fisik, koordinat GPS, dan radius presensi outlet:</span>
-            <a href="{{ route('admin.outlets.index') }}" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs transition-colors shrink-0 ui-btn ui-btn-primary">
-                Kelola Outlet & Cabang &rarr;
-            </a>
-        </div>
+        @if(in_array(Auth::user()?->role, ['superadmin', 'owner'], true))
+            <div class="pt-2 border-t border-slate-700/60 flex items-center justify-between text-xs">
+                <span class="text-slate-300">Untuk mengelola lokasi fisik, koordinat GPS, dan radius presensi outlet:</span>
+                <a href="{{ route('admin.outlets.index') }}" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs transition-colors shrink-0 ui-btn ui-btn-primary">
+                    Kelola Outlet & Cabang &rarr;
+                </a>
+            </div>
+        @endif
     </div>
 
     <!-- Form Pengaturan Global Absensi -->
