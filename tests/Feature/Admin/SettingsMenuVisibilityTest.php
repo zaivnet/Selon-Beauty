@@ -86,7 +86,6 @@ class SettingsMenuVisibilityTest extends TestCase
         $response->assertDontSee('Backup & Restore', false);
         $response->assertDontSee(route('admin.settings.branding.index'));
         $response->assertDontSee(route('admin.settings.backups.index'));
-        $response->assertDontSee(route('admin.outlets.index'));
     }
 
     public function test_settings_subnav_uses_centered_flex_wrap_layout(): void

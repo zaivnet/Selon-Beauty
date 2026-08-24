@@ -20,9 +20,16 @@ class OutletController extends Controller
 
     public function index(Request $request)
     {
-        $this->ensureGlobalScope($request);
+        $actor = $request->user();
 
-        $outlets = Outlet::withCount([
+        if ($this->outletScopeService->isGlobalScope($actor)) {
+            $query = Outlet::query();
+        } else {
+            $allowedIds = $this->outletScopeService->allowedOutletIds($actor);
+            $query = Outlet::query()->whereIn('id', $allowedIds)->where('is_active', true);
+        }
+
+        $outlets = $query->withCount([
             'employees' => fn ($q) => $q->where('status', 'active'),
             'assignedAdmins as users_count' => fn ($q) => $q->where('role', 'admin')->where('is_active', true),
         ])
@@ -96,38 +103,74 @@ class OutletController extends Controller
 
     public function edit(Request $request, Outlet $outlet)
     {
-        $this->ensureGlobalScope($request);
+        $actor = $request->user();
+
+        if ($outlet->trashed()) {
+            abort(403, 'Akses ditolak. Outlet ini sudah dihapus.');
+        }
+
+        $this->outletScopeService->ensureCanAccessOutlet($actor, $outlet);
 
         return view('admin.outlets.edit', compact('outlet'));
     }
 
     public function update(Request $request, Outlet $outlet): RedirectResponse
     {
-        $this->ensureGlobalScope($request);
+        $actor = $request->user();
 
-        $validated = $request->validate([
+        if ($outlet->trashed()) {
+            abort(403, 'Akses ditolak. Outlet ini sudah dihapus.');
+        }
+
+        $this->outletScopeService->ensureCanAccessOutlet($actor, $outlet);
+
+        $isGlobal = $this->outletScopeService->isGlobalScope($actor);
+
+        $rules = [
             'name' => ['required', 'string', 'max:150'],
-            'code' => ['required', 'string', 'max:50', 'uppercase', 'unique:outlets,code,'.$outlet->id],
             'address' => ['nullable', 'string', 'max:500'],
             'latitude' => ['required', 'numeric', 'between:-90,90'],
             'longitude' => ['required', 'numeric', 'between:-180,180'],
             'radius_meters' => ['required', 'integer', 'min:1', 'max:50000'],
             'max_accuracy_meters' => ['nullable', 'integer', 'min:1', 'max:500'],
-            'is_active' => ['nullable', 'boolean'],
-        ], [
+        ];
+
+        if ($isGlobal) {
+            $rules['code'] = ['required', 'string', 'max:50', 'uppercase', 'unique:outlets,code,'.$outlet->id];
+            $rules['is_active'] = ['nullable', 'boolean'];
+        }
+
+        $messages = [
             'name.required' => 'Nama outlet wajib diisi.',
             'code.required' => 'Kode outlet wajib diisi.',
             'code.unique' => 'Kode outlet tersebut sudah digunakan.',
             'latitude.required' => 'Latitude GPS wajib diisi.',
             'longitude.required' => 'Longitude GPS wajib diisi.',
             'radius_meters.required' => 'Radius absensi wajib diisi.',
-        ]);
+        ];
 
-        $validated['code'] = strtoupper(trim($validated['code']));
+        $validated = $request->validate($rules, $messages);
+
+        if ($isGlobal) {
+            $validated['code'] = strtoupper(trim($validated['code']));
+            $validated['is_active'] = $request->boolean('is_active', $outlet->is_active);
+        } else {
+            unset($validated['code'], $validated['is_active']);
+        }
+
         $validated['max_accuracy_meters'] = $validated['max_accuracy_meters'] ?? 100;
-        $validated['is_active'] = $request->boolean('is_active', $outlet->is_active);
 
         $outlet->update($validated);
+
+        \App\Models\AuditLog::create([
+            'user_id' => $actor->id,
+            'action' => 'outlet.updated',
+            'description' => "Memperbarui konfigurasi operasional outlet {$outlet->name} ({$outlet->code})",
+            'metadata' => [
+                'outlet_id' => $outlet->id,
+                'changed_fields' => array_keys($validated),
+            ],
+        ]);
 
         return redirect()->route('admin.outlets.index')
             ->with('success', "Data outlet {$outlet->name} berhasil diperbarui.");

@@ -38,11 +38,17 @@
                     <label for="code" class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                         Kode Outlet <span class="text-rose-500">*</span>
                     </label>
-                    <input type="text" name="code" id="code" value="{{ old('code', $outlet->code) }}" required uppercase
-                        class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none uppercase transition-all ui-input">
-                    @error('code')
-                        <p class="text-xs font-semibold text-rose-500 mt-1.5">{{ $message }}</p>
-                    @enderror
+                    @if(Auth::user()?->role === 'admin')
+                        <input type="text" value="{{ $outlet->code }}" readonly
+                            class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 text-xs font-semibold cursor-not-allowed uppercase ui-input">
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Kode outlet bersifat struktural dan tidak dapat diubah oleh Admin.</p>
+                    @else
+                        <input type="text" name="code" id="code" value="{{ old('code', $outlet->code) }}" required uppercase
+                            class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none uppercase transition-all ui-input">
+                        @error('code')
+                            <p class="text-xs font-semibold text-rose-500 mt-1.5">{{ $message }}</p>
+                        @enderror
+                    @endif
                 </div>
             </div>
 
@@ -126,13 +132,22 @@
             </div>
 
             <!-- Status Aktif -->
-            <div class="flex items-center gap-3 pt-2">
-                <input type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', $outlet->is_active) ? 'checked' : '' }}
-                    class="w-4 h-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer">
-                <label for="is_active" class="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
-                    Status Outlet Aktif
-                </label>
-            </div>
+            @if(in_array(Auth::user()?->role, ['superadmin', 'owner'], true))
+                <div class="flex items-center gap-3 pt-2">
+                    <input type="checkbox" name="is_active" id="is_active" value="1" {{ old('is_active', $outlet->is_active) ? 'checked' : '' }}
+                        class="w-4 h-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer">
+                    <label for="is_active" class="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
+                        Status Outlet Aktif
+                    </label>
+                </div>
+            @else
+                <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400 flex items-center justify-between">
+                    <span>Status Keaktifan Outlet:</span>
+                    <span class="px-2.5 py-0.5 rounded-full font-black text-[11px] {{ $outlet->is_active ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300' : 'bg-slate-200 text-slate-700' }}">
+                        {{ $outlet->is_active ? 'AKTIF' : 'NONAKTIF' }}
+                    </span>
+                </div>
+            @endif
 
             <!-- Form Action Buttons -->
             <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-200/80 dark:border-slate-800">

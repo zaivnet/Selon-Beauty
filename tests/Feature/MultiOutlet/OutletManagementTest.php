@@ -52,7 +52,7 @@ class OutletManagementTest extends TestCase
         ]);
     }
 
-    public function test_admin_cannot_access_outlet_management(): void
+    public function test_admin_can_access_scoped_outlet_management(): void
     {
         $outlet = Outlet::create([
             'name' => 'Selon Kuta',
@@ -62,9 +62,11 @@ class OutletManagementTest extends TestCase
             'radius_meters' => 100,
         ]);
         $admin = User::factory()->create(['role' => 'admin', 'is_active' => true, 'outlet_id' => $outlet->id]);
+        $admin->assignedOutlets()->sync([$outlet->id]);
 
         $response = $this->actingAs($admin)->get(route('admin.outlets.index'));
 
-        $response->assertStatus(403);
+        $response->assertStatus(200);
+        $response->assertSee('Selon Kuta');
     }
 }

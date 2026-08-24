@@ -251,7 +251,7 @@
                     <span x-show="!collapsed" class="truncate">Pengaturan</span>
                 </a>
 
-                @if(in_array(Auth::user()->role, ['owner', 'superadmin'], true))
+                @if(in_array(Auth::user()?->role, ['owner', 'superadmin', 'admin'], true))
                     <!-- Outlet -->
                     <a href="{{ route('admin.outlets.index') }}"
                        :title="collapsed ? 'Outlet & Cabang' : ''"
@@ -260,7 +260,9 @@
                         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h4m-4 0V11a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002-2v-2a2 2 0 012-2h2a2 2 0 002 2"/></svg>
                         <span x-show="!collapsed" class="truncate">Outlet</span>
                     </a>
+                @endif
 
+                @if(in_array(Auth::user()?->role, ['owner', 'superadmin'], true))
                     <a href="{{ route('admin.audit-logs.index') }}"
                        :title="collapsed ? 'Audit Trail' : ''"
                        :class="collapsed ? 'justify-center px-0' : 'px-3'"
