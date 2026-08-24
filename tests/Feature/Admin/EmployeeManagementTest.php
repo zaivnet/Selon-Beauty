@@ -200,4 +200,17 @@ class EmployeeManagementTest extends TestCase
         $this->actingAs($this->owner)->post("/admin/job-titles/{$jobTitle->id}/toggle-status");
         $this->assertDatabaseHas('job_titles', ['id' => $jobTitle->id, 'is_active' => false]);
     }
+
+    public function test_admin_employee_index_renders_responsive_toolbar_and_actions(): void
+    {
+        $response = $this->actingAs($this->owner)->get(route('admin.employees.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Daftar Karyawan');
+        $response->assertSee('Cari nama, kode, email...');
+        $response->assertSee('Semua Status');
+        $response->assertSee('Filter');
+        $response->assertSee('Kelola Jabatan');
+        $response->assertSee('Tambah Karyawan');
+    }
 }
