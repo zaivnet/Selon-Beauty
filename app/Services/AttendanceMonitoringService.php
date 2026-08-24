@@ -17,9 +17,11 @@ class AttendanceMonitoringService
     public function __construct(
         protected ?AttendanceStatusResolver $statusResolver = null,
         protected ?EffectiveScheduleService $effectiveScheduleService = null,
+        protected ?EmployeeTransferService $transferService = null,
     ) {
         $this->statusResolver = $statusResolver ?? new AttendanceStatusResolver;
         $this->effectiveScheduleService = $effectiveScheduleService ?? new EffectiveScheduleService;
+        $this->transferService = $transferService ?? app(EmployeeTransferService::class);
     }
 
     /**
@@ -128,6 +130,14 @@ class AttendanceMonitoringService
             ->get()
             ->keyBy('employee_id');
 
+        // Fetch Employee Outlet Transfers for historical home outlet resolution
+        $transfersMap = \App\Models\EmployeeOutletTransfer::whereIn('employee_id', $employeeIds)
+            ->with(['fromOutlet', 'toOutlet'])
+            ->orderBy('effective_date', 'asc')
+            ->orderBy('id', 'asc')
+            ->get()
+            ->groupBy('employee_id');
+
         $items = [];
 
         foreach ($employees as $emp) {
@@ -145,6 +155,19 @@ class AttendanceMonitoringService
             $statusKey = $resolved['key'];
             $statusLabel = $resolved['label'];
             $badgeClass = $resolved['badge_class'];
+
+            // Resolve historical HOME Outlet on $targetDate
+            $historicalHomeOutlet = $this->transferService->resolveHistoricalHomeOutlet(
+                $emp,
+                $targetDate,
+                $transfersMap->get($emp->id, collect())
+            );
+            $isTemporaryAssignment = (bool) (
+                $record
+                && $record->outlet_id
+                && $historicalHomeOutlet
+                && (int) $record->outlet_id !== (int) $historicalHomeOutlet->id
+            );
 
             // Apply status filter if set
             if ($filterStatus && $filterStatus !== 'all') {
@@ -179,6 +202,8 @@ class AttendanceMonitoringService
                 'schedule' => $schedule,
                 'effective_schedule' => $effective,
                 'record' => $record,
+                'historical_home_outlet' => $historicalHomeOutlet,
+                'is_temporary_assignment' => $isTemporaryAssignment,
                 'status_key' => $statusKey,
                 'status_label' => $statusLabel,
                 'badge_class' => $badgeClass,

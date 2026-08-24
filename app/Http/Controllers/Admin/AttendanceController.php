@@ -18,7 +18,10 @@ class AttendanceController extends Controller
     public function __construct(
         protected AttendanceMonitoringService $monitoringService,
         protected OutletScopeService $outletScopeService,
-    ) {}
+        protected ?\App\Services\EmployeeTransferService $transferService = null,
+    ) {
+        $this->transferService = $transferService ?? app(\App\Services\EmployeeTransferService::class);
+    }
 
     public function index(Request $request): View
     {
@@ -65,12 +68,25 @@ class AttendanceController extends Controller
             'employee.jobTitle',
             'schedule.shift',
             'location',
+            'outlet',
         ]);
+
+        $historicalHomeOutlet = $attendance->employee
+            ? $this->transferService->resolveHistoricalHomeOutlet($attendance->employee, $attendance->work_date)
+            : null;
+        $isTemporaryAssignment = (bool) (
+            $attendance->outlet_id
+            && $historicalHomeOutlet
+            && (int) $attendance->outlet_id !== (int) $historicalHomeOutlet->id
+        );
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'data' => $attendance,
+                'historical_home_outlet' => $historicalHomeOutlet,
+                'work_outlet' => $attendance->outlet,
+                'is_temporary_assignment' => $isTemporaryAssignment,
                 'check_in_selfie_url' => $attendance->check_in_selfie_path ? route('attendance.selfie', ['record' => $attendance->id, 'type' => 'check_in']) : null,
                 'check_out_selfie_url' => $attendance->check_out_selfie_path ? route('attendance.selfie', ['record' => $attendance->id, 'type' => 'check_out']) : null,
                 'correction_url' => route('admin.attendance.correct', $attendance),
@@ -81,6 +97,8 @@ class AttendanceController extends Controller
 
         return view('admin.attendance.show', [
             'attendance' => $attendance,
+            'historicalHomeOutlet' => $historicalHomeOutlet,
+            'isTemporaryAssignment' => $isTemporaryAssignment,
         ]);
     }
 

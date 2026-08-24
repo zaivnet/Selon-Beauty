@@ -139,6 +139,8 @@ class ReportController extends Controller
                 'Employee Code',
                 'Employee Name',
                 'Job Title',
+                'Home Outlet',
+                'Outlet Kerja',
                 'Shift',
                 'Check In',
                 'Check Out',
@@ -149,6 +151,7 @@ class ReportController extends Controller
                 'Approved Overtime Minutes',
                 'Actual Overtime Minutes',
                 'Credited Overtime Minutes',
+                'Outlet Assignment Notice',
             ]);
 
             // Data Rows
@@ -162,6 +165,8 @@ class ReportController extends Controller
                     $row['employee']->employee_code,
                     $row['employee']->full_name,
                     $row['employee']->jobTitle?->name ?? '-',
+                    $row['historical_home_outlet']?->name ?? '-',
+                    $row['work_outlet']?->name ?? '-',
                     $shiftStr,
                     $checkInStr,
                     $checkOutStr,
@@ -172,6 +177,7 @@ class ReportController extends Controller
                     $row['approved_overtime_minutes'],
                     $row['actual_overtime_minutes'],
                     $row['credited_overtime_minutes'],
+                    ! empty($row['is_temporary_assignment']) ? 'PENUGASAN OUTLET' : 'REGULER',
                 ];
 
                 $sanitizedRow = array_map(function ($val) {

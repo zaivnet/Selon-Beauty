@@ -18,10 +18,12 @@ class ReportService
         protected ?AttendanceStatusResolver $statusResolver = null,
         protected ?EffectiveScheduleService $effectiveScheduleService = null,
         protected ?OutletScopeService $outletScopeService = null,
+        protected ?EmployeeTransferService $transferService = null,
     ) {
         $this->statusResolver = $statusResolver ?? new AttendanceStatusResolver;
         $this->effectiveScheduleService = $effectiveScheduleService ?? new EffectiveScheduleService;
         $this->outletScopeService = $outletScopeService ?? app(OutletScopeService::class);
+        $this->transferService = $transferService ?? app(EmployeeTransferService::class);
     }
 
     /**
@@ -125,6 +127,14 @@ class ReportService
             ->get()
             ->keyBy(fn ($o) => $o->employee_id.'_'.$o->work_date->format('Y-m-d'));
 
+        // Fetch Employee Outlet Transfers for historical home outlet resolution
+        $transfersMap = \App\Models\EmployeeOutletTransfer::whereIn('employee_id', $employeeIds)
+            ->with(['fromOutlet', 'toOutlet'])
+            ->orderBy('effective_date', 'asc')
+            ->orderBy('id', 'asc')
+            ->get()
+            ->groupBy('employee_id');
+
         // 3. Build Daily Detail Matrix & Calculate Summaries
         $detailRows = [];
         $employeeSummaries = [];
@@ -168,6 +178,8 @@ class ReportService
                 'total_credited_overtime_minutes' => 0,
             ];
 
+            $tempAssignmentDays = 0;
+
             foreach ($datePeriod as $currDate) {
                 $dStr = $currDate->format('Y-m-d');
                 $key = $emp->id.'_'.$dStr;
@@ -198,6 +210,24 @@ class ReportService
                 $approvedOvertimeMinutes = $ovt ? (int) $ovt->approved_minutes : 0;
                 $actualOvertimeMinutes = $ovt?->session?->isCompleted() ? (int) $ovt->session->actual_minutes : 0;
                 $creditedOvertimeMinutes = $ovt?->session?->isCompleted() ? (int) $ovt->session->credited_minutes : 0;
+
+                // Resolve historical HOME Outlet on $dStr
+                $historicalHomeOutlet = $this->transferService->resolveHistoricalHomeOutlet(
+                    $emp,
+                    $dStr,
+                    $transfersMap->get($emp->id, collect())
+                );
+                $workOutlet = $att?->outlet ?? $effective['work_outlet'];
+                $isTemporaryAssignment = (bool) (
+                    $att
+                    && $att->outlet_id
+                    && $historicalHomeOutlet
+                    && (int) $att->outlet_id !== (int) $historicalHomeOutlet->id
+                );
+
+                if ($isTemporaryAssignment) {
+                    $tempAssignmentDays++;
+                }
 
                 if (! $isWorkDay) {
                     if ($effective['source'] !== 'none') {
@@ -280,7 +310,9 @@ class ReportService
                     'shift' => $effective['shift'],
                     'effective_schedule' => $effective,
                     'attendance' => $att,
-                    'work_outlet' => $att?->outlet ?? $effective['work_outlet'],
+                    'work_outlet' => $workOutlet,
+                    'historical_home_outlet' => $historicalHomeOutlet,
+                    'is_temporary_assignment' => $isTemporaryAssignment,
                     'leave_request' => $leave,
                     'overtime_request' => $ovt,
                     'status' => $statusKey,
@@ -302,6 +334,9 @@ class ReportService
             $empSummary['attendance_rate'] = $empSummary['scheduled_work_days'] > 0
                 ? round(($empSummary['present_count'] / $empSummary['scheduled_work_days']) * 100, 2)
                 : 0.0;
+
+            $empSummary['temporary_assignment_days'] = $tempAssignmentDays;
+            $empSummary['notice'] = $tempAssignmentDays > 0 ? "Memiliki {$tempAssignmentDays} hari penugasan di outlet lain pada periode ini." : null;
 
             $employeeSummaries[$emp->id] = $empSummary;
         }

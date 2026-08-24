@@ -18,8 +18,10 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 class EmployeeTransferService
 {
     public function __construct(
-        protected OutletScopeService $outletScopeService,
-    ) {}
+        protected ?OutletScopeService $outletScopeService = null,
+    ) {
+        $this->outletScopeService = $outletScopeService ?? app(OutletScopeService::class);
+    }
 
     /**
      * Transfer an employee permanently to a new destination outlet with audit history and safety checks.
@@ -123,5 +125,46 @@ class EmployeeTransferService
 
             return $transfer;
         });
+    }
+
+    /**
+     * Resolve the employee's historical HOME Outlet on a specific date based on transfer history.
+     *
+     * @param  Employee  $employee  Employee model
+     * @param  string|\Carbon\CarbonInterface  $date  Date in Y-m-d format or Carbon object
+     * @param  \Illuminate\Support\Collection<int, EmployeeOutletTransfer>|null  $preloadedTransfers  Optional preloaded transfers for $employee ordered by effective_date ASC, id ASC
+     */
+    public function resolveHistoricalHomeOutlet(Employee $employee, string|\Carbon\CarbonInterface $date, ?\Illuminate\Support\Collection $preloadedTransfers = null): ?Outlet
+    {
+        $dateStr = $date instanceof \Carbon\CarbonInterface ? $date->toDateString() : substr((string) $date, 0, 10);
+
+        if ($preloadedTransfers === null) {
+            $employee->loadMissing(['outletTransfers.fromOutlet', 'outletTransfers.toOutlet']);
+            $transfers = $employee->outletTransfers->sortBy(fn ($t) => ($t->effective_date instanceof \Carbon\CarbonInterface ? $t->effective_date->format('Y-m-d') : substr((string) $t->effective_date, 0, 10)).'_'.$t->id);
+        } else {
+            $transfers = $preloadedTransfers->sortBy(fn ($t) => ($t->effective_date instanceof \Carbon\CarbonInterface ? $t->effective_date->format('Y-m-d') : substr((string) $t->effective_date, 0, 10)).'_'.$t->id);
+        }
+
+        if ($transfers->isEmpty()) {
+            $employee->loadMissing(['outlet' => fn ($q) => $q->withTrashed()]);
+
+            return $employee->outlet;
+        }
+
+        // Find the first transfer that took effect strictly AFTER $dateStr
+        $firstFutureTransfer = $transfers->first(function ($t) use ($dateStr) {
+            $effStr = $t->effective_date instanceof \Carbon\CarbonInterface ? $t->effective_date->toDateString() : substr((string) $t->effective_date, 0, 10);
+
+            return $effStr > $dateStr;
+        });
+
+        if ($firstFutureTransfer) {
+            return $firstFutureTransfer->fromOutlet;
+        }
+
+        // Otherwise, current outlet applies
+        $employee->loadMissing(['outlet' => fn ($q) => $q->withTrashed()]);
+
+        return $employee->outlet;
     }
 }

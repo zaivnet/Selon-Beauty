@@ -120,6 +120,7 @@
                         <th class="p-2 border border-slate-300">Tanggal</th>
                         <th class="p-2 border border-slate-300">NIP / Nama Karyawan</th>
                         <th class="p-2 border border-slate-300">Jabatan</th>
+                        <th class="p-2 border border-slate-300">Outlet Kerja</th>
                         <th class="p-2 border border-slate-300">Shift</th>
                         <th class="p-2 border border-slate-300">Masuk</th>
                         <th class="p-2 border border-slate-300">Pulang</th>
@@ -150,6 +151,13 @@
                             <td class="p-2 border border-slate-300 font-bold whitespace-nowrap">{{ $rowDate ? $rowDate->format('d/m/Y') : '-' }}</td>
                             <td class="p-2 border border-slate-300 font-bold">{{ $row['employee']->full_name }} <span class="font-normal text-[10px] block">({{ $row['employee']->employee_code }})</span></td>
                             <td class="p-2 border border-slate-300">{{ $row['employee']->jobTitle?->name ?? '-' }}</td>
+                            <td class="p-2 border border-slate-300 whitespace-nowrap">
+                                <span class="font-bold block">{{ $row['work_outlet']?->name ?? '-' }}</span>
+                                @if(!empty($row['is_temporary_assignment']))
+                                    <span class="block text-[8px] font-extrabold text-indigo-700">[PENUGASAN OUTLET]</span>
+                                    <span class="block text-[8px] text-slate-500 font-normal">Home: {{ $row['historical_home_outlet']?->name ?? '-' }}</span>
+                                @endif
+                            </td>
                             <td class="p-2 border border-slate-300 whitespace-nowrap">{{ $row['shift']?->name ?? ($row['effective_schedule']['label'] ?? strtoupper($row['schedule']?->schedule_type ?? '-')) }}</td>
                             <td class="p-2 border border-slate-300 font-mono">{{ $checkInAt ? $checkInAt->format('H:i') : '-' }}</td>
                             <td class="p-2 border border-slate-300 font-mono">{{ $checkOutAt ? $checkOutAt->format('H:i') : '-' }}</td>

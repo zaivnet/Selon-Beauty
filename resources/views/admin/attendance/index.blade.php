@@ -177,6 +177,10 @@
                                 <td class="py-3.5 px-4">
                                     @if($rec && $rec->check_in_distance_meters !== null)
                                         <span class="font-bold text-slate-800 dark:text-slate-200 block text-[11px]">{{ $rec->outlet?->name ?? ($rec->location?->name ?? 'Lokasi Belum Dikonfigurasi') }}</span>
+                                        @if(!empty($item['is_temporary_assignment']))
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 my-0.5">PENUGASAN OUTLET</span>
+                                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium block">Home: {{ $item['historical_home_outlet']?->name ?? '-' }}</span>
+                                        @endif
                                         <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium block">Jarak: {{ round($rec->check_in_distance_meters) }}m • Akurasi: ±{{ round($rec->check_in_accuracy_meters) }}m</span>
                                     @else
                                         <span class="text-slate-400 dark:text-slate-500 text-[11px]">--</span>

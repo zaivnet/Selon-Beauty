@@ -192,6 +192,9 @@
                                 <td class="px-4 py-3 font-bold text-slate-900 dark:text-slate-100">
                                     {{ $es['employee']->full_name }}
                                     <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-normal">{{ $es['employee']->employee_code }} • {{ $es['employee']->jobTitle?->name ?? 'Karyawan' }}</span>
+                                    @if(!empty($es['notice']))
+                                        <span class="mt-1 block text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400">⚡ {{ $es['notice'] }}</span>
+                                    @endif
                                 </td>
                                 <td class="px-4 py-3 font-semibold text-slate-800 dark:text-slate-200">{{ $es['scheduled_work_days'] }} hari</td>
                                 <td class="px-4 py-3 font-semibold text-amber-800 dark:text-amber-400">{{ $es['holiday_count'] ?? 0 }} hari</td>
@@ -235,6 +238,7 @@
                         <tr>
                             <th class="px-4 py-3.5">Tanggal</th>
                             <th class="px-4 py-3.5">Karyawan</th>
+                            <th class="px-4 py-3.5">Outlet Kerja</th>
                             <th class="px-4 py-3.5">Shift / Jadwal</th>
                             <th class="px-4 py-3.5">Jam Masuk</th>
                             <th class="px-4 py-3.5">Jam Pulang</th>
@@ -273,6 +277,15 @@
                                 <td class="px-4 py-3.5">
                                     <div class="font-bold text-slate-900 dark:text-slate-100">{{ $row['employee']->full_name }}</div>
                                     <div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{{ $row['employee']->employee_code }} • {{ $row['employee']->jobTitle?->name ?? 'Karyawan' }}</div>
+                                </td>
+
+                                <!-- Outlet Kerja -->
+                                <td class="px-4 py-3.5 whitespace-nowrap">
+                                    <div class="font-bold text-slate-800 dark:text-slate-200">{{ $row['work_outlet']?->name ?? '-' }}</div>
+                                    @if(!empty($row['is_temporary_assignment']))
+                                        <span class="mt-0.5 inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">PENUGASAN OUTLET</span>
+                                        <div class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Home: {{ $row['historical_home_outlet']?->name ?? '-' }}</div>
+                                    @endif
                                 </td>
 
                                 <!-- Shift -->
