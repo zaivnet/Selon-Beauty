@@ -89,6 +89,17 @@ class SettingsMenuVisibilityTest extends TestCase
         $response->assertDontSee(route('admin.outlets.index'));
     }
 
+    public function test_settings_subnav_uses_centered_flex_wrap_layout(): void
+    {
+        $responseAdmin = $this->actingAs($this->admin)->get(route('admin.settings.attendance'));
+        $responseAdmin->assertOk();
+        $responseAdmin->assertSee('flex flex-wrap items-center justify-center gap-2');
+
+        $responseOwner = $this->actingAs($this->owner)->get(route('admin.settings.attendance'));
+        $responseOwner->assertOk();
+        $responseOwner->assertSee('flex flex-wrap items-center justify-center gap-2');
+    }
+
     public function test_admin_direct_access_to_branding_and_backups_returns_403(): void
     {
         $responseBranding = $this->actingAs($this->admin)->get(route('admin.settings.branding.index'));
