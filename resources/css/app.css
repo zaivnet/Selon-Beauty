@@ -412,6 +412,13 @@ html.dark main {
     padding-right: 0.75rem;
 }
 
+/* Select element with a leading icon */
+.ui-select-icon,
+.ui-select-has-icon {
+    padding-left: 2.5rem !important; /* 40px left padding to reserve space for leading icon */
+    padding-right: 2.25rem !important; /* 36px right padding for chevron safety */
+}
+
 .ui-textarea {
     padding: 0.75rem;
 }

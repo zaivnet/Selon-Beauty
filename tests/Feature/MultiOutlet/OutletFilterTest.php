@@ -223,4 +223,13 @@ class OutletFilterTest extends TestCase
 
         $this->assertTrue($this->outlet1->fresh()->is_active);
     }
+
+    public function test_outlet_filter_component_renders_ui_select_icon_and_reserved_padding(): void
+    {
+        $response = $this->actingAs($this->superadmin)->get(route('admin.dashboard'));
+        $response->assertOk();
+        $response->assertSee('ui-select-icon');
+        $response->assertSee('!pl-10');
+        $response->assertSee('aria-hidden="true"', false);
+    }
 }
