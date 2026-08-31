@@ -412,7 +412,12 @@ html.dark main {
     padding-right: 0.75rem;
 }
 
-/* Select element with a leading icon */
+/* Input and Select elements with a leading icon */
+.ui-input-icon,
+.ui-input-has-icon {
+    padding-left: 2.5rem !important; /* 40px left padding to reserve space for leading icon */
+}
+
 .ui-select-icon,
 .ui-select-has-icon {
     padding-left: 2.5rem !important; /* 40px left padding to reserve space for leading icon */

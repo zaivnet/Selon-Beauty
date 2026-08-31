@@ -194,12 +194,14 @@
                 <!-- Live Client Search Toolbar & Status Dropdown Filter -->
                 <div class="flex flex-col sm:flex-row items-center gap-3">
                     <div class="flex-1 relative w-full sm:min-w-[240px]">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        </div>
                         <input type="text"
                                x-model="search"
                                placeholder="Cari karyawan..."
                                aria-label="Cari karyawan"
-                               class="ui-input pl-9 h-10 text-xs font-bold">
-                        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                               class="ui-input ui-input-has-icon h-10 text-xs font-bold">
                     </div>
 
                     <select x-model="statusFilter"
