@@ -4,6 +4,9 @@
 @section('page-title', 'Laporan Kehadiran & Rekapitukasi')
 
 @section('content')
+@php
+    $authorizedOutlets = $authorizedOutlets ?? collect();
+@endphp
 <div class="space-y-6">
 
     <nav class="flex gap-1 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1 shadow-xs transition-colors" aria-label="Jenis laporan">
@@ -37,7 +40,7 @@
 
     <!-- Filter Card -->
     <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs transition-colors">
-        <form action="{{ route('admin.reports.attendance') }}" method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
+        <form action="{{ route('admin.reports.attendance') }}" method="GET" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
             <!-- Start Date -->
             <div class="w-full min-w-0 max-w-full">
                 <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Dari Tanggal</label>
@@ -50,13 +53,26 @@
                 <x-date-input name="end_date" value="{{ $filters['end_date'] }}" />
             </div>
 
+            <!-- Outlet -->
+            <div>
+                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Outlet</label>
+                <select name="outlet_id" class="w-full min-w-0 max-w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px] ui-select">
+                    <option value="">Semua Outlet</option>
+                    @foreach($authorizedOutlets as $outletOption)
+                        <option value="{{ $outletOption->id }}" {{ (isset($filters['outlet_id']) && (int) $filters['outlet_id'] === (int) $outletOption->id) ? 'selected' : '' }}>
+                            {{ $outletOption->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
             <!-- Employee -->
             <div>
                 <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Karyawan</label>
                 <select name="employee_id" class="w-full min-w-0 max-w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px] ui-select">
                     <option value="">Semua Karyawan</option>
                     @foreach($employees as $emp)
-                        <option value="{{ $emp->id }}" {{ $filters['employee_id'] == $emp->id ? 'selected' : '' }}>
+                        <option value="{{ $emp->id }}" {{ (isset($filters['employee_id']) && (int) $filters['employee_id'] === (int) $emp->id) ? 'selected' : '' }}>
                             {{ $emp->full_name }} ({{ $emp->employee_code }})
                         </option>
                     @endforeach

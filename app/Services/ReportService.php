@@ -9,6 +9,7 @@ use App\Models\EmployeeScheduleOverride;
 use App\Models\Holiday;
 use App\Models\LeaveRequest;
 use App\Models\OvertimeRequest;
+use App\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 
@@ -27,6 +28,64 @@ class ReportService
     }
 
     /**
+     * Get workforce employees relevant to the selected target outlets in the date range.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, Employee>
+     */
+    public function getReportEmployees(User $actor, string $startDateStr, string $endDateStr, ?int $outletId = null): \Illuminate\Database\Eloquent\Collection
+    {
+        $allowedOutletIds = $this->outletScopeService->allowedOutletIds($actor);
+        if (empty($allowedOutletIds)) {
+            return new \Illuminate\Database\Eloquent\Collection;
+        }
+
+        if ($outletId !== null) {
+            if (! in_array($outletId, $allowedOutletIds, true)) {
+                return new \Illuminate\Database\Eloquent\Collection;
+            }
+            $targetOutletIds = [$outletId];
+        } else {
+            $targetOutletIds = $allowedOutletIds;
+        }
+
+        $overrideEmpIds = EmployeeScheduleOverride::whereDate('date', '>=', $startDateStr)
+            ->whereDate('date', '<=', $endDateStr)
+            ->whereIn('work_outlet_id', $targetOutletIds)
+            ->pluck('employee_id')
+            ->all();
+
+        $scheduleEmpIds = EmployeeSchedule::whereDate('work_date', '>=', $startDateStr)
+            ->whereDate('work_date', '<=', $endDateStr)
+            ->whereIn('work_outlet_id', $targetOutletIds)
+            ->pluck('employee_id')
+            ->all();
+
+        $attendanceEmpIds = AttendanceRecord::whereDate('work_date', '>=', $startDateStr)
+            ->whereDate('work_date', '<=', $endDateStr)
+            ->whereIn('outlet_id', $targetOutletIds)
+            ->pluck('employee_id')
+            ->all();
+
+        return Employee::whereNull('deleted_at')
+            ->where('status', 'active')
+            ->currentAttendanceWorkforce()
+            ->where(function ($q) use ($targetOutletIds, $overrideEmpIds, $scheduleEmpIds, $attendanceEmpIds) {
+                $q->whereIn('outlet_id', $targetOutletIds);
+                if (! empty($overrideEmpIds)) {
+                    $q->orWhereIn('id', $overrideEmpIds);
+                }
+                if (! empty($scheduleEmpIds)) {
+                    $q->orWhereIn('id', $scheduleEmpIds);
+                }
+                if (! empty($attendanceEmpIds)) {
+                    $q->orWhereIn('id', $attendanceEmpIds);
+                }
+            })
+            ->orderBy('full_name', 'asc')
+            ->get();
+    }
+
+    /**
      * Generate comprehensive attendance report data based on filters.
      */
     public function generateAttendanceReport(array $filters): array
@@ -36,27 +95,70 @@ class ReportService
         $employeeIdFilter = $filters['employee_id'] ?? null;
         $statusFilter = $filters['status'] ?? 'all';
         $jobTitleIdFilter = $filters['job_title_id'] ?? null;
+        $actor = $filters['actor'] ?? null;
 
         $startDate = Carbon::parse($startDateStr, config('app.timezone'))->startOfDay();
         $endDate = Carbon::parse($endDateStr, config('app.timezone'))->endOfDay();
         $todayStr = now(config('app.timezone'))->format('Y-m-d');
 
-        // 1. Fetch Employees
-        $employeesQuery = Employee::with(['jobTitle', 'user'])->whereNull('deleted_at');
-
-        if (! empty($filters['actor'])) {
-            $employeesQuery = $this->outletScopeService->scopeByRequestedOutlet(
-                $filters['actor'],
-                $employeesQuery,
-                isset($filters['outlet_id']) ? (int) $filters['outlet_id'] : null,
-            );
+        // Resolve Authorized Outlets
+        $allowedOutletIds = $actor ? $this->outletScopeService->allowedOutletIds($actor) : \App\Models\Outlet::where('is_active', true)->pluck('id')->all();
+        if (empty($allowedOutletIds)) {
+            return $this->emptyReportData($startDateStr, $endDateStr, $filters);
         }
+
+        $outletIdFilter = isset($filters['outlet_id']) && $filters['outlet_id'] !== null && $filters['outlet_id'] !== '' && $filters['outlet_id'] !== 'all'
+            ? (int) $filters['outlet_id']
+            : null;
+
+        if ($outletIdFilter !== null) {
+            if (! in_array($outletIdFilter, $allowedOutletIds, true)) {
+                throw new \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException('Akses outlet ditolak. Anda tidak berwenang melihat laporan untuk outlet ini.');
+            }
+            $targetOutletIds = [$outletIdFilter];
+        } else {
+            $targetOutletIds = $allowedOutletIds;
+        }
+
+        // 1. Fetch Candidate Employees
+        $overrideEmpIds = EmployeeScheduleOverride::whereDate('date', '>=', $startDateStr)
+            ->whereDate('date', '<=', $endDateStr)
+            ->whereIn('work_outlet_id', $targetOutletIds)
+            ->pluck('employee_id')
+            ->all();
+
+        $scheduleEmpIds = EmployeeSchedule::whereDate('work_date', '>=', $startDateStr)
+            ->whereDate('work_date', '<=', $endDateStr)
+            ->whereIn('work_outlet_id', $targetOutletIds)
+            ->pluck('employee_id')
+            ->all();
+
+        $attendanceEmpIds = AttendanceRecord::whereDate('work_date', '>=', $startDateStr)
+            ->whereDate('work_date', '<=', $endDateStr)
+            ->whereIn('outlet_id', $targetOutletIds)
+            ->pluck('employee_id')
+            ->all();
+
+        $employeesQuery = Employee::with(['jobTitle', 'user', 'outlet'])->whereNull('deleted_at');
 
         if ($employeeIdFilter) {
             $employeesQuery->where('id', $employeeIdFilter);
         } else {
-            $employeesQuery->currentAttendanceWorkforce();
+            $employeesQuery->where('status', 'active')->currentAttendanceWorkforce();
         }
+
+        $employeesQuery->where(function ($q) use ($targetOutletIds, $overrideEmpIds, $scheduleEmpIds, $attendanceEmpIds) {
+            $q->whereIn('outlet_id', $targetOutletIds);
+            if (! empty($overrideEmpIds)) {
+                $q->orWhereIn('id', $overrideEmpIds);
+            }
+            if (! empty($scheduleEmpIds)) {
+                $q->orWhereIn('id', $scheduleEmpIds);
+            }
+            if (! empty($attendanceEmpIds)) {
+                $q->orWhereIn('id', $attendanceEmpIds);
+            }
+        });
 
         if ($jobTitleIdFilter) {
             $employeesQuery->where('job_title_id', $jobTitleIdFilter);
@@ -179,6 +281,7 @@ class ReportService
             ];
 
             $tempAssignmentDays = 0;
+            $empMatchingDayCount = 0;
 
             foreach ($datePeriod as $currDate) {
                 $dStr = $currDate->format('Y-m-d');
@@ -217,12 +320,26 @@ class ReportService
                     $dStr,
                     $transfersMap->get($emp->id, collect())
                 );
-                $workOutlet = $att?->outlet ?? $effective['work_outlet'];
+                $workOutlet = $att?->outlet ?? $effective['work_outlet'] ?? $historicalHomeOutlet ?? $emp->outlet;
+                $workOutletId = $att?->outlet_id
+                    ? (int) $att->outlet_id
+                    : ($effective['work_outlet_id']
+                        ? (int) $effective['work_outlet_id']
+                        : ($historicalHomeOutlet?->id
+                            ? (int) $historicalHomeOutlet->id
+                            : (int) $emp->outlet_id));
+
+                // Scope to target authorized outlets
+                if (! in_array($workOutletId, $targetOutletIds, true)) {
+                    continue;
+                }
+
+                $empMatchingDayCount++;
+
                 $isTemporaryAssignment = (bool) (
-                    $att
-                    && $att->outlet_id
+                    $workOutletId
                     && $historicalHomeOutlet
-                    && (int) $att->outlet_id !== (int) $historicalHomeOutlet->id
+                    && $workOutletId !== (int) $historicalHomeOutlet->id
                 );
 
                 if ($isTemporaryAssignment) {
@@ -331,14 +448,16 @@ class ReportService
                 ];
             }
 
-            $empSummary['attendance_rate'] = $empSummary['scheduled_work_days'] > 0
-                ? round(($empSummary['present_count'] / $empSummary['scheduled_work_days']) * 100, 2)
-                : 0.0;
+            if ($empMatchingDayCount > 0) {
+                $empSummary['attendance_rate'] = $empSummary['scheduled_work_days'] > 0
+                    ? round(($empSummary['present_count'] / $empSummary['scheduled_work_days']) * 100, 2)
+                    : 0.0;
 
-            $empSummary['temporary_assignment_days'] = $tempAssignmentDays;
-            $empSummary['notice'] = $tempAssignmentDays > 0 ? "Memiliki {$tempAssignmentDays} hari penugasan di outlet lain pada periode ini." : null;
+                $empSummary['temporary_assignment_days'] = $tempAssignmentDays;
+                $empSummary['notice'] = $tempAssignmentDays > 0 ? "Memiliki {$tempAssignmentDays} hari penugasan di outlet lain pada periode ini." : null;
 
-            $employeeSummaries[$emp->id] = $empSummary;
+                $employeeSummaries[$emp->id] = $empSummary;
+            }
         }
 
         $globalSummary['attendance_rate'] = $globalSummary['scheduled_work_days'] > 0

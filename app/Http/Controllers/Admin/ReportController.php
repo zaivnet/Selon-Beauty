@@ -21,12 +21,34 @@ class ReportController extends Controller
 
     public function attendance(Request $request): View
     {
-        $startDate = $request->input('start_date', now('Asia/Jakarta')->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->input('end_date', now('Asia/Jakarta')->endOfMonth()->format('Y-m-d'));
-        $employeeId = $request->input('employee_id');
+        $startDate = $request->input('start_date', $request->input('from_date', now('Asia/Jakarta')->startOfMonth()->format('Y-m-d')));
+        $endDate = $request->input('end_date', $request->input('to_date', now('Asia/Jakarta')->endOfMonth()->format('Y-m-d')));
+        $rawEmployeeId = $request->input('employee_id');
+        $employeeId = ($rawEmployeeId !== null && $rawEmployeeId !== '' && $rawEmployeeId !== 'all') ? (int) $rawEmployeeId : null;
         $status = $request->input('status', 'all');
-        $jobTitleId = $request->input('job_title_id');
-        $outletId = $request->has('outlet_id') ? (int) $request->input('outlet_id') : null;
+        $rawJobTitleId = $request->input('job_title_id');
+        $jobTitleId = ($rawJobTitleId !== null && $rawJobTitleId !== '' && $rawJobTitleId !== 'all') ? (int) $rawJobTitleId : null;
+        $rawOutletId = $request->input('outlet_id');
+        $outletId = ($rawOutletId !== null && $rawOutletId !== '' && $rawOutletId !== 'all') ? (int) $rawOutletId : null;
+
+        $actor = $request->user();
+        $allowedOutletIds = $this->outletScopeService->allowedOutletIds($actor);
+        $authorizedOutlets = \App\Models\Outlet::whereIn('id', $allowedOutletIds)
+            ->where('is_active', true)
+            ->orderBy('name', 'asc')
+            ->get();
+        $authorizedOutletIds = $authorizedOutlets->pluck('id')->all();
+
+        if ($outletId !== null && ! in_array($outletId, $authorizedOutletIds, true)) {
+            throw new \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException('Akses outlet ditolak. Anda tidak berwenang melihat laporan untuk outlet ini.');
+        }
+
+        $employees = $this->reportService->getReportEmployees($actor, $startDate, $endDate, $outletId);
+
+        // If selected employee does not belong to the authorized period/outlet workforce, clear it safely
+        if ($employeeId !== null && ! $employees->contains('id', $employeeId)) {
+            $employeeId = null;
+        }
 
         $filters = [
             'start_date' => $startDate,
@@ -34,7 +56,7 @@ class ReportController extends Controller
             'employee_id' => $employeeId,
             'status' => $status,
             'job_title_id' => $jobTitleId,
-            'actor' => $request->user(),
+            'actor' => $actor,
             'outlet_id' => $outletId,
         ];
 
@@ -52,19 +74,13 @@ class ReportController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        $employeesQuery = Employee::whereNull('deleted_at')
-            ->where('status', 'active')
-            ->currentAttendanceWorkforce();
-        $employeesQuery = $this->outletScopeService->scopeByRequestedOutlet($request->user(), $employeesQuery, $outletId);
-
-        $employees = $employeesQuery->orderBy('full_name', 'asc')->get();
-
         $jobTitles = JobTitle::where('is_active', true)->orderBy('name', 'asc')->get();
 
         return view('admin.reports.attendance', [
             'reportData' => $reportData,
             'paginatedRows' => $paginatedRows,
             'employees' => $employees,
+            'authorizedOutlets' => $authorizedOutlets,
             'jobTitles' => $jobTitles,
             'filters' => $filters,
         ]);
@@ -72,12 +88,27 @@ class ReportController extends Controller
 
     public function printView(Request $request): View
     {
-        $startDate = $request->input('start_date', now('Asia/Jakarta')->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->input('end_date', now('Asia/Jakarta')->endOfMonth()->format('Y-m-d'));
-        $employeeId = $request->input('employee_id');
+        $startDate = $request->input('start_date', $request->input('from_date', now('Asia/Jakarta')->startOfMonth()->format('Y-m-d')));
+        $endDate = $request->input('end_date', $request->input('to_date', now('Asia/Jakarta')->endOfMonth()->format('Y-m-d')));
+        $rawEmployeeId = $request->input('employee_id');
+        $employeeId = ($rawEmployeeId !== null && $rawEmployeeId !== '' && $rawEmployeeId !== 'all') ? (int) $rawEmployeeId : null;
         $status = $request->input('status', 'all');
-        $jobTitleId = $request->input('job_title_id');
-        $outletId = $request->has('outlet_id') ? (int) $request->input('outlet_id') : null;
+        $rawJobTitleId = $request->input('job_title_id');
+        $jobTitleId = ($rawJobTitleId !== null && $rawJobTitleId !== '' && $rawJobTitleId !== 'all') ? (int) $rawJobTitleId : null;
+        $rawOutletId = $request->input('outlet_id');
+        $outletId = ($rawOutletId !== null && $rawOutletId !== '' && $rawOutletId !== 'all') ? (int) $rawOutletId : null;
+
+        $actor = $request->user();
+        $allowedOutletIds = $this->outletScopeService->allowedOutletIds($actor);
+        $authorizedOutlets = \App\Models\Outlet::whereIn('id', $allowedOutletIds)
+            ->where('is_active', true)
+            ->orderBy('name', 'asc')
+            ->get();
+        $authorizedOutletIds = $authorizedOutlets->pluck('id')->all();
+
+        if ($outletId !== null && ! in_array($outletId, $authorizedOutletIds, true)) {
+            throw new \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException('Akses outlet ditolak. Anda tidak berwenang melihat laporan untuk outlet ini.');
+        }
 
         $filters = [
             'start_date' => $startDate,
@@ -85,26 +116,43 @@ class ReportController extends Controller
             'employee_id' => $employeeId,
             'status' => $status,
             'job_title_id' => $jobTitleId,
-            'actor' => $request->user(),
+            'actor' => $actor,
             'outlet_id' => $outletId,
         ];
 
         $reportData = $this->reportService->generateAttendanceReport($filters);
+        $selectedOutlet = $outletId ? $authorizedOutlets->firstWhere('id', $outletId) : null;
 
         return view('admin.reports.print', [
             'reportData' => $reportData,
+            'selectedOutlet' => $selectedOutlet,
             'printedAt' => now('Asia/Jakarta')->translatedFormat('d F Y H:i:s').' WIB',
         ]);
     }
 
     public function exportCsv(Request $request): StreamedResponse
     {
-        $startDate = $request->input('start_date', now('Asia/Jakarta')->startOfMonth()->format('Y-m-d'));
-        $endDate = $request->input('end_date', now('Asia/Jakarta')->endOfMonth()->format('Y-m-d'));
-        $employeeId = $request->input('employee_id');
+        $startDate = $request->input('start_date', $request->input('from_date', now('Asia/Jakarta')->startOfMonth()->format('Y-m-d')));
+        $endDate = $request->input('end_date', $request->input('to_date', now('Asia/Jakarta')->endOfMonth()->format('Y-m-d')));
+        $rawEmployeeId = $request->input('employee_id');
+        $employeeId = ($rawEmployeeId !== null && $rawEmployeeId !== '' && $rawEmployeeId !== 'all') ? (int) $rawEmployeeId : null;
         $status = $request->input('status', 'all');
-        $jobTitleId = $request->input('job_title_id');
-        $outletId = $request->has('outlet_id') ? (int) $request->input('outlet_id') : null;
+        $rawJobTitleId = $request->input('job_title_id');
+        $jobTitleId = ($rawJobTitleId !== null && $rawJobTitleId !== '' && $rawJobTitleId !== 'all') ? (int) $rawJobTitleId : null;
+        $rawOutletId = $request->input('outlet_id');
+        $outletId = ($rawOutletId !== null && $rawOutletId !== '' && $rawOutletId !== 'all') ? (int) $rawOutletId : null;
+
+        $actor = $request->user();
+        $allowedOutletIds = $this->outletScopeService->allowedOutletIds($actor);
+        $authorizedOutlets = \App\Models\Outlet::whereIn('id', $allowedOutletIds)
+            ->where('is_active', true)
+            ->orderBy('name', 'asc')
+            ->get();
+        $authorizedOutletIds = $authorizedOutlets->pluck('id')->all();
+
+        if ($outletId !== null && ! in_array($outletId, $authorizedOutletIds, true)) {
+            throw new \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException('Akses outlet ditolak. Anda tidak berwenang melihat laporan untuk outlet ini.');
+        }
 
         $filters = [
             'start_date' => $startDate,
@@ -112,7 +160,7 @@ class ReportController extends Controller
             'employee_id' => $employeeId,
             'status' => $status,
             'job_title_id' => $jobTitleId,
-            'actor' => $request->user(),
+            'actor' => $actor,
             'outlet_id' => $outletId,
         ];
 

@@ -59,6 +59,7 @@
             </div>
             <div class="sm:text-right text-xs space-y-0.5 text-slate-600 font-medium">
                 <p><strong>Periode:</strong> {{ \Carbon\Carbon::parse($reportData['start_date'])->translatedFormat('d M Y') }} - {{ \Carbon\Carbon::parse($reportData['end_date'])->translatedFormat('d M Y') }}</p>
+                <p><strong>Outlet:</strong> {{ $selectedOutlet?->name ?? 'Semua Outlet' }}</p>
                 <p><strong>Dicetak Pada:</strong> {{ $printedAt }}</p>
             </div>
         </div>
