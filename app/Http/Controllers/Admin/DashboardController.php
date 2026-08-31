@@ -15,7 +15,8 @@ class DashboardController extends Controller
     public function __construct(
         protected OperationalExceptionService $exceptionService,
         protected AttendanceMonitoringService $monitoringService,
-        protected \App\Services\MultiOutletDashboardService $multiOutletDashboardService
+        protected \App\Services\MultiOutletDashboardService $multiOutletDashboardService,
+        protected \App\Services\DashboardDutyRosterService $dutyRosterService,
     ) {}
 
     public function index(Request $request): View
@@ -28,6 +29,12 @@ class DashboardController extends Controller
         $outletScopeService = app(\App\Services\OutletScopeService::class);
         $inputOutletId = $request->has('outlet_id') ? (int) $request->input('outlet_id') : null;
         $requestedOutletId = $outletScopeService->resolveRequestedOutlet($actor, $inputOutletId);
+
+        $rosterDate = $request->input('roster_date');
+        $rosterOutletId = $request->has('roster_outlet_id')
+            ? $request->input('roster_outlet_id')
+            : ($request->has('outlet_id') ? $requestedOutletId : null);
+        $rosterData = $this->dutyRosterService->getRosterData($actor, $rosterDate, $rosterOutletId);
 
         $exceptions = $this->exceptionService->generate($todayStr, [
             'include_backup_health' => $includeBackupHealth,
@@ -45,6 +52,7 @@ class DashboardController extends Controller
                 'globalData' => $globalData,
                 'exceptions' => $exceptions,
                 'todayFormatted' => $now->locale('id')->isoFormat('dddd, D MMMM YYYY'),
+                'rosterData' => $rosterData,
             ]);
         }
 
@@ -60,6 +68,7 @@ class DashboardController extends Controller
             'shifts' => $shifts,
             'todayFormatted' => $now->locale('id')->isoFormat('dddd, D MMMM YYYY'),
             'requestedOutletId' => $requestedOutletId,
+            'rosterData' => $rosterData,
         ]);
     }
 }

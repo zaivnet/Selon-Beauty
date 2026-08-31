@@ -119,6 +119,11 @@
         </article>
     </section>
 
+    <!-- Operational Duty Roster Widget (Jadwal Piket) -->
+    @if(isset($rosterData))
+        <x-dashboard-duty-roster :roster-data="$rosterData" />
+    @endif
+
     <!-- Main Content Grid (65% Left / 35% Right) -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <!-- MAIN LEFT (8 Cols = ~66% Width) -->

@@ -132,6 +132,11 @@
         </article>
     </section>
 
+    <!-- Operational Duty Roster Widget (Jadwal Piket) -->
+    @if(isset($rosterData))
+        <x-dashboard-duty-roster :roster-data="$rosterData" />
+    @endif
+
     <!-- Operational Alert Widget -->
     @if($globalKpi['total_exceptions'] > 0)
         <div class="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-start sm:items-center gap-3">
