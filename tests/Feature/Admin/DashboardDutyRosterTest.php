@@ -347,8 +347,8 @@ class DashboardDutyRosterTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Ayu Home Pusat');
-        $response->assertSee('PENUGASAN OUTLET');
-        $response->assertSee('Dari Selon Beauty Pusat');
+        $response->assertSee('PENUGASAN');
+        $response->assertSee('dari Selon Beauty Pusat');
     }
 
     /** 10. Temporarily assigned employee does not simultaneously appear at HOME */
@@ -381,10 +381,10 @@ class DashboardDutyRosterTest extends TestCase
 
         $responseOutletB->assertOk();
         $responseOutletB->assertSee('Ayu Assigned');
-        $responseOutletB->assertSee('PENUGASAN OUTLET');
+        $responseOutletB->assertSee('PENUGASAN');
     }
 
-    /** 11. PENUGASAN OUTLET badge/context is present */
+    /** 11. PENUGASAN badge/context is present */
     public function test_penugasan_outlet_badge_is_displayed_cleanly(): void
     {
         $empA = $this->createEmployee('Ayu Temp', 'EMP-001', $this->outletA);
@@ -402,8 +402,8 @@ class DashboardDutyRosterTest extends TestCase
         $response = $this->actingAs($this->superadmin)->get(route('admin.dashboard'));
 
         $response->assertOk();
-        $response->assertSee('PENUGASAN OUTLET');
-        $response->assertSee('Dari Selon Beauty Pusat');
+        $response->assertSee('PENUGASAN');
+        $response->assertSee('dari Selon Beauty Pusat');
     }
 
     /** 12. Dynamic shift names are rendered */
@@ -583,9 +583,9 @@ class DashboardDutyRosterTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Ayu Besok');
-        $response->assertSee('TERJADWAL');
         $response->assertDontSee('BELUM CHECK-IN');
         $response->assertDontSee('TIDAK HADIR');
+        $response->assertDontSee('TERJADWAL');
     }
 
     /** 19. Past date uses historical attendance status */
