@@ -69,6 +69,12 @@ class DashboardDutyRosterService
                 'is_all_outlets' => true,
                 'outlets' => [],
                 'total_scheduled_duty' => 0,
+                'summary' => [
+                    'total_duty_count' => 0,
+                    'active_outlet_count' => 0,
+                    'unique_shift_count' => 0,
+                    'total_assignment_count' => 0,
+                ],
             ];
         }
 
@@ -104,19 +110,17 @@ class DashboardDutyRosterService
 
         // 5. Group roster items by Outlet -> Shift -> Employees
         $groupedOutlets = [];
-        $totalScheduledDutyGlobal = 0;
+        $allDutyItems = collect();
 
         foreach ($targetOutlets as $outlet) {
             $itemsForOutlet = $rosterItems->get($outlet->id, collect());
             $dutyItems = $itemsForOutlet->filter(fn ($item) => $item['is_working_duty']);
             $offItems = $itemsForOutlet->filter(fn ($item) => ! $item['is_working_duty']);
 
-            $totalScheduledDutyGlobal += $dutyItems->count();
+            $allDutyItems = $allDutyItems->concat($dutyItems);
 
-            // Group duty employees by Shift (ordered by shift start_time)
+            // Group duty employees by Shift
             $shiftsGrouped = [];
-            $shiftSummaryParts = [];
-
             $groupedByShift = $dutyItems->groupBy(fn ($item) => $item['shift']->id);
 
             foreach ($groupedByShift as $shiftId => $shiftItems) {
@@ -134,12 +138,23 @@ class DashboardDutyRosterService
                     'employee_count' => $shiftItems->count(),
                     'employees' => $shiftItems->values()->all(),
                 ];
-
-                $shiftSummaryParts[] = "{$shift->name} {$shiftItems->count()}";
             }
 
-            // Sort shift groups chronologically by start_time
-            usort($shiftsGrouped, fn ($a, $b) => strcmp($a['start_time'], $b['start_time']));
+            // Sort shift groups chronologically by start_time ASC, secondary by shift_name ASC
+            usort($shiftsGrouped, function ($a, $b) {
+                $cmp = strcmp($a['start_time'], $b['start_time']);
+                if ($cmp !== 0) {
+                    return $cmp;
+                }
+
+                return strcmp($a['shift_name'], $b['shift_name']);
+            });
+
+            // Generate summary breakdown in chronological shift order
+            $shiftSummaryParts = array_map(
+                fn ($sg) => "{$sg['shift_name']} {$sg['employee_count']}",
+                $shiftsGrouped
+            );
 
             $groupedOutlets[] = [
                 'outlet' => $outlet,
@@ -149,6 +164,22 @@ class DashboardDutyRosterService
                 'shifts' => $shiftsGrouped,
             ];
         }
+
+        $totalDutyCount = $allDutyItems->count();
+        $activeOutletCount = $rosterItems->filter(function ($items, $outletId) use ($targetOutletIds) {
+            return in_array($outletId, $targetOutletIds, true)
+                && $items->where('is_working_duty', true)->isNotEmpty();
+        })->count();
+
+        $uniqueShiftCount = $allDutyItems->pluck('shift.id')->unique()->count();
+        $totalAssignmentCount = $allDutyItems->where('is_temporary_assignment', true)->count();
+
+        $summary = [
+            'total_duty_count' => $totalDutyCount,
+            'active_outlet_count' => $activeOutletCount,
+            'unique_shift_count' => $uniqueShiftCount,
+            'total_assignment_count' => $totalAssignmentCount,
+        ];
 
         return [
             'has_outlets' => true,
@@ -164,7 +195,8 @@ class DashboardDutyRosterService
             'selected_outlet_id' => $selectedOutletId,
             'is_all_outlets' => ($selectedOutletId === null),
             'outlets' => $groupedOutlets,
-            'total_scheduled_duty' => $totalScheduledDutyGlobal,
+            'total_scheduled_duty' => $totalDutyCount,
+            'summary' => $summary,
         ];
     }
 

@@ -762,4 +762,244 @@ class DashboardDutyRosterTest extends TestCase
         $response->assertOk();
         $response->assertSee('Tidak ada jadwal kerja pada tanggal ini.');
     }
+
+    /** 26. Operational summary calculates total duty, active outlets, unique shifts, and assignments for Semua Outlet */
+    public function test_semua_outlet_operational_summary_counts(): void
+    {
+        $empA1 = $this->createEmployee('Ayu Pusat 1', 'EMP-001', $this->outletA);
+        $empA2 = $this->createEmployee('Ayu Pusat 2', 'EMP-002', $this->outletA);
+        $empB1 = $this->createEmployee('Budi Cabang 1', 'EMP-003', $this->outletB);
+
+        // Schedule empA1 on Shift Pagi at Outlet A
+        EmployeeSchedule::create([
+            'employee_id' => $empA1->id,
+            'work_date' => $this->today,
+            'shift_id' => $this->shiftPagi->id,
+            'schedule_type' => 'work',
+        ]);
+
+        // Schedule empA2 on Shift Siang at Outlet A
+        EmployeeSchedule::create([
+            'employee_id' => $empA2->id,
+            'work_date' => $this->today,
+            'shift_id' => $this->shiftSiang->id,
+            'schedule_type' => 'work',
+        ]);
+
+        // Temporary assignment: empB1 (Home B) works at Outlet A on Shift Pagi
+        EmployeeScheduleOverride::create([
+            'employee_id' => $empB1->id,
+            'date' => $this->today,
+            'override_type' => 'work',
+            'shift_id' => $this->shiftPagi->id,
+            'work_outlet_id' => $this->outletA->id,
+            'reason' => 'Bantuan piket',
+            'created_by' => $this->superadmin->id,
+        ]);
+
+        $response = $this->actingAs($this->superadmin)->get(route('admin.dashboard'));
+
+        $response->assertOk();
+        // 3 employees working (all at Outlet A), 1 active outlet, 2 unique shifts (Pagi & Siang), 1 assignment
+        $response->assertSee('3');
+        $response->assertSee('Bertugas');
+        $response->assertSee('1');
+        $response->assertSee('Outlet');
+        $response->assertSee('2');
+        $response->assertSee('Shift');
+        $response->assertSee('1');
+        $response->assertSee('Penugasan');
+    }
+
+    /** 27. Filter-aware operational summary for individual outlet */
+    public function test_individual_outlet_operational_summary_counts(): void
+    {
+        $empA = $this->createEmployee('Ayu Pusat', 'EMP-001', $this->outletA);
+        $empB = $this->createEmployee('Budi Cabang', 'EMP-002', $this->outletB);
+
+        EmployeeSchedule::create([
+            'employee_id' => $empA->id,
+            'work_date' => $this->today,
+            'shift_id' => $this->shiftPagi->id,
+            'schedule_type' => 'work',
+        ]);
+        EmployeeSchedule::create([
+            'employee_id' => $empB->id,
+            'work_date' => $this->today,
+            'shift_id' => $this->shiftSiang->id,
+            'schedule_type' => 'work',
+        ]);
+
+        // Filter explicitly to Outlet A
+        $response = $this->actingAs($this->superadmin)->get(route('admin.dashboard', [
+            'roster_outlet_id' => $this->outletA->id,
+        ]));
+
+        $response->assertOk();
+        // For Outlet A only: 1 Bertugas, 1 Outlet, 1 Shift, 0 Penugasan
+        $response->assertSee('1');
+        $response->assertSee('Bertugas');
+        $response->assertSee('1');
+        $response->assertSee('Outlet');
+        $response->assertSee('1');
+        $response->assertSee('Shift');
+        $response->assertSee('0');
+        $response->assertSee('Penugasan');
+        $response->assertDontSee('Budi Cabang');
+    }
+
+    /** 28. Unique shift count does not double-count same shift across outlets */
+    public function test_operational_summary_unique_shift_count_does_not_duplicate_across_outlets(): void
+    {
+        $empA = $this->createEmployee('Ayu Pusat', 'EMP-001', $this->outletA);
+        $empB = $this->createEmployee('Budi Cabang', 'EMP-002', $this->outletB);
+
+        // Both outlets use the SAME shift (shiftPagi)
+        EmployeeSchedule::create([
+            'employee_id' => $empA->id,
+            'work_date' => $this->today,
+            'shift_id' => $this->shiftPagi->id,
+            'schedule_type' => 'work',
+        ]);
+        EmployeeSchedule::create([
+            'employee_id' => $empB->id,
+            'work_date' => $this->today,
+            'shift_id' => $this->shiftPagi->id,
+            'schedule_type' => 'work',
+        ]);
+
+        $response = $this->actingAs($this->superadmin)->get(route('admin.dashboard'));
+
+        $response->assertOk();
+        // 2 Bertugas, 2 Outlet, 1 unique Shift, 0 Penugasan
+        $response->assertSee('2');
+        $response->assertSee('Bertugas');
+        $response->assertSee('2');
+        $response->assertSee('Outlet');
+        $response->assertSee('1');
+        $response->assertSee('Shift');
+    }
+
+    /** 29. Summary excludes OFF and unauthorized employees */
+    public function test_operational_summary_excludes_off_and_unauthorized_employees(): void
+    {
+        $admin = User::factory()->create([
+            'name' => 'Admin Single',
+            'email' => 'adminsingle@selon.id',
+            'role' => 'admin',
+            'outlet_access_mode' => 'selected',
+            'is_active' => true,
+        ]);
+        $admin->assignedOutlets()->attach([$this->outletA->id]);
+
+        $empA = $this->createEmployee('Ayu Assigned', 'EMP-001', $this->outletA);
+        $empA_Off = $this->createEmployee('Ayu Off', 'EMP-002', $this->outletA);
+        $empUnauth = $this->createEmployee('Unauthorized Emp', 'EMP-003', $this->outletB);
+
+        EmployeeSchedule::create([
+            'employee_id' => $empA->id,
+            'work_date' => $this->today,
+            'shift_id' => $this->shiftPagi->id,
+            'schedule_type' => 'work',
+        ]);
+        EmployeeSchedule::create([
+            'employee_id' => $empA_Off->id,
+            'work_date' => $this->today,
+            'shift_id' => $this->shiftPagi->id,
+            'schedule_type' => 'off',
+        ]);
+        EmployeeSchedule::create([
+            'employee_id' => $empUnauth->id,
+            'work_date' => $this->today,
+            'shift_id' => $this->shiftPagi->id,
+            'schedule_type' => 'work',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.dashboard'));
+
+        $response->assertOk();
+        // Admin only has Outlet A: 1 working employee, 1 OFF (excluded from Bertugas), Outlet B ignored
+        $response->assertSee('1');
+        $response->assertSee('Bertugas');
+        $response->assertSee('1');
+        $response->assertSee('Outlet');
+        $response->assertDontSee('Unauthorized Emp');
+    }
+
+    /** 30. Shift groups and outlet summary are ordered chronologically by start_time ASC */
+    public function test_shift_groups_and_outlet_summary_ordered_chronologically_by_start_time(): void
+    {
+        $shiftEarly = Shift::create([
+            'name' => 'Shift Subuh',
+            'code' => 'SSB',
+            'start_time' => '05:00:00',
+            'end_time' => '12:00:00',
+        ]);
+        $shiftLate = Shift::create([
+            'name' => 'Shift Malam',
+            'code' => 'SML',
+            'start_time' => '22:00:00',
+            'end_time' => '06:00:00',
+        ]);
+
+        $emp1 = $this->createEmployee('Emp Malam', 'EMP-001', $this->outletA);
+        $emp2 = $this->createEmployee('Emp Siang', 'EMP-002', $this->outletA);
+        $emp3 = $this->createEmployee('Emp Subuh', 'EMP-003', $this->outletA);
+
+        // Created out of chronological order
+        EmployeeSchedule::create([
+            'employee_id' => $emp1->id,
+            'work_date' => $this->today,
+            'shift_id' => $shiftLate->id,
+            'schedule_type' => 'work',
+        ]);
+        EmployeeSchedule::create([
+            'employee_id' => $emp2->id,
+            'work_date' => $this->today,
+            'shift_id' => $this->shiftSiang->id, // 14:00
+            'schedule_type' => 'work',
+        ]);
+        EmployeeSchedule::create([
+            'employee_id' => $emp3->id,
+            'work_date' => $this->today,
+            'shift_id' => $shiftEarly->id, // 05:00
+            'schedule_type' => 'work',
+        ]);
+
+        $response = $this->actingAs($this->superadmin)->get(route('admin.dashboard'));
+
+        $response->assertOk();
+        $content = $response->getContent();
+
+        // Check chronological order in outlet summary: Shift Subuh 1 • Shift Siang 1 • Shift Malam 1
+        $posSubuh = strpos($content, 'Shift Subuh');
+        $posSiang = strpos($content, 'Shift Siang');
+        $posMalam = strpos($content, 'Shift Malam');
+
+        $this->assertNotFalse($posSubuh);
+        $this->assertNotFalse($posSiang);
+        $this->assertNotFalse($posMalam);
+        $this->assertTrue($posSubuh < $posSiang, 'Shift Subuh (05:00) should appear before Shift Siang (14:00)');
+        $this->assertTrue($posSiang < $posMalam, 'Shift Siang (14:00) should appear before Shift Malam (22:00)');
+    }
+
+    /** 31. Zero-assignment Admin does not leak summary counts */
+    public function test_zero_assignment_admin_does_not_leak_summary_counts(): void
+    {
+        $admin = $this->unassignedAdmin;
+
+        $empA = $this->createEmployee('Ayu Secret', 'EMP-001', $this->outletA);
+        EmployeeSchedule::create([
+            'employee_id' => $empA->id,
+            'work_date' => $this->today,
+            'shift_id' => $this->shiftPagi->id,
+            'schedule_type' => 'work',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.dashboard'));
+
+        $response->assertOk();
+        $response->assertSee('Anda belum memiliki akses outlet.');
+        $response->assertDontSee('Ayu Secret');
+    }
 }

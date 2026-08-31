@@ -69,6 +69,38 @@
             <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Hubungi Administrator untuk mendapatkan akses ke outlet operasional.</p>
         </div>
     @else
+        @php
+            $summary = $rosterData['summary'] ?? [
+                'total_duty_count' => 0,
+                'active_outlet_count' => 0,
+                'unique_shift_count' => 0,
+                'total_assignment_count' => 0,
+            ];
+        @endphp
+
+        <!-- Operational Summary Chip Bar -->
+        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs font-semibold">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80">
+                <strong class="font-black text-slate-900 dark:text-white">{{ $summary['total_duty_count'] }}</strong>
+                <span class="text-slate-600 dark:text-slate-400">Bertugas</span>
+            </span>
+
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80">
+                <strong class="font-black text-slate-900 dark:text-white">{{ $summary['active_outlet_count'] }}</strong>
+                <span class="text-slate-600 dark:text-slate-400">Outlet</span>
+            </span>
+
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700/80">
+                <strong class="font-black text-slate-900 dark:text-white">{{ $summary['unique_shift_count'] }}</strong>
+                <span class="text-slate-600 dark:text-slate-400">Shift</span>
+            </span>
+
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg {{ $summary['total_assignment_count'] > 0 ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800/80 font-bold' : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200/80 dark:border-slate-700/80' }} border">
+                <strong class="font-black">{{ $summary['total_assignment_count'] }}</strong>
+                <span class="{{ $summary['total_assignment_count'] > 0 ? 'text-purple-700 dark:text-purple-300' : 'text-slate-600 dark:text-slate-400' }}">Penugasan</span>
+            </span>
+        </div>
+
         <!-- Multi-Outlet Subnav Filter (Visible if user has > 1 authorized outlet) -->
         @if($authorizedOutlets->count() > 1)
             <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
