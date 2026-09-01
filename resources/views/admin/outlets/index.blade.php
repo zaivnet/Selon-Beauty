@@ -46,35 +46,56 @@
     <!-- Simulator Evaluasi Geofence Outlet -->
     @if($outlets->isNotEmpty())
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-6 space-y-4">
-            <div>
-                <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                    <svg class="w-4 h-4 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                    <span>Simulator Evaluasi Geofence Per-Outlet</span>
-                </h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Uji perhitungan jarak Haversine koordinat karyawan terhadap outlet yang dipilih secara instan.</p>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                        <span>Simulator Evaluasi Geofence Per-Outlet</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Masukkan koordinat posisi karyawan atau gunakan lokasi perangkat saat ini untuk menguji jarak ke outlet terpilih.</p>
+                </div>
+                <button type="button" id="btn-get-sim-location" onclick="getSimulatorCurrentLocation()" class="inline-flex items-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition-all cursor-pointer shrink-0">
+                    <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <span id="btn-get-sim-location-text">Gunakan Lokasi Saya Saat Ini</span>
+                </button>
             </div>
+
+            <div id="sim-location-msg" class="hidden text-xs font-semibold px-3.5 py-2 rounded-xl"></div>
 
             <form action="{{ route('admin.outlets.index') }}" method="GET" class="space-y-4 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
                 <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase">Pilih Outlet</label>
+                        <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase">Pilih Outlet <span class="text-rose-500">*</span></label>
                         <select name="test_outlet_id" required class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-semibold ui-select">
+                            <option value="" disabled {{ !request('test_outlet_id') ? 'selected' : '' }}>-- Pilih Outlet --</option>
                             @foreach($outlets as $o)
                                 <option value="{{ $o->id }}" {{ request('test_outlet_id') == $o->id ? 'selected' : '' }}>{{ $o->name }} ({{ $o->code }})</option>
                             @endforeach
                         </select>
+                        @error('test_outlet_id')
+                            <p class="text-[10px] font-semibold text-rose-500 mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase">Lat Karyawan</label>
-                        <input type="number" step="any" name="test_lat" value="{{ request('test_lat', $outlets->first()?->latitude ?? -6.2) }}" required class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-mono bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+                        <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase">Lat Karyawan <span class="text-rose-500">*</span></label>
+                        <input type="number" step="any" name="test_lat" id="sim_test_lat" value="{{ request('test_lat') }}" placeholder="Contoh: -6.2000000" required class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-mono bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+                        @error('test_lat')
+                            <p class="text-[10px] font-semibold text-rose-500 mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase">Lon Karyawan</label>
-                        <input type="number" step="any" name="test_lon" value="{{ request('test_lon', $outlets->first()?->longitude ?? 106.8) }}" required class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-mono bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+                        <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase">Lon Karyawan <span class="text-rose-500">*</span></label>
+                        <input type="number" step="any" name="test_lon" id="sim_test_lon" value="{{ request('test_lon') }}" placeholder="Contoh: 106.8166660" required class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-mono bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+                        @error('test_lon')
+                            <p class="text-[10px] font-semibold text-rose-500 mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
                     <div>
                         <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase">Akurasi GPS (m)</label>
-                        <input type="number" step="any" name="test_accuracy" value="{{ request('test_accuracy', 15) }}" required class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+                        <input type="number" step="any" name="test_accuracy" id="sim_test_accuracy" value="{{ request('test_accuracy', 15) }}" placeholder="15" required class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+                        @error('test_accuracy')
+                            <p class="text-[10px] font-semibold text-rose-500 mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
 
@@ -109,6 +130,70 @@
                 </div>
             @endif
         </div>
+
+        <script>
+        function getSimulatorCurrentLocation() {
+            const btn = document.getElementById('btn-get-sim-location');
+            const btnText = document.getElementById('btn-get-sim-location-text');
+            const msgBox = document.getElementById('sim-location-msg');
+            const latInput = document.getElementById('sim_test_lat');
+            const lonInput = document.getElementById('sim_test_lon');
+            const accInput = document.getElementById('sim_test_accuracy');
+
+            if (!navigator.geolocation) {
+                if (msgBox) {
+                    msgBox.className = 'text-xs font-semibold px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60';
+                    msgBox.textContent = 'Browser Anda tidak mendukung fitur Geolocation.';
+                    msgBox.classList.remove('hidden');
+                }
+                return;
+            }
+
+            if (btn) btn.disabled = true;
+            if (btnText) btnText.textContent = 'Mendeteksi Lokasi...';
+            if (msgBox) msgBox.classList.add('hidden');
+
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    if (latInput) latInput.value = Number(position.coords.latitude).toFixed(7);
+                    if (lonInput) lonInput.value = Number(position.coords.longitude).toFixed(7);
+                    if (accInput) accInput.value = Math.round(position.coords.accuracy || 15);
+
+                    if (btn) btn.disabled = false;
+                    if (btnText) btnText.textContent = 'Gunakan Lokasi Saya Saat Ini';
+                    if (msgBox) {
+                        msgBox.className = 'text-xs font-semibold px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60';
+                        msgBox.textContent = '✓ Koordinat berhasil terisi dari lokasi perangkat. Klik "Hitung Jarak & Uji Status Geofence" untuk menguji.';
+                        msgBox.classList.remove('hidden');
+                    }
+                },
+                function(error) {
+                    if (btn) btn.disabled = false;
+                    if (btnText) btnText.textContent = 'Gunakan Lokasi Saya Saat Ini';
+
+                    let errText = 'Gagal mendeteksi lokasi perangkat.';
+                    if (error.code === 1) {
+                        errText = 'Izin akses lokasi ditolak di browser Anda.';
+                    } else if (error.code === 2) {
+                        errText = 'Posisi lokasi/GPS tidak tersedia saat ini.';
+                    } else if (error.code === 3) {
+                        errText = 'Waktu permintaan lokasi habis (timeout). Coba lagi.';
+                    }
+
+                    if (msgBox) {
+                        msgBox.className = 'text-xs font-semibold px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60';
+                        msgBox.textContent = '✕ ' + errText;
+                        msgBox.classList.remove('hidden');
+                    }
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
+        </script>
     @endif
 
     <!-- Outlet Grid / Table Card -->

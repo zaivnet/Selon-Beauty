@@ -44,18 +44,38 @@ class OutletController extends Controller
         $outlets->each(fn (Outlet $outlet) => $outlet->setAttribute('users_count', $outlet->users_count + $allOutletAdminCount));
 
         $testResult = null;
-        if ($request->filled(['test_outlet_id', 'test_lat', 'test_lon'])) {
-            $selectedOutlet = $outlets->firstWhere('id', (int) $request->input('test_outlet_id'));
+        if ($request->hasAny(['test_outlet_id', 'test_lat', 'test_lon', 'test_accuracy'])) {
+            $validated = $request->validate([
+                'test_outlet_id' => ['required', 'integer'],
+                'test_lat' => ['required', 'numeric', 'between:-90,90'],
+                'test_lon' => ['required', 'numeric', 'between:-180,180'],
+                'test_accuracy' => ['nullable', 'numeric', 'min:0', 'max:5000'],
+            ], [
+                'test_outlet_id.required' => 'Pilih outlet yang akan diuji.',
+                'test_lat.required' => 'Latitude posisi karyawan wajib diisi.',
+                'test_lat.numeric' => 'Latitude posisi karyawan harus berupa angka desimal.',
+                'test_lat.between' => 'Latitude posisi karyawan harus bernilai antara -90 dan 90.',
+                'test_lon.required' => 'Longitude posisi karyawan wajib diisi.',
+                'test_lon.numeric' => 'Longitude posisi karyawan harus berupa angka desimal.',
+                'test_lon.between' => 'Longitude posisi karyawan harus bernilai antara -180 dan 180.',
+                'test_accuracy.numeric' => 'Akurasi GPS harus berupa angka.',
+                'test_accuracy.min' => 'Akurasi GPS tidak boleh bernilai negatif.',
+            ]);
+
+            $selectedOutlet = $outlets->firstWhere('id', (int) $validated['test_outlet_id']);
             if ($selectedOutlet) {
-                $testLat = (float) $request->input('test_lat');
-                $testLon = (float) $request->input('test_lon');
-                $testAccuracy = (float) $request->input('test_accuracy', 15.0);
+                $testLat = (float) $validated['test_lat'];
+                $testLon = (float) $validated['test_lon'];
+                $testAccuracy = (float) ($validated['test_accuracy'] ?? 15.0);
 
                 $testResult = $this->geofenceService->evaluateGeofence($testLat, $testLon, $testAccuracy, $selectedOutlet);
                 $testResult['outlet'] = $selectedOutlet;
                 $testResult['test_lat'] = $testLat;
                 $testResult['test_lon'] = $testLon;
                 $testResult['test_accuracy'] = $testAccuracy;
+            } else {
+                return redirect()->route('admin.outlets.index')
+                    ->with('error', 'Outlet yang dipilih tidak ditemukan atau berada di luar cakupan izin Anda.');
             }
         }
 
