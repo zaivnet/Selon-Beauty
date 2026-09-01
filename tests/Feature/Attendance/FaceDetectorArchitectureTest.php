@@ -107,4 +107,49 @@ class FaceDetectorArchitectureTest extends TestCase
         $this->assertStringContainsString("url.pathname.startsWith('/attendance')", $worker);
         $this->assertStringContainsString("url.pathname.startsWith('/build/')", $worker);
     }
+
+    public function test_face_detector_observability_and_debug_panel_security(): void
+    {
+        $module = file_get_contents(resource_path('js/attendance-face-detector.js'));
+        $dashboard = file_get_contents(resource_path('views/employee/dashboard.blade.php'));
+        $app = file_get_contents(resource_path('js/app.js'));
+
+        // 1. Diagnostic metrics and methods
+        $this->assertStringContainsString('evaluateFaceAcceptance', $module);
+        $this->assertStringContainsString('getDiagnostics', $module);
+        $this->assertStringContainsString('recordDetectionDiagnostic', $module);
+        $this->assertStringContainsString('window.evaluateAttendanceFaceAcceptance = evaluateFaceAcceptance;', $app);
+
+        // 2. Reject reasons
+        foreach ([
+            'no_detection',
+            'face_too_small',
+            'face_too_far_left',
+            'face_too_far_right',
+            'face_too_high',
+            'face_too_low',
+            'detector_not_ready',
+            'detector_error',
+            'invalid_frame',
+        ] as $reason) {
+            $this->assertStringContainsString($reason, $module);
+        }
+
+        // 3. Relaxed threshold definitions & preserved center constraints
+        $this->assertStringContainsString('DEFAULT_MIN_DETECTION_CONFIDENCE = 0.50', $module);
+        $this->assertStringContainsString('DEFAULT_MIN_WIDTH_RATIO = 0.15', $module);
+        $this->assertStringContainsString('DEFAULT_CENTER_X_MIN = 0.25', $module);
+        $this->assertStringContainsString('DEFAULT_CENTER_X_MAX = 0.75', $module);
+        $this->assertStringContainsString('DEFAULT_CENTER_Y_MIN = 0.20', $module);
+        $this->assertStringContainsString('DEFAULT_CENTER_Y_MAX = 0.80', $module);
+        $this->assertStringContainsString('minDetectionConfidence: DEFAULT_MIN_DETECTION_CONFIDENCE', $module);
+        $this->assertStringContainsString('minSuppressionThreshold: 0.3', $module);
+        $this->assertStringContainsString('min 15%', $dashboard);
+
+        // 4. Debug panel is strictly authorized and disabled by default
+        $this->assertStringContainsString('id="face-debug-panel"', $dashboard);
+        $this->assertStringContainsString('$canViewFaceDebug = (bool)', $dashboard);
+        $this->assertStringContainsString('face_debug', $dashboard);
+        $this->assertStringContainsString('renderFaceDiagnostics', $dashboard);
+    }
 }

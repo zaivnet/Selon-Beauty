@@ -3,6 +3,9 @@
 @section('title', 'Beranda Karyawan')
 
 @section('content')
+@php
+    $canViewFaceDebug = (bool) (config('app.debug') || (auth()->check() && in_array(auth()->user()->role, ['superadmin', 'owner'], true)));
+@endphp
 <div class="space-y-4">
 
     <!-- Flash Alerts -->
@@ -430,6 +433,36 @@
                     </button>
                 </div>
             </div>
+
+            @if($canViewFaceDebug)
+            <!-- Face Detection Diagnostic Panel (Authorized Superadmin / Local Debug only with ?face_debug=1) -->
+            <div id="face-debug-panel" class="hidden text-xs p-3.5 rounded-xl bg-slate-900 text-slate-200 border border-slate-700 shadow-sm font-mono space-y-2">
+                <div class="flex items-center justify-between border-b border-slate-700 pb-1.5 text-[11px] font-bold text-amber-400">
+                    <span>⚡ FACE DETECTOR RUNTIME DIAGNOSTIC</span>
+                    <span id="face-debug-status" class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300">IDLE</span>
+                </div>
+                <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+                    <div><span class="text-slate-400">Backend:</span> <span id="face-debug-backend" class="font-bold text-white">--</span></div>
+                    <div><span class="text-slate-400">Init Status:</span> <span id="face-debug-init" class="font-bold text-white">--</span></div>
+                    <div><span class="text-slate-400">WASM Mode:</span> <span id="face-debug-wasm" class="font-bold text-white">--</span></div>
+                    <div><span class="text-slate-400">Init Duration:</span> <span id="face-debug-init-time" class="font-bold text-white">--</span></div>
+                    <div><span class="text-slate-400">Video Size:</span> <span id="face-debug-video-size" class="font-bold text-white">--</span></div>
+                    <div><span class="text-slate-400">Canvas Size:</span> <span id="face-debug-canvas-size" class="font-bold text-white">--</span></div>
+                    <div><span class="text-slate-400">Detections:</span> <span id="face-debug-detections" class="font-bold text-white">--</span></div>
+                    <div><span class="text-slate-400">Detect Time:</span> <span id="face-debug-detect-time" class="font-bold text-white">--</span></div>
+                    <div><span class="text-slate-400">Confidence:</span> <span id="face-debug-confidence" class="font-bold text-white">--</span></div>
+                    <div><span class="text-slate-400">Width Ratio:</span> <span id="face-debug-width-ratio" class="font-bold text-white">--</span></div>
+                    <div><span class="text-slate-400">Center (X, Y):</span> <span id="face-debug-center" class="font-bold text-white">--</span></div>
+                    <div><span class="text-slate-400">Validation:</span> <span id="face-debug-validation" class="font-bold text-white">--</span></div>
+                </div>
+                <div class="border-t border-slate-800 pt-1.5 text-[10px]">
+                    <span class="text-slate-400">Reject Reason:</span> <span id="face-debug-reason" class="font-bold text-rose-400">none</span>
+                </div>
+                <div id="face-debug-error-box" class="hidden border-t border-slate-800 pt-1 text-[10px] text-rose-300 break-words">
+                    <span class="text-slate-400">Error:</span> <span id="face-debug-error">none</span>
+                </div>
+            </div>
+            @endif
         </div>
         @endif
 
@@ -496,6 +529,74 @@ let faceDetectionInterval = null;
 let cameraError = false;
 let detectorError = false;
 
+const isFaceDebugAuthorized = @json($canViewFaceDebug);
+const isFaceDebugRequested = typeof window !== 'undefined' && (new URLSearchParams(window.location.search).get('face_debug') === '1');
+const showFaceDebugPanel = Boolean(isFaceDebugAuthorized && isFaceDebugRequested);
+
+function renderFaceDiagnostics() {
+    if (!showFaceDebugPanel) return;
+    const panel = document.getElementById('face-debug-panel');
+    if (!panel) return;
+    panel.classList.remove('hidden');
+
+    const diag = facePresenceDetector?.getDiagnostics?.() || null;
+    const last = diag?.lastDetection || null;
+
+    const elBackend = document.getElementById('face-debug-backend');
+    const elInit = document.getElementById('face-debug-init');
+    const elWasm = document.getElementById('face-debug-wasm');
+    const elInitTime = document.getElementById('face-debug-init-time');
+    const elVideoSize = document.getElementById('face-debug-video-size');
+    const elCanvasSize = document.getElementById('face-debug-canvas-size');
+    const elDetections = document.getElementById('face-debug-detections');
+    const elDetectTime = document.getElementById('face-debug-detect-time');
+    const elConfidence = document.getElementById('face-debug-confidence');
+    const elWidthRatio = document.getElementById('face-debug-width-ratio');
+    const elCenter = document.getElementById('face-debug-center');
+    const elValidation = document.getElementById('face-debug-validation');
+    const elReason = document.getElementById('face-debug-reason');
+    const elStatus = document.getElementById('face-debug-status');
+    const elError = document.getElementById('face-debug-error');
+    const elErrorBox = document.getElementById('face-debug-error-box');
+
+    if (elBackend) elBackend.textContent = diag ? (diag.backend || 'none') : (window.FaceDetector ? 'native (avail)' : 'none');
+    if (elInit) elInit.textContent = diag ? `${diag.initStatus} (${diag.initDurationMs}ms)` : (faceDetectorReady ? 'ready' : 'uninitialized');
+    if (elWasm) elWasm.textContent = diag?.wasmType ? diag.wasmType.toUpperCase() : (diag?.backend === 'native' ? 'NATIVE-API' : 'NONE');
+    if (elInitTime) elInitTime.textContent = diag?.initDurationMs ? `${diag.initDurationMs}ms` : '--';
+
+    if (last) {
+        if (elVideoSize) elVideoSize.textContent = `${last.sourceDimensions.width}x${last.sourceDimensions.height}`;
+        if (elCanvasSize) elCanvasSize.textContent = `${last.canvasDimensions.width}x${last.canvasDimensions.height}`;
+        if (elDetections) elDetections.textContent = `${last.rawDetectionCount} face(s)`;
+        if (elDetectTime) elDetectTime.textContent = `${last.durationMs}ms`;
+        if (elConfidence) elConfidence.textContent = last.rawConfidence !== null ? `${(last.rawConfidence * 100).toFixed(1)}%` : 'N/A (native)';
+
+        const m = last.bestFaceMetrics;
+        if (elWidthRatio) elWidthRatio.textContent = m ? `${(m.widthRatio * 100).toFixed(1)}% (min 15%)` : '--';
+        if (elCenter) elCenter.textContent = m ? `${(m.centerXRatio * 100).toFixed(0)}%, ${(m.centerYRatio * 100).toFixed(0)}%` : '--';
+
+        if (elValidation) {
+            elValidation.textContent = last.validationResult;
+            elValidation.className = last.validationResult === 'PASS' ? 'font-bold text-emerald-400' : 'font-bold text-rose-400';
+        }
+        if (elStatus) {
+            elStatus.textContent = last.validationResult;
+            elStatus.className = last.validationResult === 'PASS' ? 'px-2 py-0.5 rounded text-[10px] bg-emerald-950 text-emerald-300' : 'px-2 py-0.5 rounded text-[10px] bg-rose-950 text-rose-300';
+        }
+        if (elReason) {
+            elReason.textContent = last.rejectReason;
+            elReason.className = last.rejectReason === 'none' ? 'font-bold text-emerald-400' : 'font-bold text-rose-400';
+        }
+
+        if (last.lastError) {
+            if (elErrorBox) elErrorBox.classList.remove('hidden');
+            if (elError) elError.textContent = last.lastError;
+        } else if (elErrorBox) {
+            elErrorBox.classList.add('hidden');
+        }
+    }
+}
+
 function updateFaceIndicator(state, diagnosticCode = null) {
     const indicator = document.getElementById('face-detection-indicator');
     const dot = document.getElementById('face-indicator-dot');
@@ -529,17 +630,20 @@ async function initFacePresenceDetector() {
     faceValid = false;
     detectorError = false;
     updateFaceIndicator('loading');
+    renderFaceDiagnostics();
     try {
         facePresenceDetector?.destroy();
         facePresenceDetector = new window.AttendanceFaceDetector();
         await facePresenceDetector.init();
         faceDetectorReady = true;
         updateFaceIndicator('missing');
+        renderFaceDiagnostics();
         return true;
     } catch (error) {
         facePresenceDetector = null;
         detectorError = error?.code || 'FD-UNKNOWN';
         updateFaceIndicator('error', detectorError);
+        renderFaceDiagnostics();
         const statusText = document.getElementById('camera-status-text');
         if (statusText) statusText.innerText = `Deteksi wajah bermasalah. [${detectorError}] Coba tutup dan buka kembali kamera.`;
         return false;
@@ -557,13 +661,16 @@ async function detectValidFace(source, waitForCurrent = false, mode = 'video') {
     activeFaceDetectionPromise = facePresenceDetector.detect(source, mode);
     try {
         const result = await activeFaceDetectionPromise;
-        return window.hasAcceptableAttendanceFace(result);
+        const valid = window.hasAcceptableAttendanceFace(result);
+        renderFaceDiagnostics();
+        return valid;
     } catch (error) {
         faceDetectorReady = false;
         faceValid = false;
         detectorError = error?.code || 'FD-INFERENCE';
         stopFaceDetection();
         updateFaceIndicator('error', detectorError);
+        renderFaceDiagnostics();
         const statusText = document.getElementById('camera-status-text');
         if (statusText) statusText.innerText = `Deteksi wajah bermasalah. [${detectorError}] Coba tutup dan buka kembali kamera.`;
         return false;
@@ -576,6 +683,7 @@ async function checkLiveFace(video) {
     if (!video || video.readyState < 2) return;
     faceValid = await detectValidFace(video);
     updateFaceIndicator(faceValid ? 'detected' : (faceDetectorReady ? 'missing' : 'error'), detectorError || null);
+    renderFaceDiagnostics();
     evaluateCaptureButton();
 }
 

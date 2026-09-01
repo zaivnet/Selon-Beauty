@@ -1,7 +1,8 @@
-import { AttendanceFaceDetector, hasAcceptableFace } from './attendance-face-detector';
+import { AttendanceFaceDetector, hasAcceptableFace, evaluateFaceAcceptance } from './attendance-face-detector';
 
 window.AttendanceFaceDetector = AttendanceFaceDetector;
 window.hasAcceptableAttendanceFace = hasAcceptableFace;
+window.evaluateAttendanceFaceAcceptance = evaluateFaceAcceptance;
 
 /* ==========================================================================
    UI Performance & Transitions (Sprint 07)
