@@ -11,6 +11,12 @@ class OutletManagementTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        \App\Models\AppSetting::set('outlet_mode', \App\Services\OutletModeService::MODE_MULTI, 'string', false);
+    }
+
     public function test_superadmin_can_view_outlets_list(): void
     {
         $superadmin = User::factory()->create(['role' => 'superadmin', 'is_active' => true]);

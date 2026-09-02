@@ -248,7 +248,7 @@
                     </div>
                 </div>
 
-                @if(count($assignableRoles) > 1)
+                @if(count($assignableRoles) > 1 && app(\App\Services\OutletModeService::class)->isMultiOutlet())
                     @include('admin.employees._admin-outlet-access', [
                         'selectedMode' => $employee->user?->outlet_access_mode ?? 'selected',
                         'selectedIds' => $employee->user?->assignedOutlets?->pluck('id')->all() ?? [],

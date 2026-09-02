@@ -55,6 +55,47 @@
             @csrf
 
             <div class="space-y-6">
+                <!-- Mode Operasional Outlet (Superadmin / Owner Only) -->
+                @if(in_array(Auth::user()?->role, ['superadmin', 'owner'], true))
+                    <div>
+                        <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                            Mode Operasional Outlet <span class="text-rose-500">*</span>
+                        </label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+                            <!-- Single Outlet Card -->
+                            <label class="relative flex flex-col p-4 rounded-xl border cursor-pointer transition-all {{ $settings['outlet_mode'] === 'single' ? 'border-rose-500 bg-rose-50/30 dark:bg-rose-950/20 ring-2 ring-rose-500/20' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 hover:border-slate-300 dark:hover:border-slate-700' }}">
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <span class="text-xs font-black text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                                        🏢 Single Outlet
+                                    </span>
+                                    <input type="radio" name="outlet_mode" value="single" {{ $settings['outlet_mode'] === 'single' ? 'checked' : '' }} class="w-4 h-4 text-rose-600 focus:ring-rose-500 border-slate-300 dark:border-slate-700">
+                                </div>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                                    Aplikasi menggunakan <strong>satu lokasi operasional utama</strong>. Seluruh filter dan menu transfer multi-cabang disederhanakan.
+                                </p>
+                            </label>
+
+                            <!-- Multi Outlet Card -->
+                            <label class="relative flex flex-col p-4 rounded-xl border cursor-pointer transition-all {{ $settings['outlet_mode'] === 'multi' ? 'border-rose-500 bg-rose-50/30 dark:bg-rose-950/20 ring-2 ring-rose-500/20' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 hover:border-slate-300 dark:hover:border-slate-700' }}">
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <span class="text-xs font-black text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                                        🌐 Multi Outlet (Pusat & Cabang)
+                                    </span>
+                                    <input type="radio" name="outlet_mode" value="multi" {{ $settings['outlet_mode'] === 'multi' ? 'checked' : '' }} class="w-4 h-4 text-rose-600 focus:ring-rose-500 border-slate-300 dark:border-slate-700">
+                                </div>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                                    Aplikasi dapat <strong>mengelola beberapa cabang outlet</strong>, jadwal piket terpisah, rotasi transfer karyawan, dan hak akses admin per outlet.
+                                </p>
+                            </label>
+                        </div>
+                        <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-2">
+                            Catatan: Beralih ke Single Outlet memerlukan hanya ada 1 outlet aktif dan tidak ada karyawan/jadwal yang terikat ke cabang lain.
+                        </p>
+                    </div>
+
+                    <hr class="border-slate-200/80 dark:border-slate-800">
+                @endif
+
                 <!-- Timezone -->
                 <div>
                     <label for="timezone" class="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">

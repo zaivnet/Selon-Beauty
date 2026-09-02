@@ -1,6 +1,7 @@
 @php
     $selectedMode = old('outlet_access_mode', $selectedMode ?? 'selected');
-    $selectedIds = collect(old('assigned_outlet_ids', $selectedIds ?? []))->map(fn ($id) => (int) $id)->all();
+    $rawSelectedIds = old('assigned_outlet_ids', $selectedIds ?? []);
+    $selectedIds = is_array($rawSelectedIds) ? array_map('intval', $rawSelectedIds) : collect($rawSelectedIds)->map(fn ($id) => (int) $id)->all();
 @endphp
 
 <section id="admin-outlet-access-section" class="hidden rounded-xl border border-rose-200 bg-white p-4 dark:border-rose-900/60 dark:bg-slate-900">

@@ -18,7 +18,7 @@
                 @endif
             </p>
         </div>
-        @if(in_array(Auth::user()?->role, ['superadmin', 'owner'], true))
+        @if(in_array(Auth::user()?->role, ['superadmin', 'owner'], true) && app(\App\Services\OutletModeService::class)->isMultiOutlet())
             <div>
                 <a href="{{ route('admin.outlets.create') }}" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-bold rounded-xl shadow-lg shadow-rose-500/25 transition-all cursor-pointer ui-btn ui-btn-primary">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -251,7 +251,7 @@
                                 </div>
                             </td>
                             <td class="py-4 px-4 text-center whitespace-nowrap">
-                                @if(in_array(Auth::user()?->role, ['superadmin', 'owner'], true))
+                                @if(in_array(Auth::user()?->role, ['superadmin', 'owner'], true) && app(\App\Services\OutletModeService::class)->isMultiOutlet())
                                     <form action="{{ route('admin.outlets.toggle-status', $outlet) }}" method="POST" class="inline-block">
                                         @csrf
                                         <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black cursor-pointer transition-all border {{ $outlet->is_active ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-100' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-200' }}">
@@ -271,7 +271,7 @@
                                     <a href="{{ route('admin.outlets.edit', $outlet) }}" class="p-2 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer" title="Edit Outlet">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                     </a>
-                                    @if(in_array(Auth::user()?->role, ['superadmin', 'owner'], true) && $outlet->code !== 'PUSAT')
+                                    @if(in_array(Auth::user()?->role, ['superadmin', 'owner'], true) && $outlet->code !== 'PUSAT' && app(\App\Services\OutletModeService::class)->isMultiOutlet())
                                         <form action="{{ route('admin.outlets.destroy', $outlet) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus outlet {{ $outlet->name }}?')" class="inline-block">
                                             @csrf
                                             @method('DELETE')

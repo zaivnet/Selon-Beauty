@@ -62,11 +62,11 @@
                 <!-- Initial Home Outlet -->
                 <div>
                     <label for="outlet_id" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Home Outlet *</label>
-                    @if(Auth::user()->role === 'admin' && $adminOutlet)
+                    @if(app(\App\Services\OutletModeService::class)->isSingleOutlet() || (Auth::user()->role === 'admin' && $adminOutlet))
                         <div class="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold flex items-center gap-2">
                             <svg class="w-4 h-4 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h4m-4 0V11a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002-2v-2a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 002 2"/></svg>
-                            <span>{{ $adminOutlet?->name ?? 'Outlet Admin' }} ({{ $adminOutlet?->code ?? 'PUSAT' }})</span>
-                            <span class="text-[10px] font-normal text-slate-500 ml-auto">(Otomatis mengikuti Admin)</span>
+                            <span>{{ $adminOutlet?->name ?? 'Outlet Utama' }} ({{ $adminOutlet?->code ?? 'PUSAT' }})</span>
+                            <span class="text-[10px] font-normal text-slate-500 ml-auto">(Otomatis)</span>
                         </div>
                         <input type="hidden" name="outlet_id" value="{{ $adminOutlet?->id }}">
                     @else
@@ -79,7 +79,7 @@
                     @error('outlet_id')
                         <p class="text-xs text-rose-600 dark:text-rose-400 font-semibold mt-1">{{ $message }}</p>
                     @enderror
-                    <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1.5">Home Outlet awal karyawan. Pemindahan permanen setelah data dibuat harus menggunakan fitur Pindah Outlet.</p>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1.5">Home Outlet awal karyawan.</p>
                 </div>
 
                 <!-- Jabatan (Posisi Pekerjaan) -->
@@ -209,7 +209,7 @@
                     </div>
                 </div>
 
-                @if(count($assignableRoles) > 1)
+                @if(count($assignableRoles) > 1 && app(\App\Services\OutletModeService::class)->isMultiOutlet())
                     @include('admin.employees._admin-outlet-access', ['selectedMode' => 'selected', 'selectedIds' => []])
                 @endif
             </div>

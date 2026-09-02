@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Outlet;
 use App\Models\User;
 use App\Services\GeofenceService;
+use App\Services\OutletModeService;
 use App\Services\OutletScopeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,6 +17,7 @@ class OutletController extends Controller
     public function __construct(
         protected OutletScopeService $outletScopeService,
         protected GeofenceService $geofenceService,
+        protected OutletModeService $outletModeService,
     ) {}
 
     public function index(Request $request)
@@ -86,12 +88,22 @@ class OutletController extends Controller
     {
         $this->ensureGlobalScope($request);
 
+        if ($this->outletModeService->isSingleOutlet()) {
+            return redirect()->route('admin.outlets.index')
+                ->with('error', 'Aplikasi berada dalam Mode Single Outlet. Tidak dapat menambah outlet baru.');
+        }
+
         return view('admin.outlets.create');
     }
 
     public function store(Request $request): RedirectResponse
     {
         $this->ensureGlobalScope($request);
+
+        if ($this->outletModeService->isSingleOutlet()) {
+            return redirect()->route('admin.outlets.index')
+                ->with('error', 'Aplikasi berada dalam Mode Single Outlet. Tidak dapat menambah outlet baru.');
+        }
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:150'],
@@ -200,6 +212,11 @@ class OutletController extends Controller
     {
         $this->ensureGlobalScope($request);
 
+        if ($this->outletModeService->isSingleOutlet()) {
+            return redirect()->back()
+                ->with('error', 'Aplikasi berada dalam Mode Single Outlet. Status operasional outlet tunggal tidak dapat dinonaktifkan.');
+        }
+
         $newStatus = ! $outlet->is_active;
 
         if (! $newStatus) {
@@ -228,6 +245,11 @@ class OutletController extends Controller
     public function destroy(Request $request, Outlet $outlet): RedirectResponse
     {
         $this->ensureGlobalScope($request);
+
+        if ($this->outletModeService->isSingleOutlet()) {
+            return redirect()->back()
+                ->with('error', 'Aplikasi berada dalam Mode Single Outlet. Outlet operasional utama tidak dapat dihapus.');
+        }
 
         $activeEmployeesCount = $outlet->employees()->where('status', 'active')->count();
         if ($activeEmployeesCount > 0) {

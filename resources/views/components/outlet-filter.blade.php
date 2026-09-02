@@ -1,11 +1,12 @@
 @php
     $actor = Auth::user();
     $outletScopeService = app(\App\Services\OutletScopeService::class);
+    $outletModeService = app(\App\Services\OutletModeService::class);
     $isGlobal = $actor ? $outletScopeService->isGlobalScope($actor) : false;
     $inputOutletId = request()->has('outlet_id') ? (int) request('outlet_id') : null;
     $activeOutletId = $actor ? $outletScopeService->resolveRequestedOutlet($actor, $inputOutletId) : null;
     $activeOutlets = $actor ? $outletScopeService->getAuthorizedActiveOutlets($actor) : collect();
-    $canSelect = $isGlobal || ($actor?->role === 'admin' && $activeOutlets->count() > 1);
+    $canSelect = $outletModeService->isMultiOutlet() && ($isGlobal || ($actor?->role === 'admin' && $activeOutlets->count() > 1));
     $activeOutlet = $activeOutletId ? $activeOutlets->firstWhere('id', $activeOutletId) : null;
 @endphp
 

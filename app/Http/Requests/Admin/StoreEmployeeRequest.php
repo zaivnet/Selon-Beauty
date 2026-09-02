@@ -18,6 +18,15 @@ class StoreEmployeeRequest extends FormRequest
                 'email' => strtolower(trim((string) $this->email)),
             ]);
         }
+
+        if (app(\App\Services\OutletModeService::class)->isSingleOutlet()) {
+            $singleOutlet = app(\App\Services\OutletModeService::class)->getSingleOperationalOutlet();
+            if ($singleOutlet) {
+                $this->merge([
+                    'outlet_id' => $singleOutlet->id,
+                ]);
+            }
+        }
     }
 
     public function rules(): array

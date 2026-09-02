@@ -123,13 +123,15 @@
                         @foreach($activeShifts as $shift)<option value="{{ $shift->id }}" @selected(old('shift_id') == $shift->id)>{{ $shift->name }} · {{ substr($shift->start_time, 0, 5) }}–{{ substr($shift->end_time, 0, 5) }}</option>@endforeach
                     </select>
                 </div>
-                <div x-show="overrideType === 'work'" x-cloak>
-                    <label for="override_work_outlet_id" class="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-300">Outlet Kerja *</label>
-                    <select id="override_work_outlet_id" name="work_outlet_id" :required="overrideType === 'work'" class="min-h-[44px] w-full min-w-0 rounded-xl border border-slate-600 bg-slate-800 px-3 text-xs text-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30">
-                        <option value="">Pilih Outlet Kerja</option>
-                        @foreach($workOutlets as $outlet)<option value="{{ $outlet->id }}" @selected(old('work_outlet_id') == $outlet->id)>{{ $outlet->name }}</option>@endforeach
-                    </select>
-                </div>
+                @if(app(\App\Services\OutletModeService::class)->isMultiOutlet())
+                    <div x-show="overrideType === 'work'" x-cloak>
+                        <label for="override_work_outlet_id" class="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-300">Outlet Kerja *</label>
+                        <select id="override_work_outlet_id" name="work_outlet_id" :required="overrideType === 'work'" class="min-h-[44px] w-full min-w-0 rounded-xl border border-slate-600 bg-slate-800 px-3 text-xs text-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30">
+                            <option value="">Pilih Outlet Kerja</option>
+                            @foreach($workOutlets as $outlet)<option value="{{ $outlet->id }}" @selected(old('work_outlet_id') == $outlet->id)>{{ $outlet->name }}</option>@endforeach
+                        </select>
+                    </div>
+                @endif
                 <div>
                     <label for="override_reason" class="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-300">Alasan *</label>
                     <textarea id="override_reason" name="reason" rows="2" minlength="5" maxlength="1000" required class="w-full min-w-0 rounded-xl border border-slate-600 bg-slate-800 px-3.5 py-3 text-xs text-white placeholder:text-slate-500 focus:border-rose-400 focus:ring-2 focus:ring-rose-400/30" placeholder="Minimal 5 karakter">{{ old('reason') }}</textarea>

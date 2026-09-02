@@ -13,6 +13,7 @@ use App\Services\AdminOutletAccessService;
 use App\Services\AttendanceParticipationService;
 use App\Services\EmployeeService;
 use App\Services\EmployeeTransferService;
+use App\Services\OutletModeService;
 use App\Services\OutletScopeService;
 use App\Services\UserRoleService;
 use Illuminate\Database\QueryException;
@@ -31,6 +32,7 @@ class EmployeeController extends Controller
         protected UserRoleService $userRoleService,
         protected OutletScopeService $outletScopeService,
         protected EmployeeTransferService $transferService,
+        protected OutletModeService $outletModeService,
     ) {}
 
     public function index(Request $request): View
@@ -70,9 +72,9 @@ class EmployeeController extends Controller
         $jobTitles = JobTitle::where('is_active', true)->orderBy('name')->get();
         $outlets = $this->outletScopeService->getAuthorizedActiveOutlets($request->user());
         $assignableRoles = UserRole::getAssignableRoles($request->user()->role);
-        $adminOutlet = ! $this->outletScopeService->isGlobalScope($request->user()) && $outlets->count() === 1
-            ? $outlets->first()
-            : null;
+        $adminOutlet = $this->outletModeService->isSingleOutlet()
+            ? $this->outletModeService->getSingleOperationalOutlet()
+            : (! $this->outletScopeService->isGlobalScope($request->user()) && $outlets->count() === 1 ? $outlets->first() : null);
 
         return view('admin.employees.create', compact('suggestedCode', 'jobTitles', 'outlets', 'assignableRoles', 'adminOutlet'));
     }
@@ -89,7 +91,12 @@ class EmployeeController extends Controller
             ? UserRole::EMPLOYEE->value
             : $request->input('role', UserRole::EMPLOYEE->value);
 
-        if ($actorRole === UserRole::ADMIN->value) {
+        if ($this->outletModeService->isSingleOutlet()) {
+            $singleOutlet = $this->outletModeService->getSingleOperationalOutlet();
+            if ($singleOutlet) {
+                $validated['outlet_id'] = $singleOutlet->id;
+            }
+        } elseif ($actorRole === UserRole::ADMIN->value) {
             $allowedOutletIds = $this->outletScopeService->allowedOutletIds($request->user());
             $requestedOutletId = isset($validated['outlet_id']) ? (int) $validated['outlet_id'] : null;
 
@@ -171,7 +178,8 @@ class EmployeeController extends Controller
             'outletTransfers.transferredBy',
         ]);
 
-        $canTransfer = $this->outletScopeService->isGlobalScope($request->user());
+        $canTransfer = $this->outletModeService->isMultiOutlet()
+            && $this->outletScopeService->isGlobalScope($request->user());
         $availableOutlets = $canTransfer
             ? Outlet::where('is_active', true)->where('id', '!=', $employee->outlet_id)->orderBy('name')->get()
             : collect();
@@ -375,6 +383,11 @@ class EmployeeController extends Controller
     public function transfer(Request $request, Employee $employee): RedirectResponse
     {
         $this->outletScopeService->ensureCanManageEmployee($request->user(), $employee);
+
+        if ($this->outletModeService->isSingleOutlet()) {
+            return redirect()->back()
+                ->with('error', 'Aplikasi berada dalam Mode Single Outlet. Fitur pemindahan outlet tidak tersedia.');
+        }
 
         $validated = $request->validate([
             'destination_outlet_id' => ['required', 'integer', 'exists:outlets,id'],

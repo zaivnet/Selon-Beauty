@@ -80,7 +80,13 @@ git stash pop
 /home/adezaivm/bin/php84-attendance artisan migrate --force
 
 # -------------------------------------------------------------
-# 8. Rebuild Application Caches
+# 8. Initialize Operational Settings (Required for v1.1.0+)
+# -------------------------------------------------------------
+# Idempotently establishes initial outlet_mode ('multi' or 'single') in app_settings
+/home/adezaivm/bin/php84-attendance artisan app:init-outlet-mode
+
+# -------------------------------------------------------------
+# 9. Rebuild Application Caches
 # -------------------------------------------------------------
 /home/adezaivm/bin/php84-attendance artisan optimize:clear
 /home/adezaivm/bin/php84-attendance artisan config:cache
@@ -88,7 +94,7 @@ git stash pop
 /home/adezaivm/bin/php84-attendance artisan view:cache
 
 # -------------------------------------------------------------
-# 9. Verify Post-Upgrade Status
+# 10. Verify Post-Upgrade Status
 # -------------------------------------------------------------
 git log -1 --oneline
 git status
