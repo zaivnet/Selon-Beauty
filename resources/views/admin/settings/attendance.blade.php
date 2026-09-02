@@ -105,5 +105,20 @@
         </form>
     </div>
 
+    <!-- System Version Info Card -->
+    <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+        <div class="flex items-center gap-2">
+            <span class="font-bold text-slate-700 dark:text-slate-300">{{ $branding['company_name'] ?? config('app.name', 'Selon Beauty') }}</span>
+            <span>&bull;</span>
+            <span>Sistem Presensi & Operasional</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-[11px] font-semibold text-slate-400">Rilis Aplikasi:</span>
+            <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono font-bold text-slate-800 dark:text-slate-200 text-[11px]">
+                Versi {{ config('app.version', '1.0.0') }}
+            </span>
+        </div>
+    </div>
+
 </div>
 @endsection

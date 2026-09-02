@@ -17,6 +17,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Version
+    |--------------------------------------------------------------------------
+    |
+    | This value determines the current release version of the application.
+    | It is resolved from the VERSION file in the project root.
+    |
+    */
+
+    'version' => env('APP_VERSION', \App\Services\AppVersionService::getVersion()),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

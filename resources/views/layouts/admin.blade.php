@@ -509,6 +509,11 @@
         <main class="flex-1 p-4 md:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6 bg-slate-100 dark:bg-slate-950 transition-colors">
             @yield('content')
         </main>
+
+        <!-- Admin Footer -->
+        <footer class="py-4 px-6 text-center text-xs font-semibold text-slate-400 dark:text-slate-500 border-t border-slate-200/80 dark:border-slate-800/80">
+            <span>{{ $branding['company_name'] ?? config('app.name', 'Selon Beauty') }}</span> &bull; <span>Versi {{ config('app.version', '1.0.0') }}</span>
+        </footer>
     </div>
 
 </body>
