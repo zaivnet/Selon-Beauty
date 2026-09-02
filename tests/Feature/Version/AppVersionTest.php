@@ -17,7 +17,7 @@ class AppVersionTest extends TestCase
         $this->assertFileExists($versionFile);
 
         $content = trim((string) file_get_contents($versionFile));
-        $this->assertEquals('1.0.0', $content);
+        $this->assertEquals('1.1.0', $content);
         $this->assertMatchesRegularExpression('/^\d+\.\d+\.\d+(-[a-zA-Z0-9.]+)?$/', $content);
     }
 
@@ -26,13 +26,13 @@ class AppVersionTest extends TestCase
         AppVersionService::clearCache();
         $version = AppVersionService::getVersion();
 
-        $this->assertEquals('1.0.0', $version);
-        $this->assertEquals('1.0.0', (new AppVersionService)->version());
+        $this->assertEquals('1.1.0', $version);
+        $this->assertEquals('1.1.0', (new AppVersionService)->version());
     }
 
     public function test_config_app_version_matches_service_version(): void
     {
-        $this->assertEquals('1.0.0', config('app.version'));
+        $this->assertEquals('1.1.0', config('app.version'));
     }
 
     public function test_admin_pages_render_application_version(): void
@@ -45,10 +45,10 @@ class AppVersionTest extends TestCase
         $response = $this->actingAs($superadmin)->get(route('admin.dashboard'));
 
         $response->assertStatus(200);
-        $response->assertSee('Versi 1.0.0');
+        $response->assertSee('Versi 1.1.0');
 
         $settingsResponse = $this->actingAs($superadmin)->get(route('admin.settings.attendance'));
         $settingsResponse->assertStatus(200);
-        $settingsResponse->assertSee('Versi 1.0.0');
+        $settingsResponse->assertSee('Versi 1.1.0');
     }
 }

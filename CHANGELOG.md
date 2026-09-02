@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-09-02
+
+### Added
+- Single Outlet and Multi Outlet operating modes.
+- Centralized `OutletModeService` capability management.
+- Safe explicit outlet mode initialization command (`php artisan app:init-outlet-mode`).
+- Single Outlet UI simplification across administrative navigation and management views.
+- Automatic HOME Outlet binding for new employees in Single Mode.
+- Server-side capability guards preventing second-outlet creation in Single Mode.
+- Outlet Mode management for Owner and Superadmin roles.
+- Upgrade compatibility test coverage from v1.0.0 to v1.1.0.
+
+### Changed
+- Existing installations with multiple active outlets initialize as Multi Outlet.
+- Existing installations with exactly one active outlet initialize as Single Outlet.
+- Multi-outlet-only controls are hidden when operating in Single Outlet mode.
+- Reports, schedules, employee management, and outlet filters adapt dynamically to the selected operating mode.
+- Outlet mode resolution is centralized and side-effect-free during normal reads.
+
+### Data Safety
+- No database schema migration was introduced.
+- No employee outlet IDs are rewritten.
+- Attendance outlet snapshots remain unchanged.
+- Transfer history remains unchanged.
+- Schedule WORK outlet history remains unchanged.
+- Geofence coordinates/radius remain unchanged.
+- Single → Multi transition requires no data migration.
+- Multi → Single transition is protected by server-side blockers.
+
 ## [1.0.0] - 2026-09-02
 
 ### Added
