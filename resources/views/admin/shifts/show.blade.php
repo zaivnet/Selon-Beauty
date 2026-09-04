@@ -78,6 +78,26 @@
             </div>
         </div>
 
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div>
+                <span class="font-bold text-slate-800 dark:text-slate-200 block uppercase tracking-wider text-[11px]">Automatic Shift Checkout:</span>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    @if($shift->auto_checkout_enabled)
+                        Otomatis checkout setelah <strong>{{ $shift->auto_checkout_grace_minutes }} menit</strong> dari jam selesai shift ({{ $shift->auto_checkout_grace_minutes == 0 ? 'Tepat saat shift selesai' : '+'.$shift->auto_checkout_grace_minutes.' menit' }}).
+                    @else
+                        Fitur checkout otomatis dinonaktifkan untuk shift ini.
+                    @endif
+                </p>
+            </div>
+            <div>
+                @if($shift->auto_checkout_enabled)
+                    <span class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-bold text-[10px] rounded-full">Aktif ({{ $shift->auto_checkout_grace_minutes }}m)</span>
+                @else
+                    <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 font-bold text-[10px] rounded-full">Nonaktif</span>
+                @endif
+            </div>
+        </div>
+
         <div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
             <form action="{{ route('admin.shifts.destroy', $shift) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus shift ini?')">
                 @csrf

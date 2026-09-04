@@ -38,6 +38,8 @@ class UpdateShiftRequest extends FormRequest
             'check_in_close_minutes_after' => ['required', 'integer', 'min:0', 'max:480'],
             'check_out_open_minutes_before' => ['required', 'integer', 'min:0', 'max:480'],
             'break_minutes' => ['required', 'integer', 'min:0', 'max:480'],
+            'auto_checkout_enabled' => ['nullable', 'boolean'],
+            'auto_checkout_grace_minutes' => ['nullable', 'integer', 'min:0', 'max:180'],
             'is_active' => ['nullable', 'boolean'],
         ];
     }

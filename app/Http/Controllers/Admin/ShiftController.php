@@ -49,6 +49,8 @@ class ShiftController extends Controller
         $startTime = $validated['start_time'];
         $endTime = $validated['end_time'];
         $validated['crosses_midnight'] = ($endTime < $startTime);
+        $validated['auto_checkout_enabled'] = $request->boolean('auto_checkout_enabled', true);
+        $validated['auto_checkout_grace_minutes'] = (int) ($validated['auto_checkout_grace_minutes'] ?? 10);
         $validated['is_active'] = $request->boolean('is_active', true);
 
         $shift = Shift::create($validated);
@@ -74,6 +76,8 @@ class ShiftController extends Controller
         $startTime = $validated['start_time'];
         $endTime = $validated['end_time'];
         $validated['crosses_midnight'] = ($endTime < $startTime);
+        $validated['auto_checkout_enabled'] = $request->boolean('auto_checkout_enabled', false);
+        $validated['auto_checkout_grace_minutes'] = (int) ($validated['auto_checkout_grace_minutes'] ?? 10);
         $validated['is_active'] = $request->boolean('is_active', $shift->is_active);
 
         $shift->update($validated);

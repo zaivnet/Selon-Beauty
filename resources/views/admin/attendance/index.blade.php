@@ -161,6 +161,9 @@
                                 </td>
                                 <td class="py-3.5 px-4 font-mono font-bold text-slate-800 dark:text-slate-200">
                                     {{ $rec?->check_out_at ? $rec->check_out_at->format('H:i') : '--:--' }}
+                                    @if($rec && $rec->checkout_source === 'auto_shift_end')
+                                        <span class="block text-[9px] font-extrabold text-indigo-600 dark:text-indigo-400 font-sans">Auto</span>
+                                    @endif
                                 </td>
                                 <td class="py-3.5 px-4">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border {{ $item['badge_class'] }}">
@@ -245,6 +248,9 @@
                             <div>
                                 <span class="text-[10px] text-slate-400 dark:text-slate-500 font-normal block font-sans">Keluar</span>
                                 <span class="font-extrabold text-slate-900 dark:text-slate-100">{{ $rec?->check_out_at ? $rec->check_out_at->format('H:i') : '--:--' }}</span>
+                                @if($rec && $rec->checkout_source === 'auto_shift_end')
+                                    <span class="block text-[9px] font-extrabold text-indigo-600 dark:text-indigo-400 font-sans">Auto</span>
+                                @endif
                             </div>
                         </div>
 
@@ -365,7 +371,10 @@ async function showAttendanceDetail(recordId) {
                         <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                         <span>Bukti Check-Out (Pulang)</span>
                     </span>
-                    <span class="font-mono font-bold text-indigo-800 dark:text-indigo-300">${data.check_out_at ? new Date(data.check_out_at).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}) + ' WIB' : '--:--'}</span>
+                    <span class="font-mono font-bold text-indigo-800 dark:text-indigo-300">
+                        ${data.check_out_at ? new Date(data.check_out_at).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}) + ' WIB' : '--:--'}
+                        ${data.checkout_source === 'auto_shift_end' ? '<span class="ml-1 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300">Auto Checkout</span>' : ''}
+                    </span>
                 </div>
 
                 <div class="flex items-center gap-3">

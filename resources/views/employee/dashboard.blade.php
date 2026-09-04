@@ -236,7 +236,13 @@
 
                         <div class="flex-1">
                             <div class="flex items-center justify-between">
-                                <span class="text-xs font-extrabold text-indigo-900 dark:text-indigo-200">✓ Absen Pulang Berhasil</span>
+                                <span class="text-xs font-extrabold text-indigo-900 dark:text-indigo-200">
+                                    @if($todayAttendance->checkout_source === 'auto_shift_end')
+                                        ⚡ Checkout Otomatis Sistem
+                                    @else
+                                        ✓ Absen Pulang Berhasil
+                                    @endif
+                                </span>
                                 <span class="text-xs font-mono font-bold text-indigo-800 dark:text-indigo-300">{{ $todayAttendance->check_out_at?->format('H:i') }} WIB</span>
                             </div>
                             <p class="text-[11px] text-indigo-700 dark:text-indigo-400 mt-0.5 font-medium">

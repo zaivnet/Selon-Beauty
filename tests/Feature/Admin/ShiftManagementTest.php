@@ -60,8 +60,31 @@ class ShiftManagementTest extends TestCase
             'end_time' => '17:00',
             'grace_period_minutes' => 10,
             'crosses_midnight' => false,
+            'auto_checkout_enabled' => true,
+            'auto_checkout_grace_minutes' => 10,
             'is_active' => true,
         ]);
+    }
+
+    public function test_shift_creation_defaults_auto_checkout_to_true_and_grace_to_10(): void
+    {
+        $response = $this->actingAs($this->owner)->post('/admin/shifts', [
+            'name' => 'Shift Default Auto',
+            'code' => 'DEFAUTO',
+            'start_time' => '08:00',
+            'end_time' => '16:00',
+            'grace_period_minutes' => 5,
+            'check_in_open_minutes_before' => 60,
+            'check_in_close_minutes_after' => 120,
+            'check_out_open_minutes_before' => 60,
+            'break_minutes' => 60,
+        ]);
+
+        $response->assertRedirect('/admin/shifts');
+
+        $shift = Shift::where('code', 'DEFAUTO')->firstOrFail();
+        $this->assertTrue((bool) $shift->auto_checkout_enabled);
+        $this->assertEquals(10, $shift->auto_checkout_grace_minutes);
     }
 
     public function test_shift_code_must_be_unique(): void

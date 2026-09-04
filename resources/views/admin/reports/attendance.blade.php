@@ -343,6 +343,9 @@
                                 <!-- Jam Pulang -->
                                 <td class="px-4 py-3.5 whitespace-nowrap font-mono font-semibold text-slate-800 dark:text-slate-200">
                                     {{ $checkOutAt ? $checkOutAt->format('H:i') : '-' }}
+                                    @if(($row['checkout_source'] ?? $row['attendance']?->checkout_source) === 'auto_shift_end')
+                                        <span class="block text-[9px] font-extrabold text-indigo-600 dark:text-indigo-400 font-sans">Auto</span>
+                                    @endif
                                 </td>
 
                                 <!-- Status Badge -->

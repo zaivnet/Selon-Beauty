@@ -15,3 +15,8 @@ Schedule::call(function () {
     ->everyMinute()
     ->withoutOverlapping()
     ->timezone('Asia/Jakarta');
+
+Schedule::command('attendance:auto-checkout')
+    ->everyMinute()
+    ->withoutOverlapping(10)
+    ->timezone('Asia/Jakarta');

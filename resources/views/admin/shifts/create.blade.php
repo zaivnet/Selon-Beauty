@@ -106,10 +106,37 @@
                 </div>
             </div>
 
+            <hr class="border-slate-200 dark:border-slate-800">
+
+            <!-- Parameter Automatic Shift Checkout -->
+            <div class="space-y-3 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Automatic Shift Checkout</h4>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Sistem otomatis melakukan checkout jika karyawan lupa checkout setelah shift berakhir.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="auto_checkout_enabled" id="auto_checkout_enabled" value="1" {{ old('auto_checkout_enabled', '1') == '1' ? 'checked' : '' }} class="w-4 h-4 text-rose-600 border-slate-300 dark:border-slate-700 rounded focus:ring-rose-500">
+                        <label for="auto_checkout_enabled" class="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">Aktif</label>
+                    </div>
+                </div>
+
+                <div class="pt-2 border-t border-slate-200/80 dark:border-slate-700/80">
+                    <label for="auto_checkout_grace_minutes" class="block text-[11px] font-bold text-slate-600 dark:text-slate-400">Checkout Otomatis Setelah (Menit setelah shift berakhir)</label>
+                    <div class="flex items-center gap-3 mt-1">
+                        <input type="number" name="auto_checkout_grace_minutes" id="auto_checkout_grace_minutes" value="{{ old('auto_checkout_grace_minutes', 10) }}" required min="0" max="180" class="w-32 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-mono bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+                        <span class="text-xs text-slate-500 dark:text-slate-400">Menit (Default: 10 menit. Nilai 0 = tepat saat shift selesai)</span>
+                    </div>
+                    @error('auto_checkout_grace_minutes')
+                        <p class="text-xs text-rose-600 dark:text-rose-400 font-semibold mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
             <!-- Status Aktif -->
             <div class="flex items-center gap-2 pt-1">
                 <input type="checkbox" name="is_active" id="is_active" value="1" checked class="w-4 h-4 text-rose-600 border-slate-300 dark:border-slate-700 rounded focus:ring-rose-500">
-                <label for="is_active" class="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">Status Aktif</label>
+                <label for="is_active" class="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">Status Aktif Shift</label>
             </div>
 
             <div class="flex items-center justify-end gap-3 pt-2">

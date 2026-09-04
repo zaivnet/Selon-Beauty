@@ -21,6 +21,8 @@ class Shift extends Model
         'grace_period_minutes',
         'break_minutes',
         'crosses_midnight',
+        'auto_checkout_enabled',
+        'auto_checkout_grace_minutes',
         'is_active',
     ];
 
@@ -33,6 +35,8 @@ class Shift extends Model
             'grace_period_minutes' => 'integer',
             'break_minutes' => 'integer',
             'crosses_midnight' => 'boolean',
+            'auto_checkout_enabled' => 'boolean',
+            'auto_checkout_grace_minutes' => 'integer',
             'is_active' => 'boolean',
         ];
     }

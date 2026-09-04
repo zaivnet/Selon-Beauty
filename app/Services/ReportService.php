@@ -438,6 +438,7 @@ class ReportService
                     'status_badge_class' => $statusBadgeClass,
                     'check_in_at' => $att?->check_in_at,
                     'check_out_at' => $att?->check_out_at,
+                    'checkout_source' => $att?->checkout_source,
                     'late_minutes' => $lateMinutes,
                     'worked_minutes' => $workedMinutes,
                     'early_leave_minutes' => $earlyLeaveMinutes,

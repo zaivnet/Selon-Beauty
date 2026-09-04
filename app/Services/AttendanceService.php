@@ -207,7 +207,7 @@ class AttendanceService
                 }
 
                 $serverNow = Carbon::now($this->timezone());
-                [$shiftStart] = $this->shiftDatetimes($schedule);
+                [$shiftStart, $shiftEnd] = $this->shiftDatetimes($schedule);
                 $checkInOpen = (clone $shiftStart)->subMinutes((int) $schedule->shift->check_in_open_minutes_before);
                 $checkInClose = (clone $shiftStart)->addMinutes((int) $schedule->shift->check_in_close_minutes_after);
 
@@ -251,6 +251,19 @@ class AttendanceService
                     $status = 'present';
                 }
 
+                $scheduledShiftEndAt = null;
+                $breakMinutesSnapshot = null;
+                $autoCheckoutBoundary = null;
+
+                if ($schedule->shift) {
+                    $scheduledShiftEndAt = $shiftEnd;
+                    $breakMinutesSnapshot = (int) ($schedule->shift->break_minutes ?? 0);
+
+                    if ($schedule->shift->auto_checkout_enabled) {
+                        $autoCheckoutBoundary = (clone $shiftEnd)->addMinutes((int) ($schedule->shift->auto_checkout_grace_minutes ?? 10));
+                    }
+                }
+
                 $legacyLocationId = AttendanceLocation::where('id', $location->id)->exists()
                     ? $location->id
                     : AttendanceLocation::where('is_active', true)->value('id');
@@ -270,6 +283,9 @@ class AttendanceService
                     'check_in_selfie_path' => $newSelfiePath,
                     'check_in_ip' => request()->ip(),
                     'check_in_user_agent' => request()->userAgent(),
+                    'scheduled_shift_end_at' => $scheduledShiftEndAt,
+                    'break_minutes_snapshot' => $breakMinutesSnapshot,
+                    'auto_checkout_boundary' => $autoCheckoutBoundary,
                     'late_minutes' => $lateMins,
                     'notes' => $evidence['notes'] ?? null,
                 ]);
@@ -405,20 +421,26 @@ class AttendanceService
                 $grossMinutes = max(0, $grossMinutes);
 
                 // Net worked minutes (minus break)
-                $breakMins = (int) $schedule->shift->break_minutes;
+                $breakMins = $record->break_minutes_snapshot !== null
+                    ? (int) $record->break_minutes_snapshot
+                    : (int) ($schedule->shift->break_minutes ?? 0);
                 $workedMinutes = max(0, $grossMinutes - $breakMins);
 
-                // Early Leave Minutes
-                if ($serverNow->lessThan($shiftEnd)) {
-                    $earlyLeaveMins = (int) floor($serverNow->diffInMinutes($shiftEnd, false));
+                // Early Leave & Overtime comparison using snapshot if available
+                $targetShiftEnd = $record->scheduled_shift_end_at !== null
+                    ? Carbon::createFromFormat('Y-m-d H:i:s', $record->scheduled_shift_end_at->format('Y-m-d H:i:s'), $this->timezone())
+                    : $shiftEnd;
+
+                if ($serverNow->lessThan($targetShiftEnd)) {
+                    $earlyLeaveMins = (int) floor($serverNow->diffInMinutes($targetShiftEnd, false));
                     $earlyLeaveMins = max(0, $earlyLeaveMins);
                 } else {
                     $earlyLeaveMins = 0;
                 }
 
                 // Overtime Candidate Minutes
-                if ($serverNow->greaterThan($shiftEnd)) {
-                    $overtimeMins = (int) floor($shiftEnd->diffInMinutes($serverNow, false));
+                if ($serverNow->greaterThan($targetShiftEnd)) {
+                    $overtimeMins = (int) floor($targetShiftEnd->diffInMinutes($serverNow, false));
                     $overtimeMins = max(0, $overtimeMins);
                 } else {
                     $overtimeMins = 0;
@@ -435,6 +457,7 @@ class AttendanceService
                     'check_out_selfie_path' => $newSelfiePath,
                     'check_out_ip' => request()->ip(),
                     'check_out_user_agent' => request()->userAgent(),
+                    'checkout_source' => 'manual',
                     'worked_minutes' => $workedMinutes,
                     'early_leave_minutes' => $earlyLeaveMins,
                     'overtime_minutes' => $overtimeMins,
@@ -567,9 +590,16 @@ class AttendanceService
             }
 
             $wasMissingCheckout = $record->check_out_at === null && $checkOutAt !== null;
+            $checkoutSource = $checkOutAt !== null
+                ? ($wasMissingCheckout || $record->check_out_at?->format('Y-m-d H:i:s') !== $checkOutAt->format('Y-m-d H:i:s')
+                    ? 'admin_correction'
+                    : ($record->checkout_source ?? 'manual'))
+                : null;
+
             $record->update([
                 'check_in_at' => $checkInAt,
                 'check_out_at' => $checkOutAt,
+                'checkout_source' => $checkoutSource,
                 'status' => $resolvedStatus,
                 ...$metrics,
                 'is_manually_adjusted' => true,
