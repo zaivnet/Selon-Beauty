@@ -39,25 +39,47 @@
     </div>
 
     <!-- Filter Card -->
-    <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs transition-colors">
-        <form action="{{ route('admin.reports.attendance') }}" method="GET" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
+    <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs transition-colors"
+         x-data="{ isSubmitting: false }">
+        <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Filter Laporan</span>
+                <span x-show="isSubmitting" x-cloak class="inline-flex items-center gap-1.5 text-[11px] font-bold text-rose-600 dark:text-rose-400 animate-pulse ml-2">
+                    <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    Memuat laporan...
+                </span>
+            </div>
+            @if(request()->hasAny(['start_date', 'end_date', 'outlet_id', 'employee_id', 'status', 'from', 'to', 'from_date', 'to_date']))
+                <a href="{{ route('admin.reports.attendance') }}" class="text-[11px] font-bold text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <span>Bersihkan filter</span>
+                </a>
+            @endif
+        </div>
+
+        <form id="attendanceReportFilterForm" action="{{ route('admin.reports.attendance') }}" method="GET"
+              class="grid grid-cols-1 sm:grid-cols-2 {{ app(\App\Services\OutletModeService::class)->isMultiOutlet() ? 'md:grid-cols-3 lg:grid-cols-5' : 'md:grid-cols-4' }} gap-3 text-xs"
+              @submit="isSubmitting = true">
             <!-- Start Date -->
             <div class="w-full min-w-0 max-w-full">
                 <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Dari Tanggal</label>
-                <x-date-input name="start_date" value="{{ $filters['start_date'] }}" />
+                <x-date-input name="start_date" value="{{ $filters['start_date'] }}" onchange="this.form.dispatchEvent(new Event('submit')); this.form.submit();" />
             </div>
 
             <!-- End Date -->
             <div class="w-full min-w-0 max-w-full">
                 <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Sampai Tanggal</label>
-                <x-date-input name="end_date" value="{{ $filters['end_date'] }}" />
+                <x-date-input name="end_date" value="{{ $filters['end_date'] }}" onchange="this.form.dispatchEvent(new Event('submit')); this.form.submit();" />
             </div>
 
             <!-- Outlet -->
             @if(app(\App\Services\OutletModeService::class)->isMultiOutlet())
                 <div>
                     <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Outlet</label>
-                    <select name="outlet_id" class="w-full min-w-0 max-w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px] ui-select">
+                    <select name="outlet_id"
+                            onchange="const empEl = this.form.querySelector('select[name=employee_id]'); if(empEl) empEl.value=''; this.form.dispatchEvent(new Event('submit')); this.form.submit();"
+                            class="w-full min-w-0 max-w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px] ui-select">
                         <option value="">Semua Outlet</option>
                         @foreach($authorizedOutlets as $outletOption)
                             <option value="{{ $outletOption->id }}" {{ (isset($filters['outlet_id']) && (int) $filters['outlet_id'] === (int) $outletOption->id) ? 'selected' : '' }}>
@@ -71,7 +93,9 @@
             <!-- Employee -->
             <div>
                 <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Karyawan</label>
-                <select name="employee_id" class="w-full min-w-0 max-w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px] ui-select">
+                <select name="employee_id"
+                        onchange="this.form.dispatchEvent(new Event('submit')); this.form.submit();"
+                        class="w-full min-w-0 max-w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px] ui-select">
                     <option value="">Semua Karyawan</option>
                     @foreach($employees as $emp)
                         <option value="{{ $emp->id }}" {{ (isset($filters['employee_id']) && (int) $filters['employee_id'] === (int) $emp->id) ? 'selected' : '' }}>
@@ -84,7 +108,9 @@
             <!-- Status -->
             <div>
                 <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Status Kehadiran</label>
-                <select name="status" class="w-full min-w-0 max-w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px] ui-select">
+                <select name="status"
+                        onchange="this.form.dispatchEvent(new Event('submit')); this.form.submit();"
+                        class="w-full min-w-0 max-w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl font-semibold text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px] ui-select">
                     <option value="all" {{ $filters['status'] === 'all' ? 'selected' : '' }}>Semua Status</option>
                     <option value="present" {{ $filters['status'] === 'present' ? 'selected' : '' }}>Hadir (Termasuk Terlambat)</option>
                     <option value="late" {{ $filters['status'] === 'late' ? 'selected' : '' }}>Terlambat</option>
@@ -95,17 +121,6 @@
                     <option value="off" {{ $filters['status'] === 'off' ? 'selected' : '' }}>OFF Pekanan</option>
                     <option value="holiday" {{ $filters['status'] === 'holiday' ? 'selected' : '' }}>Libur</option>
                 </select>
-            </div>
-
-            <!-- Submit & Reset Buttons -->
-            <div class="flex items-end gap-2">
-                <button type="submit" class="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer min-h-[44px] ui-btn ui-btn-primary">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
-                    <span>Filter</span>
-                </button>
-                <a href="{{ route('admin.reports.attendance') }}" class="py-2.5 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-extrabold rounded-xl transition-all text-xs flex items-center justify-center cursor-pointer min-h-[44px]">
-                    Reset
-                </a>
             </div>
         </form>
     </div>

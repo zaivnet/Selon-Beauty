@@ -21,15 +21,15 @@ class ReportController extends Controller
 
     public function attendance(Request $request): View
     {
-        $startDate = $request->input('start_date', $request->input('from_date', now('Asia/Jakarta')->startOfMonth()->format('Y-m-d')));
-        $endDate = $request->input('end_date', $request->input('to_date', now('Asia/Jakarta')->endOfMonth()->format('Y-m-d')));
+        $startDate = $request->input('start_date', $request->input('from_date', $request->input('from', now('Asia/Jakarta')->startOfMonth()->format('Y-m-d'))));
+        $endDate = $request->input('end_date', $request->input('to_date', $request->input('to', now('Asia/Jakarta')->endOfMonth()->format('Y-m-d'))));
         $rawEmployeeId = $request->input('employee_id');
-        $employeeId = ($rawEmployeeId !== null && $rawEmployeeId !== '' && $rawEmployeeId !== 'all') ? (int) $rawEmployeeId : null;
+        $employeeId = ($rawEmployeeId !== null && $rawEmployeeId !== '' && $rawEmployeeId !== 'all' && $rawEmployeeId !== '0') ? (int) $rawEmployeeId : null;
         $status = $request->input('status', 'all');
         $rawJobTitleId = $request->input('job_title_id');
-        $jobTitleId = ($rawJobTitleId !== null && $rawJobTitleId !== '' && $rawJobTitleId !== 'all') ? (int) $rawJobTitleId : null;
+        $jobTitleId = ($rawJobTitleId !== null && $rawJobTitleId !== '' && $rawJobTitleId !== 'all' && $rawJobTitleId !== '0') ? (int) $rawJobTitleId : null;
         $rawOutletId = $request->input('outlet_id');
-        $outletId = ($rawOutletId !== null && $rawOutletId !== '' && $rawOutletId !== 'all') ? (int) $rawOutletId : null;
+        $outletId = ($rawOutletId !== null && $rawOutletId !== '' && $rawOutletId !== 'all' && $rawOutletId !== '0') ? (int) $rawOutletId : null;
 
         $actor = $request->user();
         $allowedOutletIds = $this->outletScopeService->allowedOutletIds($actor);
@@ -88,15 +88,15 @@ class ReportController extends Controller
 
     public function printView(Request $request): View
     {
-        $startDate = $request->input('start_date', $request->input('from_date', now('Asia/Jakarta')->startOfMonth()->format('Y-m-d')));
-        $endDate = $request->input('end_date', $request->input('to_date', now('Asia/Jakarta')->endOfMonth()->format('Y-m-d')));
+        $startDate = $request->input('start_date', $request->input('from_date', $request->input('from', now('Asia/Jakarta')->startOfMonth()->format('Y-m-d'))));
+        $endDate = $request->input('end_date', $request->input('to_date', $request->input('to', now('Asia/Jakarta')->endOfMonth()->format('Y-m-d'))));
         $rawEmployeeId = $request->input('employee_id');
-        $employeeId = ($rawEmployeeId !== null && $rawEmployeeId !== '' && $rawEmployeeId !== 'all') ? (int) $rawEmployeeId : null;
+        $employeeId = ($rawEmployeeId !== null && $rawEmployeeId !== '' && $rawEmployeeId !== 'all' && $rawEmployeeId !== '0') ? (int) $rawEmployeeId : null;
         $status = $request->input('status', 'all');
         $rawJobTitleId = $request->input('job_title_id');
-        $jobTitleId = ($rawJobTitleId !== null && $rawJobTitleId !== '' && $rawJobTitleId !== 'all') ? (int) $rawJobTitleId : null;
+        $jobTitleId = ($rawJobTitleId !== null && $rawJobTitleId !== '' && $rawJobTitleId !== 'all' && $rawJobTitleId !== '0') ? (int) $rawJobTitleId : null;
         $rawOutletId = $request->input('outlet_id');
-        $outletId = ($rawOutletId !== null && $rawOutletId !== '' && $rawOutletId !== 'all') ? (int) $rawOutletId : null;
+        $outletId = ($rawOutletId !== null && $rawOutletId !== '' && $rawOutletId !== 'all' && $rawOutletId !== '0') ? (int) $rawOutletId : null;
 
         $actor = $request->user();
         $allowedOutletIds = $this->outletScopeService->allowedOutletIds($actor);
@@ -132,15 +132,15 @@ class ReportController extends Controller
 
     public function exportCsv(Request $request): StreamedResponse
     {
-        $startDate = $request->input('start_date', $request->input('from_date', now('Asia/Jakarta')->startOfMonth()->format('Y-m-d')));
-        $endDate = $request->input('end_date', $request->input('to_date', now('Asia/Jakarta')->endOfMonth()->format('Y-m-d')));
+        $startDate = $request->input('start_date', $request->input('from_date', $request->input('from', now('Asia/Jakarta')->startOfMonth()->format('Y-m-d'))));
+        $endDate = $request->input('end_date', $request->input('to_date', $request->input('to', now('Asia/Jakarta')->endOfMonth()->format('Y-m-d'))));
         $rawEmployeeId = $request->input('employee_id');
-        $employeeId = ($rawEmployeeId !== null && $rawEmployeeId !== '' && $rawEmployeeId !== 'all') ? (int) $rawEmployeeId : null;
+        $employeeId = ($rawEmployeeId !== null && $rawEmployeeId !== '' && $rawEmployeeId !== 'all' && $rawEmployeeId !== '0') ? (int) $rawEmployeeId : null;
         $status = $request->input('status', 'all');
         $rawJobTitleId = $request->input('job_title_id');
-        $jobTitleId = ($rawJobTitleId !== null && $rawJobTitleId !== '' && $rawJobTitleId !== 'all') ? (int) $rawJobTitleId : null;
+        $jobTitleId = ($rawJobTitleId !== null && $rawJobTitleId !== '' && $rawJobTitleId !== 'all' && $rawJobTitleId !== '0') ? (int) $rawJobTitleId : null;
         $rawOutletId = $request->input('outlet_id');
-        $outletId = ($rawOutletId !== null && $rawOutletId !== '' && $rawOutletId !== 'all') ? (int) $rawOutletId : null;
+        $outletId = ($rawOutletId !== null && $rawOutletId !== '' && $rawOutletId !== 'all' && $rawOutletId !== '0') ? (int) $rawOutletId : null;
 
         $actor = $request->user();
         $allowedOutletIds = $this->outletScopeService->allowedOutletIds($actor);
