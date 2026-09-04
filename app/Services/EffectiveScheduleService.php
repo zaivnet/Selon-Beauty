@@ -191,7 +191,9 @@ class EffectiveScheduleService
             return $regular->workOutlet;
         }
 
-        $employee->loadMissing('outlet');
+        if (! $employee->relationLoaded('outlet')) {
+            $employee->loadMissing('outlet');
+        }
 
         return $employee->outlet;
     }

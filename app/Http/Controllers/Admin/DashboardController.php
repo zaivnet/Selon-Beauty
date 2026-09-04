@@ -27,7 +27,8 @@ class DashboardController extends Controller
         $includeBackupHealth = in_array($actor->role, ['owner', 'superadmin'], true);
 
         $outletScopeService = app(\App\Services\OutletScopeService::class);
-        $inputOutletId = $request->has('outlet_id') ? (int) $request->input('outlet_id') : null;
+        $rawInput = $request->input('outlet_id');
+        $inputOutletId = $request->has('outlet_id') ? ($rawInput === 'all' || $rawInput === '0' || $rawInput === 0 ? 0 : (int) $rawInput) : null;
         $requestedOutletId = $outletScopeService->resolveRequestedOutlet($actor, $inputOutletId);
 
         $rosterDate = $request->input('roster_date');
@@ -44,9 +45,11 @@ class DashboardController extends Controller
 
         $attendanceItems = $this->monitoringService->getAttendanceMonitoringList(['date' => $todayStr], $now, $actor, $requestedOutletId);
 
-        if ($requestedOutletId === null && $outletScopeService->isGlobalScope($actor)) {
-            $activeOutlets = $outletScopeService->getActiveOutlets();
-            $globalData = $this->multiOutletDashboardService->generateOverview($activeOutlets, $attendanceItems, $exceptions);
+        $authorizedOutlets = $outletScopeService->getAuthorizedActiveOutlets($actor);
+        $isAllOutletsView = ($requestedOutletId === null && $authorizedOutlets->count() > 1);
+
+        if ($isAllOutletsView) {
+            $globalData = $this->multiOutletDashboardService->generateOverview($authorizedOutlets, $attendanceItems, $exceptions);
 
             return view('admin.dashboard_global', [
                 'globalData' => $globalData,

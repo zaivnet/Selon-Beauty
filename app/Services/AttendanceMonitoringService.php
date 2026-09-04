@@ -37,23 +37,7 @@ class AttendanceMonitoringService
         }
 
         $collection = collect($items);
-
-        $employeesQuery = Employee::whereNull('deleted_at')
-            ->where('status', 'active')
-            ->currentAttendanceWorkforce();
-
-        $outletScopeService = app(OutletScopeService::class);
-        $targetOutletId = $actor ? $outletScopeService->resolveRequestedOutlet($actor, $requestedOutletId) : $requestedOutletId;
-
-        if ($targetOutletId !== null) {
-            // Total Karyawan is an organizational (Home Outlet) KPI, unlike the
-            // date-based attendance items that are filtered by Work Outlet.
-            $employeesQuery->where('employees.outlet_id', $targetOutletId);
-        } elseif ($actor) {
-            $outletScopeService->scopeEmployeesFor($actor, $employeesQuery);
-        }
-
-        $totalEmployees = $employeesQuery->count();
+        $totalEmployees = $collection->pluck('employee.id')->unique()->count();
 
         $presentToday = $collection->filter(fn ($i) => in_array($i['status_key'], ['present', 'late'], true))->count();
         $lateToday = $collection->filter(fn ($i) => $i['status_key'] === 'late')->count();
@@ -88,13 +72,39 @@ class AttendanceMonitoringService
             ->currentAttendanceWorkforce();
 
         $outletScopeService = app(OutletScopeService::class);
-        $inputOutletId = $requestedOutletId ?? ($filters['outlet_id'] ?? null);
-        $targetOutletId = $actor ? $outletScopeService->resolveRequestedOutlet($actor, $inputOutletId ? (int) $inputOutletId : null) : $inputOutletId;
+        $rawInput = $requestedOutletId ?? ($filters['outlet_id'] ?? null);
+        $inputOutletId = ($rawInput !== null && $rawInput !== '' && $rawInput !== 'all') ? (int) $rawInput : ($rawInput === 'all' || $rawInput === '0' || $rawInput === 0 ? 0 : null);
+        $targetOutletId = $actor ? $outletScopeService->resolveRequestedOutlet($actor, $inputOutletId) : $inputOutletId;
 
-        if ($actor) {
-            // Home Outlet controls who an admin may manage. The requested outlet is
-            // applied below to the resolved Work Outlet for this operational date.
-            $outletScopeService->scopeEmployeesFor($actor, $employeesQuery);
+        $allowedOutletIds = $actor ? $outletScopeService->allowedOutletIds($actor) : [];
+        if ($targetOutletId !== null) {
+            $targetOutletIds = [$targetOutletId];
+        } elseif ($actor && ! $outletScopeService->isGlobalScope($actor)) {
+            $targetOutletIds = $allowedOutletIds;
+        } else {
+            $targetOutletIds = null;
+        }
+
+        if ($actor && ! $outletScopeService->isGlobalScope($actor)) {
+            $matchingOverrideEmpIds = EmployeeScheduleOverride::whereDate('date', $targetDate)
+                ->whereIn('work_outlet_id', $allowedOutletIds)
+                ->pluck('employee_id')
+                ->all();
+
+            $matchingSchedEmpIds = EmployeeSchedule::whereDate('work_date', $targetDate)
+                ->whereIn('work_outlet_id', $allowedOutletIds)
+                ->pluck('employee_id')
+                ->all();
+
+            $employeesQuery->where(function ($q) use ($allowedOutletIds, $matchingOverrideEmpIds, $matchingSchedEmpIds) {
+                $q->whereIn('employees.outlet_id', $allowedOutletIds);
+                if (! empty($matchingOverrideEmpIds)) {
+                    $q->orWhereIn('employees.id', $matchingOverrideEmpIds);
+                }
+                if (! empty($matchingSchedEmpIds)) {
+                    $q->orWhereIn('employees.id', $matchingSchedEmpIds);
+                }
+            });
         }
 
         if ($filterEmployeeId) {
@@ -148,8 +158,12 @@ class AttendanceMonitoringService
             $effective = $this->effectiveScheduleService->resolveFromModels(
                 $emp, $targetDate, $schedule, $overrides->get($emp->id), $calendarDay,
             );
-            if ($targetOutletId !== null && (int) $effective['work_outlet_id'] !== $targetOutletId) {
-                continue;
+            $workOutletId = $effective['work_outlet_id'] ? (int) $effective['work_outlet_id'] : null;
+
+            if ($targetOutletIds !== null) {
+                if (! $workOutletId || ! in_array($workOutletId, $targetOutletIds, true)) {
+                    continue;
+                }
             }
             $resolved = $this->statusResolver->resolveEffective($effective, $record, $approvedLeave, $nowServerTime);
             $statusKey = $resolved['key'];
@@ -232,8 +246,37 @@ class AttendanceMonitoringService
         $outletScopeService = app(OutletScopeService::class);
         $targetOutletId = $actor ? $outletScopeService->resolveRequestedOutlet($actor, $requestedOutletId) : $requestedOutletId;
 
-        if ($actor) {
-            $outletScopeService->scopeEmployeesFor($actor, $employeesQuery);
+        $allowedOutletIds = $actor ? $outletScopeService->allowedOutletIds($actor) : [];
+        if ($targetOutletId !== null) {
+            $targetOutletIds = [$targetOutletId];
+        } elseif ($actor && ! $outletScopeService->isGlobalScope($actor)) {
+            $targetOutletIds = $allowedOutletIds;
+        } else {
+            $targetOutletIds = null;
+        }
+
+        if ($actor && ! $outletScopeService->isGlobalScope($actor)) {
+            $matchingOverrideEmpIds = EmployeeScheduleOverride::whereDate('date', '>=', $startDate)
+                ->whereDate('date', '<=', $endDate)
+                ->whereIn('work_outlet_id', $allowedOutletIds)
+                ->pluck('employee_id')
+                ->all();
+
+            $matchingSchedEmpIds = EmployeeSchedule::whereDate('work_date', '>=', $startDate)
+                ->whereDate('work_date', '<=', $endDate)
+                ->whereIn('work_outlet_id', $allowedOutletIds)
+                ->pluck('employee_id')
+                ->all();
+
+            $employeesQuery->where(function ($q) use ($allowedOutletIds, $matchingOverrideEmpIds, $matchingSchedEmpIds) {
+                $q->whereIn('employees.outlet_id', $allowedOutletIds);
+                if (! empty($matchingOverrideEmpIds)) {
+                    $q->orWhereIn('employees.id', $matchingOverrideEmpIds);
+                }
+                if (! empty($matchingSchedEmpIds)) {
+                    $q->orWhereIn('employees.id', $matchingSchedEmpIds);
+                }
+            });
         }
 
         $employees = $employeesQuery->orderBy('full_name', 'asc')->get();
@@ -323,8 +366,12 @@ class AttendanceMonitoringService
                 $effective = $this->effectiveScheduleService->resolveFromModels(
                     $emp, $date, $schedule, $override, $calendarDay,
                 );
-                if ($targetOutletId !== null && (int) $effective['work_outlet_id'] !== $targetOutletId) {
-                    continue;
+                $workOutletId = $effective['work_outlet_id'] ? (int) $effective['work_outlet_id'] : null;
+
+                if ($targetOutletIds !== null) {
+                    if (! $workOutletId || ! in_array($workOutletId, $targetOutletIds, true)) {
+                        continue;
+                    }
                 }
                 $resolved = $this->statusResolver->resolveEffective($effective, $record, $approvedLeave, null);
                 $statusKey = $resolved['key'];

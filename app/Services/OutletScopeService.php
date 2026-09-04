@@ -291,6 +291,10 @@ class OutletScopeService
     /** @return Collection<int, Outlet> */
     public function getAuthorizedActiveOutlets(User $actor): Collection
     {
+        if ($this->isGlobalScope($actor)) {
+            return $this->getActiveOutlets();
+        }
+
         $this->allowedOutletIds($actor);
 
         return ($this->resolvedOutlets[$actor->id] ?? new Collection)
@@ -298,9 +302,16 @@ class OutletScopeService
             ->values();
     }
 
-    /** Resolve one operational context. Only global roles may use null for all outlets. */
+    /** Resolve one operational context. Null represents all accessible outlets in scope. */
     public function resolveRequestedOutlet(User $actor, ?int $inputOutletId = null): ?int
     {
+        $outletModeService = app(OutletModeService::class);
+        if ($outletModeService->isSingleOutlet()) {
+            $single = $outletModeService->getSingleOperationalOutlet();
+
+            return $single?->id;
+        }
+
         if ($this->isGlobalScope($actor)) {
             return $this->resolveGlobalOutletContext($actor, $inputOutletId);
         }
@@ -318,25 +329,45 @@ class OutletScopeService
             return null;
         }
 
-        if ($inputOutletId !== null && $inputOutletId > 0 && in_array($inputOutletId, $allowedIds, true)) {
-            $this->rememberOutletContext($actor, $inputOutletId);
+        // If admin has only 1 assigned outlet, always return that outlet
+        if (count($allowedIds) === 1) {
+            $this->rememberOutletContext($actor, $allowedIds[0]);
 
-            return $inputOutletId;
+            return $allowedIds[0];
         }
 
-        if ($inputOutletId === null) {
-            $sessionOutletId = (int) session('active_outlet_user_id') === (int) $actor->id
-                ? (int) session('active_outlet_id', 0)
-                : 0;
-            if ($sessionOutletId > 0 && in_array($sessionOutletId, $allowedIds, true)) {
-                return $sessionOutletId;
+        // Admin with > 1 outlets:
+        // 1. Explicit single outlet request
+        if ($inputOutletId !== null && $inputOutletId > 0) {
+            if (in_array($inputOutletId, $allowedIds, true)) {
+                $this->rememberOutletContext($actor, $inputOutletId);
+
+                return $inputOutletId;
             }
+
+            // Sanitize invalid/tampered input to primary assigned outlet
+            $fallbackId = $this->getAdminOutletId($actor) ?? $allowedIds[0];
+            $this->rememberOutletContext($actor, $fallbackId);
+
+            return $fallbackId;
         }
 
-        $fallbackId = $this->getAdminOutletId($actor) ?? $allowedIds[0];
-        $this->rememberOutletContext($actor, $fallbackId);
+        // 2. Explicit "Semua Outlet" request (inputOutletId === 0 or <= 0)
+        if ($inputOutletId !== null && $inputOutletId <= 0) {
+            $this->forgetOutletContext();
 
-        return $fallbackId;
+            return null;
+        }
+
+        // 3. No query parameter provided (inputOutletId === null)
+        $sessionOutletId = (int) session('active_outlet_user_id') === (int) $actor->id
+            ? (int) session('active_outlet_id', 0)
+            : 0;
+        if ($sessionOutletId > 0 && in_array($sessionOutletId, $allowedIds, true)) {
+            return $sessionOutletId;
+        }
+
+        return null; // Default for >1 outlets is Semua Outlet (null)
     }
 
     public function scopeByRequestedOutlet(User $actor, Builder $query, ?int $inputOutletId = null, string $outletColumn = 'outlet_id'): Builder
@@ -347,7 +378,7 @@ class OutletScopeService
             return $this->applyOutletConstraint($query, [$targetOutletId], $outletColumn);
         }
 
-        return $this->isGlobalScope($actor) ? $query : $query->whereRaw('1 = 0');
+        return $this->isGlobalScope($actor) ? $query : $this->scopeQueryFor($actor, $query, $outletColumn);
     }
 
     public function ensureAdminHasOutlet(User $user): void
@@ -426,9 +457,7 @@ class OutletScopeService
             return $sessionOutletId;
         }
 
-        $this->forgetOutletContext();
-
-        return null;
+        return null; // Default for global scope is Semua Outlet (null)
     }
 
     private function rememberOutletContext(User $actor, int $outletId): void

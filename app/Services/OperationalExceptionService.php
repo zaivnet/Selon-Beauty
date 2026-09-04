@@ -55,14 +55,38 @@ class OperationalExceptionService
             : ($target->isBefore($actualNow) ? $target->copy()->endOfDay() : $actualNow);
         $lookbackStart = $target->copy()->subDays(max(1, (int) config('operations.review_lookback_days', 31)));
 
-        $employeesQuery = Employee::with('jobTitle')->whereNull('deleted_at')->where('status', 'active')->currentAttendanceWorkforce();
+        $employeesQuery = Employee::with(['jobTitle', 'outlet'])->whereNull('deleted_at')->where('status', 'active')->currentAttendanceWorkforce();
         $targetOutletId = null;
+        $allowedOutletIds = [];
         if (! empty($filters['actor'])) {
-            $requestedOutletId = isset($filters['outlet_id']) ? (int) $filters['outlet_id'] : null;
+            $rawInput = $filters['outlet_id'] ?? null;
+            $requestedOutletId = ($rawInput !== null && $rawInput !== '' && $rawInput !== 'all') ? (int) $rawInput : ($rawInput === 'all' || $rawInput === '0' || $rawInput === 0 ? 0 : null);
             $targetOutletId = $this->outletScopeService->resolveRequestedOutlet($filters['actor'], $requestedOutletId);
-            // Home Outlet remains the management boundary. The operational outlet
-            // filter is applied after effective schedule resolution below.
-            $this->outletScopeService->scopeEmployeesFor($filters['actor'], $employeesQuery);
+            $allowedOutletIds = $this->outletScopeService->allowedOutletIds($filters['actor']);
+
+            if (! $this->outletScopeService->isGlobalScope($filters['actor'])) {
+                $matchingOverrideEmpIds = EmployeeScheduleOverride::whereDate('date', '>=', $lookbackStart->toDateString())
+                    ->whereDate('date', '<=', $targetDate)
+                    ->whereIn('work_outlet_id', $allowedOutletIds)
+                    ->pluck('employee_id')
+                    ->all();
+
+                $matchingSchedEmpIds = EmployeeSchedule::whereDate('work_date', '>=', $lookbackStart->toDateString())
+                    ->whereDate('work_date', '<=', $targetDate)
+                    ->whereIn('work_outlet_id', $allowedOutletIds)
+                    ->pluck('employee_id')
+                    ->all();
+
+                $employeesQuery->where(function ($q) use ($allowedOutletIds, $matchingOverrideEmpIds, $matchingSchedEmpIds) {
+                    $q->whereIn('employees.outlet_id', $allowedOutletIds);
+                    if (! empty($matchingOverrideEmpIds)) {
+                        $q->orWhereIn('employees.id', $matchingOverrideEmpIds);
+                    }
+                    if (! empty($matchingSchedEmpIds)) {
+                        $q->orWhereIn('employees.id', $matchingSchedEmpIds);
+                    }
+                });
+            }
         } elseif (! empty($filters['outlet_id'])) {
             $targetOutletId = (int) $filters['outlet_id'];
         }
@@ -125,8 +149,15 @@ class OperationalExceptionService
             $effective = $this->effectiveScheduleService->resolveFromModels(
                 $employee, $targetDate, $schedule, $override, $calendar->get($targetDate),
             );
-            if ($targetOutletId !== null && (int) $effective['work_outlet_id'] !== $targetOutletId) {
-                continue;
+            $workOutletId = $effective['work_outlet_id'] ? (int) $effective['work_outlet_id'] : null;
+            if ($targetOutletId !== null) {
+                if ($workOutletId !== $targetOutletId) {
+                    continue;
+                }
+            } elseif (! empty($filters['actor']) && ! $this->outletScopeService->isGlobalScope($filters['actor'])) {
+                if (! $workOutletId || ! in_array($workOutletId, $allowedOutletIds, true)) {
+                    continue;
+                }
             }
             $effectiveSchedule = $this->effectiveScheduleService->scheduleContext($effective);
             $resolved = $this->statusResolver->resolveEffective($effective, $attendance, $leave, $operationalNow);
@@ -186,9 +217,15 @@ class OperationalExceptionService
                 $overrides->get($this->key($attendance->employee_id, $dateString)),
                 $calendar->get($dateString),
             );
-            $attendanceOutletId = $attendance->outlet_id ?: $effective['work_outlet_id'];
-            if ($targetOutletId !== null && (int) $attendanceOutletId !== $targetOutletId) {
-                continue;
+            $attendanceOutletId = $attendance->outlet_id ? (int) $attendance->outlet_id : ($effective['work_outlet_id'] ? (int) $effective['work_outlet_id'] : null);
+            if ($targetOutletId !== null) {
+                if ($attendanceOutletId !== $targetOutletId) {
+                    continue;
+                }
+            } elseif (! empty($filters['actor']) && ! $this->outletScopeService->isGlobalScope($filters['actor'])) {
+                if (! $attendanceOutletId || ! in_array($attendanceOutletId, $allowedOutletIds, true)) {
+                    continue;
+                }
             }
             $effectiveSchedule = $this->effectiveScheduleService->scheduleContext($effective);
             if (! $effectiveSchedule?->shift) {

@@ -25,6 +25,15 @@ class FoundationTest extends TestCase
 
     public function test_admin_dashboard_loads_with_real_database_counts(): void
     {
+        \App\Models\Outlet::create([
+            'name' => 'Outlet Cabang',
+            'code' => 'OUT-CAB',
+            'latitude' => -6.2,
+            'longitude' => 106.8,
+            'radius_meters' => 100,
+            'is_active' => true,
+        ]);
+
         $owner = User::create([
             'name' => 'Owner System',
             'email' => 'owner@selonbeauty.com',
@@ -38,7 +47,7 @@ class FoundationTest extends TestCase
         $response->assertStatus(200)
             ->assertSee('SELON BEAUTY')
             ->assertSee('Status Operasional Global')
-            ->assertSee('Backup Operasional');
+            ->assertSee('Backup Operasional', false);
     }
 
     public function test_employee_dashboard_loads_without_error(): void

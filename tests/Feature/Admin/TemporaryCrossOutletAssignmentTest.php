@@ -718,7 +718,7 @@ class TemporaryCrossOutletAssignmentTest extends TestCase
         $this->assertArrayNotHasKey('remember_token', $audit->metadata ?? []);
     }
 
-    public function test_25_dashboard_headcount_remains_home_based(): void
+    public function test_25_dashboard_headcount_follows_operational_work_outlet(): void
     {
         $admin = $this->createAdmin('admin', 'all');
         $calendarService = app(WorkCalendarService::class);
@@ -735,13 +735,13 @@ class TemporaryCrossOutletAssignmentTest extends TestCase
 
         $monitoringService = app(AttendanceMonitoringService::class);
 
-        // Pusat organizational headcount includes employeePusat
+        // Pusat operational workforce does NOT include employee assigned to Cabang today
         $metricsPusat = $monitoringService->getSummaryMetrics('2026-08-25', $admin, null, $this->outletPusat->id);
-        $this->assertEquals(1, $metricsPusat['total_employees']);
+        $this->assertEquals(0, $metricsPusat['total_employees']);
 
-        // Cabang organizational headcount does NOT gain employeePusat permanently
+        // Cabang operational workforce gains employeePusat for target date
         $metricsCabang = $monitoringService->getSummaryMetrics('2026-08-25', $admin, null, $this->outletCabang->id);
-        $this->assertEquals(0, $metricsCabang['total_employees']);
+        $this->assertEquals(1, $metricsCabang['total_employees']);
     }
 
     public function test_26_same_outlet_schedule_shows_reguler_badge(): void

@@ -3,7 +3,8 @@
     $outletScopeService = app(\App\Services\OutletScopeService::class);
     $outletModeService = app(\App\Services\OutletModeService::class);
     $isGlobal = $actor ? $outletScopeService->isGlobalScope($actor) : false;
-    $inputOutletId = request()->has('outlet_id') ? (int) request('outlet_id') : null;
+    $rawInput = request('outlet_id');
+    $inputOutletId = request()->has('outlet_id') ? ($rawInput === 'all' || $rawInput === '0' || $rawInput === 0 ? 0 : (int) $rawInput) : null;
     $activeOutletId = $actor ? $outletScopeService->resolveRequestedOutlet($actor, $inputOutletId) : null;
     $activeOutlets = $actor ? $outletScopeService->getAuthorizedActiveOutlets($actor) : collect();
     $canSelect = $outletModeService->isMultiOutlet() && ($isGlobal || ($actor?->role === 'admin' && $activeOutlets->count() > 1));
@@ -29,9 +30,7 @@
                 </svg>
             </span>
             <select name="outlet_id" onchange="this.form.submit()" class="ui-select ui-select-icon !pl-10 !pr-8 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-xs hover:border-rose-500 dark:hover:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20 transition-all cursor-pointer w-full sm:w-auto">
-                @if($isGlobal)
-                    <option value="0" {{ $activeOutletId === null ? 'selected' : '' }}>Semua Outlet</option>
-                @endif
+                <option value="0" {{ $activeOutletId === null ? 'selected' : '' }}>Semua Outlet</option>
                 @foreach($activeOutlets as $outlet)
                     <option value="{{ $outlet->id }}" {{ $activeOutletId === $outlet->id ? 'selected' : '' }}>{{ $outlet->name }}</option>
                 @endforeach
