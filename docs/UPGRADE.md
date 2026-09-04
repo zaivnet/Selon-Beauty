@@ -80,13 +80,7 @@ git stash pop
 /home/adezaivm/bin/php84-attendance artisan migrate --force
 
 # -------------------------------------------------------------
-# 8. Initialize Operational Settings (Required for v1.1.0+)
-# -------------------------------------------------------------
-# Idempotently establishes initial outlet_mode ('multi' or 'single') in app_settings
-/home/adezaivm/bin/php84-attendance artisan app:init-outlet-mode
-
-# -------------------------------------------------------------
-# 9. Rebuild Application Caches
+# 8. Rebuild Application Caches
 # -------------------------------------------------------------
 /home/adezaivm/bin/php84-attendance artisan optimize:clear
 /home/adezaivm/bin/php84-attendance artisan config:cache
@@ -94,10 +88,22 @@ git stash pop
 /home/adezaivm/bin/php84-attendance artisan view:cache
 
 # -------------------------------------------------------------
-# 10. Verify Post-Upgrade Status
+# 9. Verify Scheduler Tasks
 # -------------------------------------------------------------
+# Confirm attendance:auto-checkout is registered and active
+/home/adezaivm/bin/php84-attendance artisan schedule:list
+
+# -------------------------------------------------------------
+# 10. Post-Upgrade Verification & Feature Activation
+# -------------------------------------------------------------
+# - Check Git HEAD version:
 git log -1 --oneline
 git status
+
+# - Shift Configuration Check:
+# Existing shifts are migrated with Auto Checkout OFF by default.
+# Administrators may now selectively navigate to Shift Management
+# and enable Auto Checkout with appropriate grace minutes per shift.
 ```
 
 ---
