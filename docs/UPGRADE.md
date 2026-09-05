@@ -51,15 +51,28 @@ git stash push -m "hosting-cpanel-php-handler" -- public/.htaccess
 # -------------------------------------------------------------
 # 3. Create Pre-Upgrade Safety Backup
 # -------------------------------------------------------------
-/home/adezaivm/bin/php84-attendance artisan app:run-scheduled-backup
+# Pre-upgrade full backup is MANDATORY before proceeding.
+# Note: artisan app:run-scheduled-backup without flags is schedule-aware
+# and will skip if current time != scheduled hour. Use --force to execute immediately:
+/home/adezaivm/bin/php84-attendance artisan app:run-scheduled-backup --force
+
+# Alternatively, trigger manual Full Backup from Admin UI:
+# Navigating to Pengaturan -> Backup & Pemulihan (/admin/settings/backups) -> "Buat Backup Sekarang".
+#
+# Backup Verification Note:
+# - Backup files in storage/app/private/backups/ use .zip extension but are packaged
+#   as JSON containers with base64-encoded entries (backup-manifest.json, database/dump.json,
+#   checksums.json, private media).
+# - DO NOT validate using 'unzip -t'.
+# - Confirm physical file size > 0 bytes and SHA-256 matches backup_records.checksum.
+# - Validate container: outer JSON decodes cleanly and inner manifest/dump/checksums decode validly.
 
 # -------------------------------------------------------------
-# 4. Pull Release Source Code
+# 4. Fetch & Deploy Stable Release Tag (v1.2.0)
 # -------------------------------------------------------------
-git fetch --tags
-git pull --ff-only origin main
-# Or checkout specific release tag:
-# git checkout v1.0.0
+# Production environments MUST checkout the immutable release tag, NOT the development branch (main).
+git fetch --tags --prune
+git checkout v1.2.0
 
 # -------------------------------------------------------------
 # 5. Restore Hosting-Specific Configuration
