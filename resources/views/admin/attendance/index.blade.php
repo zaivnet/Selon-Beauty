@@ -179,7 +179,7 @@
                                 </td>
                                 <td class="py-3.5 px-4">
                                     @if($rec && $rec->check_in_distance_meters !== null)
-                                        <span class="font-bold text-slate-800 dark:text-slate-200 block text-[11px]">{{ $rec->outlet?->name ?? ($rec->location?->name ?? 'Lokasi Belum Dikonfigurasi') }}</span>
+                                        <span class="font-bold text-slate-800 dark:text-slate-200 block text-[11px]">{{ $rec->getWorkOutletName() }}</span>
                                         @if(!empty($item['is_temporary_assignment']))
                                             <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 my-0.5">PENUGASAN OUTLET</span>
                                             <span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium block">Home: {{ $item['historical_home_outlet']?->name ?? '-' }}</span>
@@ -259,9 +259,14 @@
                                 <div class="rounded-lg bg-amber-50 dark:bg-amber-950/60 px-2 py-1 text-[10px] font-bold text-amber-700 dark:text-amber-300">Dikoreksi Admin · {{ $rec->corrected_at?->format('d/m/Y H:i') }}</div>
                             @endif
                             <div class="flex items-center justify-between pt-1">
-                                <div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                                <div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium space-y-0.5">
                                     @if($rec->check_in_distance_meters !== null)
-                                        📍 Jarak: {{ round($rec->check_in_distance_meters) }}m (±{{ round($rec->check_in_accuracy_meters) }}m)
+                                        <span class="font-bold text-slate-800 dark:text-slate-200 block">{{ $rec->getWorkOutletName() }}</span>
+                                        @if(!empty($item['is_temporary_assignment']))
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 my-0.5">PENUGASAN OUTLET</span>
+                                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium block">Home: {{ $item['historical_home_outlet']?->name ?? '-' }}</span>
+                                        @endif
+                                        <span class="block">📍 Jarak: {{ round($rec->check_in_distance_meters) }}m (±{{ round($rec->check_in_accuracy_meters) }}m)</span>
                                     @endif
                                 </div>
                                 <button type="button" onclick="showAttendanceDetail({{ $rec->id }})" class="px-3 py-1 bg-slate-900 dark:bg-slate-700 text-white font-extrabold text-[11px] rounded-lg transition-colors cursor-pointer">
@@ -299,6 +304,16 @@
 </div>
 
 <script>
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 async function showAttendanceDetail(recordId) {
     const modal = document.getElementById('attendance-detail-modal');
     const modalBody = document.getElementById('modal-body-content');
@@ -325,7 +340,43 @@ async function showAttendanceDetail(recordId) {
         const emp = data.employee || {};
         const sched = data.schedule || {};
         const shift = sched.shift || {};
-        const loc = data.location || {};
+        const workOutlet = json.work_outlet || data.outlet || null;
+        const legacyLoc = data.location || null;
+
+        // Determine WORK Outlet display name:
+        // 1. work_outlet or data.outlet (primary snapshot from attendance_records.outlet_id)
+        // 2. If outlet_id exists but outlet data missing: 'Outlet Tidak Ditemukan'
+        // 3. Fallback to legacy location ONLY if record has no outlet_id
+        // 4. Default: 'Lokasi Belum Dikonfigurasi'
+        let locationName;
+        if (json.work_outlet_name) {
+            locationName = json.work_outlet_name;
+        } else if (workOutlet && workOutlet.name) {
+            locationName = workOutlet.name;
+        } else if (data.outlet_id) {
+            locationName = 'Outlet Tidak Ditemukan';
+        } else if (legacyLoc && legacyLoc.name) {
+            locationName = legacyLoc.name;
+        } else {
+            locationName = 'Lokasi Belum Dikonfigurasi';
+        }
+
+        const isTemporaryAssignment = Boolean(json.is_temporary_assignment);
+        const homeOutletName = json.historical_home_outlet?.name || '-';
+
+        const checkInDistance = data.check_in_distance_meters !== null && data.check_in_distance_meters !== undefined
+            ? Math.round(data.check_in_distance_meters) + 'm'
+            : '--';
+        const checkInAccuracy = data.check_in_accuracy_meters !== null && data.check_in_accuracy_meters !== undefined
+            ? '±' + Math.round(data.check_in_accuracy_meters) + 'm'
+            : '--';
+
+        const checkOutDistance = data.check_out_distance_meters !== null && data.check_out_distance_meters !== undefined
+            ? Math.round(data.check_out_distance_meters) + 'm'
+            : '--';
+        const checkOutAccuracy = data.check_out_accuracy_meters !== null && data.check_out_accuracy_meters !== undefined
+            ? '±' + Math.round(data.check_out_accuracy_meters) + 'm'
+            : '--';
 
         modalEmp.innerText = (emp.full_name || 'Karyawan') + ' (' + (emp.employee_code || '') + ') — ' + (data.work_date || '');
 
@@ -333,13 +384,17 @@ async function showAttendanceDetail(recordId) {
             <div class="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800/50 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
                 <div>
                     <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">Shift Kerja</span>
-                    <span class="font-bold text-slate-900 dark:text-slate-100">${shift.name || '--'} (${shift.code || '--'})</span>
-                    <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">${shift.start_time ? shift.start_time.substring(0,5) : ''} - ${shift.end_time ? shift.end_time.substring(0,5) : ''} WIB</span>
+                    <span class="font-bold text-slate-900 dark:text-slate-100">${escapeHtml(shift.name || '--')} (${escapeHtml(shift.code || '--')})</span>
+                    <span class="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">${shift.start_time ? escapeHtml(shift.start_time.substring(0,5)) : ''} - ${shift.end_time ? escapeHtml(shift.end_time.substring(0,5)) : ''} WIB</span>
                 </div>
                 <div>
                     <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">Lokasi Toko</span>
-                    <span class="font-bold text-slate-900 dark:text-slate-100">${loc.name || 'Lokasi Belum Dikonfigurasi'}</span>
-                    <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block">📍 Jarak: ${data.check_in_distance_meters !== null ? Math.round(data.check_in_distance_meters) + 'm' : '--'} (Akurasi ±${data.check_in_accuracy_meters !== null ? Math.round(data.check_in_accuracy_meters) + 'm' : '--'})</span>
+                    <span class="font-bold text-slate-900 dark:text-slate-100 block">${escapeHtml(locationName)}</span>
+                    ${isTemporaryAssignment ? `
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 my-0.5">PENUGASAN OUTLET</span>
+                        <span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium block">Home: ${escapeHtml(homeOutletName)}</span>
+                    ` : ''}
+                    <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block">📍 Jarak: ${escapeHtml(checkInDistance)} (Akurasi ${escapeHtml(checkInAccuracy)})</span>
                 </div>
             </div>
 
@@ -354,12 +409,12 @@ async function showAttendanceDetail(recordId) {
                 </div>
 
                 <div class="flex items-center gap-3">
-                    ${json.check_in_selfie_url ? `<a href="${json.check_in_selfie_url}" target="_blank"><img src="${json.check_in_selfie_url}" alt="Selfie Masuk" class="w-20 h-20 rounded-lg object-cover border border-emerald-300 dark:border-emerald-700 shadow-2xs hover:opacity-90 transition-opacity"></a>` : '<div class="w-20 h-20 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-[10px] text-emerald-700 dark:text-emerald-300 font-bold">No Selfie</div>'}
+                    ${json.check_in_selfie_url ? `<a href="${encodeURI(json.check_in_selfie_url)}" target="_blank"><img src="${encodeURI(json.check_in_selfie_url)}" alt="Selfie Masuk" class="w-20 h-20 rounded-lg object-cover border border-emerald-300 dark:border-emerald-700 shadow-2xs hover:opacity-90 transition-opacity"></a>` : '<div class="w-20 h-20 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-[10px] text-emerald-700 dark:text-emerald-300 font-bold">No Selfie</div>'}
                     <div class="space-y-1 text-[11px] text-emerald-800 dark:text-emerald-300">
-                        <p><strong>GPS:</strong> ${data.check_in_latitude || '--'}, ${data.check_in_longitude || '--'}</p>
-                        <p><strong>Akurasi GPS:</strong> ±${data.check_in_accuracy_meters !== null ? Math.round(data.check_in_accuracy_meters) : '--'}m</p>
-                        <p><strong>Jarak:</strong> ${data.check_in_distance_meters !== null ? Math.round(data.check_in_distance_meters) : '--'}m</p>
-                        <p><strong>IP & Browser:</strong> ${data.check_in_ip || '--'}</p>
+                        <p><strong>GPS:</strong> ${escapeHtml(data.check_in_latitude ?? '--')}, ${escapeHtml(data.check_in_longitude ?? '--')}</p>
+                        <p><strong>Akurasi GPS:</strong> ${escapeHtml(checkInAccuracy)}</p>
+                        <p><strong>Jarak:</strong> ${escapeHtml(checkInDistance)}</p>
+                        <p><strong>IP & Browser:</strong> ${escapeHtml(data.check_in_ip || '--')}</p>
                     </div>
                 </div>
             </div>
@@ -378,12 +433,12 @@ async function showAttendanceDetail(recordId) {
                 </div>
 
                 <div class="flex items-center gap-3">
-                    ${json.check_out_selfie_url ? `<a href="${json.check_out_selfie_url}" target="_blank"><img src="${json.check_out_selfie_url}" alt="Selfie Pulang" class="w-20 h-20 rounded-lg object-cover border border-indigo-300 dark:border-indigo-700 shadow-2xs hover:opacity-90 transition-opacity"></a>` : '<div class="w-20 h-20 rounded-lg bg-indigo-100 dark:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-[10px] text-indigo-700 dark:text-indigo-300 font-bold">No Selfie</div>'}
+                    ${json.check_out_selfie_url ? `<a href="${encodeURI(json.check_out_selfie_url)}" target="_blank"><img src="${encodeURI(json.check_out_selfie_url)}" alt="Selfie Pulang" class="w-20 h-20 rounded-lg object-cover border border-indigo-300 dark:border-indigo-700 shadow-2xs hover:opacity-90 transition-opacity"></a>` : '<div class="w-20 h-20 rounded-lg bg-indigo-100 dark:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-[10px] text-indigo-700 dark:text-indigo-300 font-bold">No Selfie</div>'}
                     <div class="space-y-1 text-[11px] text-indigo-800 dark:text-indigo-300">
-                        <p><strong>GPS:</strong> ${data.check_out_latitude || '--'}, ${data.check_out_longitude || '--'}</p>
-                        <p><strong>Akurasi GPS:</strong> ±${data.check_out_accuracy_meters !== null ? Math.round(data.check_out_accuracy_meters) : '--'}m</p>
-                        <p><strong>Jarak:</strong> ${data.check_out_distance_meters !== null ? Math.round(data.check_out_distance_meters) : '--'}m</p>
-                        <p><strong>IP & Browser:</strong> ${data.check_out_ip || '--'}</p>
+                        <p><strong>GPS:</strong> ${escapeHtml(data.check_out_latitude ?? '--')}, ${escapeHtml(data.check_out_longitude ?? '--')}</p>
+                        <p><strong>Akurasi GPS:</strong> ${escapeHtml(checkOutAccuracy)}</p>
+                        <p><strong>Jarak:</strong> ${escapeHtml(checkOutDistance)}</p>
+                        <p><strong>IP & Browser:</strong> ${escapeHtml(data.check_out_ip || '--')}</p>
                     </div>
                 </div>
             </div>
@@ -392,29 +447,29 @@ async function showAttendanceDetail(recordId) {
             <div class="grid grid-cols-4 gap-2 pt-1 font-mono text-[11px]">
                 <div class="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg text-center">
                     <span class="text-[9px] text-slate-500 dark:text-slate-400 font-sans block">Terlambat</span>
-                    <span class="font-extrabold text-slate-900 dark:text-slate-100">${data.late_minutes || 0}m</span>
+                    <span class="font-extrabold text-slate-900 dark:text-slate-100">${Number(data.late_minutes) || 0}m</span>
                 </div>
                 <div class="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg text-center">
                     <span class="text-[9px] text-slate-500 dark:text-slate-400 font-sans block">Worked Time</span>
-                    <span class="font-extrabold text-slate-900 dark:text-slate-100">${Math.floor((data.worked_minutes || 0)/60)}j ${(data.worked_minutes || 0)%60}m</span>
+                    <span class="font-extrabold text-slate-900 dark:text-slate-100">${Math.floor((Number(data.worked_minutes) || 0)/60)}j ${(Number(data.worked_minutes) || 0)%60}m</span>
                 </div>
                 <div class="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg text-center">
                     <span class="text-[9px] text-slate-500 dark:text-slate-400 font-sans block">Pulang Awal</span>
-                    <span class="font-extrabold text-slate-900 dark:text-slate-100">${data.early_leave_minutes || 0}m</span>
+                    <span class="font-extrabold text-slate-900 dark:text-slate-100">${Number(data.early_leave_minutes) || 0}m</span>
                 </div>
                 <div class="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg text-center">
                     <span class="text-[9px] text-slate-500 dark:text-slate-400 font-sans block">Lembur Harian</span>
-                    <span class="font-extrabold text-slate-900 dark:text-slate-100">${data.overtime_minutes || 0}m</span>
+                    <span class="font-extrabold text-slate-900 dark:text-slate-100">${Number(data.overtime_minutes) || 0}m</span>
                 </div>
             </div>
 
             <details class="rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/60 dark:bg-amber-950/40 p-3">
                 <summary class="flex min-h-[44px] cursor-pointer items-center font-extrabold text-amber-900 dark:text-amber-300">Koreksi Absensi</summary>
-                <form method="POST" action="${json.correction_url}" class="mt-3 space-y-3">
+                <form method="POST" action="${escapeHtml(json.correction_url || '')}" class="mt-3 space-y-3">
                     <input type="hidden" name="_token" value="{{ csrf_token() }}">
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <label class="block min-w-0"><span class="mb-1 block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">Jam Masuk</span><input type="datetime-local" name="check_in_at" value="${json.check_in_local || ''}" class="min-h-[44px] w-full min-w-0 max-w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 px-3 text-xs"></label>
-                        <label class="block min-w-0"><span class="mb-1 block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">Jam Pulang</span><input type="datetime-local" name="check_out_at" value="${json.check_out_local || ''}" class="min-h-[44px] w-full min-w-0 max-w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 px-3 text-xs"></label>
+                        <label class="block min-w-0"><span class="mb-1 block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">Jam Masuk</span><input type="datetime-local" name="check_in_at" value="${escapeHtml(json.check_in_local || '')}" class="min-h-[44px] w-full min-w-0 max-w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 px-3 text-xs"></label>
+                        <label class="block min-w-0"><span class="mb-1 block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">Jam Pulang</span><input type="datetime-local" name="check_out_at" value="${escapeHtml(json.check_out_local || '')}" class="min-h-[44px] w-full min-w-0 max-w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 px-3 text-xs"></label>
                     </div>
                     <label class="block"><span class="mb-1 block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">Alasan Koreksi *</span><textarea name="reason" minlength="5" maxlength="2000" required rows="2" class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 p-3 text-xs" placeholder="Contoh: Lupa absen pulang"></textarea></label>
                     <label class="block"><span class="mb-1 block text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">Catatan Internal (opsional)</span><textarea name="internal_note" maxlength="2000" rows="2" class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 p-3 text-xs"></textarea></label>

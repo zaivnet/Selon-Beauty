@@ -125,8 +125,8 @@ class AttendanceMonitoringService
             ->whereDate('date', $targetDate)->get()->keyBy('employee_id');
         $calendarDay = Holiday::whereDate('date', $targetDate)->first();
 
-        // Fetch attendance records for target date with location
-        $records = AttendanceRecord::with(['location'])
+        // Fetch attendance records for target date with location and outlet
+        $records = AttendanceRecord::with(['location', 'outlet'])
             ->whereIn('employee_id', $employeeIds)
             ->whereDate('work_date', $targetDate)
             ->get()
@@ -321,7 +321,7 @@ class AttendanceMonitoringService
             ->get()
             ->keyBy(fn ($item) => $item->date->format('Y-m-d'));
 
-        $records = AttendanceRecord::with(['location'])
+        $records = AttendanceRecord::with(['location', 'outlet'])
             ->whereIn('employee_id', $empIds)
             ->whereDate('work_date', '>=', $startDate)
             ->whereDate('work_date', '<=', $endDate)

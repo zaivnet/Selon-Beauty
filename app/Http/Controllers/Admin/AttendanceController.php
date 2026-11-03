@@ -11,6 +11,7 @@ use App\Services\OutletScopeService;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class AttendanceController extends Controller
@@ -60,7 +61,7 @@ class AttendanceController extends Controller
         ]);
     }
 
-    public function show(Request $request, AttendanceRecord $attendance): View|JsonResponse
+    public function show(Request $request, AttendanceRecord $attendance): View|JsonResponse|RedirectResponse
     {
         $this->outletScopeService->ensureCanManageAttendance($request->user(), $attendance);
 
@@ -80,12 +81,13 @@ class AttendanceController extends Controller
             && (int) $attendance->outlet_id !== (int) $historicalHomeOutlet->id
         );
 
-        if ($request->wantsJson()) {
+        if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
                 'data' => $attendance,
                 'historical_home_outlet' => $historicalHomeOutlet,
                 'work_outlet' => $attendance->outlet,
+                'work_outlet_name' => $attendance->getWorkOutletName(),
                 'is_temporary_assignment' => $isTemporaryAssignment,
                 'check_in_selfie_url' => $attendance->check_in_selfie_path ? route('attendance.selfie', ['record' => $attendance->id, 'type' => 'check_in']) : null,
                 'check_out_selfie_url' => $attendance->check_out_selfie_path ? route('attendance.selfie', ['record' => $attendance->id, 'type' => 'check_out']) : null,
@@ -95,10 +97,17 @@ class AttendanceController extends Controller
             ]);
         }
 
-        return view('admin.attendance.show', [
-            'attendance' => $attendance,
-            'historicalHomeOutlet' => $historicalHomeOutlet,
-            'isTemporaryAssignment' => $isTemporaryAssignment,
+        if (view()->exists('admin.attendance.show')) {
+            return view('admin.attendance.show', [
+                'attendance' => $attendance,
+                'historicalHomeOutlet' => $historicalHomeOutlet,
+                'isTemporaryAssignment' => $isTemporaryAssignment,
+            ]);
+        }
+
+        return redirect()->route('admin.attendance.index', [
+            'date' => $attendance->work_date?->toDateString(),
+            'employee_id' => $attendance->employee_id,
         ]);
     }
 

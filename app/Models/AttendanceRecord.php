@@ -99,4 +99,17 @@ class AttendanceRecord extends Model
     {
         return $this->belongsTo(User::class, 'corrected_by');
     }
+
+    /**
+     * Resolve the WORK Outlet display name from snapshot outlet_id,
+     * falling back to legacy location only if outlet_id is not set.
+     */
+    public function getWorkOutletName(): string
+    {
+        if ($this->outlet_id) {
+            return $this->outlet?->name ?? 'Outlet Tidak Ditemukan';
+        }
+
+        return $this->location?->name ?? 'Lokasi Belum Dikonfigurasi';
+    }
 }
