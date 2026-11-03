@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Admin Panel') - {{ $branding['app_name'] }}</title>
+    <title>@yield('title', 'Admin Panel') · {{ $branding['company_name'] }} — {{ $branding['product_name'] }}</title>
     <link rel="manifest" href="{{ route('pwa.manifest', [], false) }}">
     <meta name="theme-color" content="{{ $branding['pwa_theme_color'] }}">
     <meta name="mobile-web-app-capable" content="yes">
@@ -113,15 +113,15 @@
                  :class="collapsed ? 'justify-center px-2' : 'justify-between px-4'">
                 <div class="flex items-center gap-3 overflow-hidden">
                     @if($branding['app_logo_url'])
-                        <img src="{{ $branding['app_logo_url'] }}" alt="{{ $branding['app_name'] }}" class="w-9 h-9 object-contain rounded-xl shrink-0">
+                        <img src="{{ $branding['app_logo_url'] }}" alt="{{ $branding['company_name'] }}" class="w-9 h-9 object-contain rounded-xl shrink-0">
                     @else
                         <div class="w-9 h-9 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 flex items-center justify-center font-black text-white text-sm shadow-md shadow-rose-500/20 shrink-0">
-                            {{ strtoupper(substr($branding['app_name'], 0, 2)) }}
+                            {{ strtoupper(substr($branding['company_name'], 0, 2)) }}
                         </div>
                     @endif
                     <div x-show="!collapsed" class="transition-opacity duration-200">
-                        <h1 class="font-extrabold text-sm tracking-tight text-slate-900 dark:text-white leading-none whitespace-nowrap">{{ $branding['app_name'] }}</h1>
-                        <span class="text-[10px] text-rose-600 dark:text-rose-400 font-extrabold uppercase tracking-wider block mt-0.5 whitespace-nowrap">Admin Portal</span>
+                        <h1 class="font-extrabold text-sm tracking-tight text-slate-900 dark:text-white leading-none whitespace-nowrap">{{ $branding['company_name'] }}</h1>
+                        <span class="text-[10px] text-rose-600 dark:text-rose-400 font-extrabold uppercase tracking-wider block mt-0.5 whitespace-nowrap">Admin Portal · {{ $branding['product_name'] }}</span>
                     </div>
                 </div>
 
@@ -508,7 +508,7 @@
 
         <!-- Admin Footer -->
         <footer class="py-4 px-6 text-center text-xs font-semibold text-slate-400 dark:text-slate-500 border-t border-slate-200/80 dark:border-slate-800/80">
-            <span>{{ $branding['company_name'] ?? config('app.name', 'Selon Beauty') }}</span> &bull; <span>Versi {{ config('app.version', '1.0.0') }}</span>
+            <span>{{ $branding['company_name'] }}</span> &bull; <span>Powered by {{ $branding['product_name'] }}</span> &bull; <span>Versi {{ config('app.version', '1.2.0') }}</span>
         </footer>
     </div>
 

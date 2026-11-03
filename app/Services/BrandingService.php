@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\Storage;
 
 class BrandingService
 {
+    public const PRODUCT_NAME = 'Absensi Zaiv';
+    public const PRODUCT_TAGLINE = 'Sistem Presensi & Manajemen Kerja';
+
     public const MEDIA_SETTINGS = [
         'logo' => 'app_logo_path',
         'pwa-icon' => 'app_icon_path',
@@ -29,16 +32,67 @@ class BrandingService
         return $this->cachedSettings[$key] ?? $default;
     }
 
+    /**
+     * Product Identity Accessor (Fixed / Centrally Defined)
+     */
+    public function getProductName(): string
+    {
+        return self::PRODUCT_NAME;
+    }
+
+    /**
+     * Product Tagline Accessor (Fixed / Centrally Defined)
+     */
+    public function getProductTagline(): string
+    {
+        return self::PRODUCT_TAGLINE;
+    }
+
+    /**
+     * Legacy App Name Accessor (Backward-Compatible with database setting & config)
+     */
     public function getAppName(): string
     {
-        return $this->getSetting('app_name', config('app.name', 'Attendance & Scheduling'));
+        $dbAppName = trim((string) $this->getSetting('app_name', ''));
+        if ($dbAppName !== '') {
+            return $dbAppName;
+        }
+
+        $configName = config('app.name');
+        if ($configName && ! in_array($configName, ['Laravel', 'Attendance & Scheduling', 'SELON BEAUTY Attendance'], true)) {
+            return $configName;
+        }
+
+        return self::PRODUCT_NAME;
     }
 
+    /**
+     * Organization Short Name Accessor
+     */
     public function getAppShortName(): string
     {
-        return $this->getSetting('app_short_name', 'SELON BEAUTY');
+        $shortName = trim((string) $this->getSetting('app_short_name', ''));
+        if ($shortName !== '') {
+            return $shortName;
+        }
+
+        $companyName = trim((string) $this->getSetting('company_name', ''));
+        if ($companyName !== '') {
+            return $companyName;
+        }
+
+        return self::PRODUCT_NAME;
     }
 
+    /**
+     * Organization / Company Name Resolution
+     *
+     * Resolution order:
+     * 1. Configured company_name in app_settings
+     * 2. Configured app_short_name in app_settings
+     * 3. Configured app_name in app_settings
+     * 4. Fallback to generic organization label or config
+     */
     public function getCompanyName(): string
     {
         $companyName = trim((string) $this->getSetting('company_name', ''));
@@ -56,33 +110,80 @@ class BrandingService
             return $appName;
         }
 
-        return 'SELON';
+        return config('app.company_name', 'Perusahaan');
     }
 
+    /**
+     * Alias for Organization Name
+     */
+    public function getOrganizationName(): string
+    {
+        return $this->getCompanyName();
+    }
+
+    /**
+     * Organization Tagline Accessor
+     */
     public function getAppTagline(): string
     {
-        return $this->getSetting('app_tagline', 'Sistem Presensi & Kehadiran Moderen');
+        return $this->getSetting('app_tagline', self::PRODUCT_TAGLINE);
+    }
+
+    /**
+     * Dynamic PWA Application Name
+     */
+    public function getPwaName(): string
+    {
+        $dbAppName = trim((string) $this->getSetting('app_name', ''));
+        if ($dbAppName !== '') {
+            return $dbAppName;
+        }
+
+        $companyName = trim((string) $this->getSetting('company_name', ''));
+        if ($companyName !== '' && $companyName !== 'Perusahaan') {
+            return "{$companyName} (" . self::PRODUCT_NAME . ')';
+        }
+
+        return self::PRODUCT_NAME;
+    }
+
+    /**
+     * Dynamic PWA Short Name
+     */
+    public function getPwaShortName(): string
+    {
+        $dbShortName = trim((string) $this->getSetting('app_short_name', ''));
+        if ($dbShortName !== '') {
+            return $dbShortName;
+        }
+
+        $companyName = trim((string) $this->getSetting('company_name', ''));
+        if ($companyName !== '' && $companyName !== 'Perusahaan') {
+            return $companyName;
+        }
+
+        return self::PRODUCT_NAME;
     }
 
     public function getBrandPrimary(): string
     {
-        $color = $this->getSetting('brand_primary', '#e11d48');
+        $color = $this->getSetting('brand_primary', '#0F766E');
 
-        return preg_match('/^#[0-9A-Fa-f]{6}$/', $color) ? $color : '#e11d48';
+        return preg_match('/^#[0-9A-Fa-f]{6}$/', $color) ? $color : '#0F766E';
     }
 
     public function getBrandAccent(): string
     {
-        $color = $this->getSetting('brand_accent', '#f43f5e');
+        $color = $this->getSetting('brand_accent', '#0284C7');
 
-        return preg_match('/^#[0-9A-Fa-f]{6}$/', $color) ? $color : '#f43f5e';
+        return preg_match('/^#[0-9A-Fa-f]{6}$/', $color) ? $color : '#0284C7';
     }
 
     public function getPwaThemeColor(): string
     {
-        $color = $this->getSetting('pwa_theme_color', '#e11d48');
+        $color = $this->getSetting('pwa_theme_color', $this->getBrandPrimary());
 
-        return preg_match('/^#[0-9A-Fa-f]{6}$/', $color) ? $color : '#e11d48';
+        return preg_match('/^#[0-9A-Fa-f]{6}$/', $color) ? $color : $this->getBrandPrimary();
     }
 
     public function getAppLogoUrl(): ?string
@@ -134,6 +235,21 @@ class BrandingService
     }
 
     /**
+     * Format a standard browser title: {pageTitle} · {organization_name} — {product_name}
+     */
+    public function formatBrowserTitle(string $pageTitle): string
+    {
+        $org = $this->getCompanyName();
+        $product = $this->getProductName();
+
+        if (trim($pageTitle) === '') {
+            return "{$org} — {$product}";
+        }
+
+        return "{$pageTitle} · {$org} — {$product}";
+    }
+
+    /**
      * Get all branding properties as array for views / manifest / notifications.
      */
     public function getBranding(): array
@@ -147,9 +263,12 @@ class BrandingService
     public function getBrandingData(): array
     {
         return [
+            'product_name' => $this->getProductName(),
+            'product_tagline' => $this->getProductTagline(),
+            'company_name' => $this->getCompanyName(),
+            'organization_name' => $this->getOrganizationName(),
             'app_name' => $this->getAppName(),
             'app_short_name' => $this->getAppShortName(),
-            'company_name' => $this->getCompanyName(),
             'app_tagline' => $this->getAppTagline(),
             'brand_primary' => $this->getBrandPrimary(),
             'brand_accent' => $this->getBrandAccent(),

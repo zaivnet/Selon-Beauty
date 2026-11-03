@@ -12,7 +12,7 @@ class ServiceWorkerStaticTest extends TestCase
         $this->assertFileExists($swPath);
 
         $content = file_get_contents($swPath);
-        $this->assertStringContainsString("const CACHE_NAME = 'selon-beauty-static-v3';", $content);
+        $this->assertStringContainsString("const CACHE_NAME = 'absensi-zaiv-static-v4';", $content);
     }
 
     public function test_manifest_file_exists_and_is_valid_json(): void

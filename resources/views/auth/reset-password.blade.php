@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Reset Password Baru - {{ $branding['app_name'] ?? 'SELON BEAUTY' }}</title>
-    <meta name="theme-color" content="{{ $branding['pwa_theme_color'] ?? '#E11D48' }}">
+    <title>Reset Password · {{ $branding['company_name'] }} — {{ $branding['product_name'] }}</title>
+    <meta name="theme-color" content="{{ $branding['pwa_theme_color'] ?? '#0F766E' }}">
     <link rel="icon" type="{{ $branding['favicon_mime_type'] ?? 'image/x-icon' }}" href="{{ $branding['favicon_url'] ?? asset('favicon.ico') }}">
     <style>
         :root {
-            --brand-primary: {{ $branding['brand_primary'] ?? '#E11D48' }};
-            --brand-accent: {{ $branding['brand_accent'] ?? '#F43F5E' }};
+            --brand-primary: {{ $branding['brand_primary'] ?? '#0F766E' }};
+            --brand-accent: {{ $branding['brand_accent'] ?? '#0284C7' }};
         }
     </style>
     @include('partials.theme_bootstrap')
@@ -26,15 +26,15 @@
         <!-- Brand Header -->
         <div class="text-center space-y-3">
             @if(!empty($branding['app_logo_url']))
-                <img src="{{ $branding['app_logo_url'] }}" alt="{{ $branding['app_name'] }}" class="w-14 h-14 mx-auto object-contain rounded-2xl shadow-xl shadow-rose-950/50">
+                <img src="{{ $branding['app_logo_url'] }}" alt="{{ $branding['company_name'] }}" class="w-14 h-14 mx-auto object-contain rounded-2xl shadow-xl shadow-rose-950/50">
             @else
                 <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-rose-600 via-pink-600 to-rose-500 flex items-center justify-center font-black text-white text-xl shadow-xl shadow-rose-950/50">
-                    {{ strtoupper(substr($branding['app_name'] ?? 'SB', 0, 2)) }}
+                    {{ strtoupper(substr($branding['company_name'] ?? 'AZ', 0, 2)) }}
                 </div>
             @endif
 
             <div>
-                <h1 class="text-xl font-black text-slate-900 dark:text-white tracking-tight">{{ $branding['app_name'] ?? 'SELON BEAUTY' }}</h1>
+                <h1 class="text-xl font-black text-slate-900 dark:text-white tracking-tight">{{ $branding['company_name'] }}</h1>
                 <p class="text-xs font-bold text-rose-500 dark:text-rose-400 uppercase tracking-widest mt-0.5">Password Baru</p>
             </div>
         </div>
@@ -116,7 +116,7 @@
         </div>
 
         <p class="text-[11px] text-slate-400 dark:text-slate-500 text-center font-medium">
-            &copy; {{ date('Y') }} {{ $branding['app_name'] ?? 'SELON BEAUTY' }}. All rights reserved.
+            &copy; {{ date('Y') }} {{ $branding['company_name'] }} &bull; Powered by {{ $branding['product_name'] }}
         </p>
 
     </div>

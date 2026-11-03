@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>@yield('title', 'Portal Karyawan') - {{ $branding['app_name'] }}</title>
+    <title>@yield('title', 'Portal Karyawan') · {{ $branding['company_name'] }} — {{ $branding['product_name'] }}</title>
     <link rel="manifest" href="{{ route('pwa.manifest', [], false) }}">
     <meta name="theme-color" content="{{ $branding['pwa_theme_color'] }}">
     <meta name="mobile-web-app-capable" content="yes">
@@ -68,15 +68,15 @@
     <header class="bg-gradient-to-r from-rose-700 via-rose-600 to-pink-600 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-20 shadow-md" style="padding-top: max(0.75rem, env(safe-area-inset-top, 0px));">
         <div class="flex items-center gap-2.5">
             @if($branding['app_logo_url'])
-                <img src="{{ $branding['app_logo_url'] }}" alt="{{ $branding['app_name'] }}" class="w-8 h-8 object-contain rounded-xl shadow-xs">
+                <img src="{{ $branding['app_logo_url'] }}" alt="{{ $branding['company_name'] }}" class="w-8 h-8 object-contain rounded-xl shadow-xs">
             @else
                 <div class="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center font-black text-xs tracking-wider shadow-inner">
-                    {{ strtoupper(substr($branding['app_name'], 0, 2)) }}
+                    {{ strtoupper(substr($branding['company_name'], 0, 2)) }}
                 </div>
             @endif
             <div>
-                <h1 class="font-black text-sm tracking-tight leading-tight">{{ $branding['app_name'] }}</h1>
-                <span class="text-[10px] text-rose-200 font-medium block">Employee Portal</span>
+                <h1 class="font-black text-sm tracking-tight leading-tight">{{ $branding['company_name'] }}</h1>
+                <span class="text-[10px] text-rose-200 font-medium block">Portal Karyawan · {{ $branding['product_name'] }}</span>
             </div>
         </div>
 

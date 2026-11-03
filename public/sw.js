@@ -1,4 +1,4 @@
-const CACHE_NAME = 'selon-beauty-static-v3';
+const CACHE_NAME = 'absensi-zaiv-static-v4';
 const PRECACHE_ASSETS = [
     '/offline.html',
     '/icons/icon-192x192.png',
@@ -26,7 +26,7 @@ self.addEventListener('activate', (event) => {
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
-                    if (cacheName.startsWith('selon-beauty-') && cacheName !== CACHE_NAME) {
+                    if ((cacheName.startsWith('selon-beauty-') || cacheName.startsWith('absensi-zaiv-')) && cacheName !== CACHE_NAME) {
                         return caches.delete(cacheName);
                     }
                 })

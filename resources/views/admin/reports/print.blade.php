@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cetak Laporan Kehadiran Karyawan - {{ $branding['app_name'] ?? 'Absensi' }}</title>
+    <title>Cetak Laporan Kehadiran · {{ $branding['company_name'] }} — {{ $branding['product_name'] }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         @media print {
@@ -51,8 +51,8 @@
         <!-- Document Header -->
         <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between border-b-2 border-slate-900 pb-4 gap-4">
             <div>
-                <h1 class="text-xl sm:text-2xl font-black tracking-tight text-slate-900 ui-page-header">{{ $branding['company_name'] ?? ($branding['app_name'] ?? 'Aplikasi Absensi') }}</h1>
-                <h2 class="text-xs sm:text-sm font-extrabold text-rose-700 uppercase tracking-widest mt-0.5">Laporan Kehadiran Karyawan</h2>
+                <h1 class="text-xl sm:text-2xl font-black tracking-tight text-slate-900 ui-page-header">{{ $branding['company_name'] }}</h1>
+                <h2 class="text-xs sm:text-sm font-extrabold text-rose-700 uppercase tracking-widest mt-0.5">Laporan Kehadiran Karyawan · {{ $branding['product_name'] }}</h2>
             </div>
             <div class="sm:text-right text-xs space-y-0.5 text-slate-600 font-medium">
                 <p><strong>Periode:</strong> {{ \Carbon\Carbon::parse($reportData['start_date'])->translatedFormat('d M Y') }} - {{ \Carbon\Carbon::parse($reportData['end_date'])->translatedFormat('d M Y') }}</p>

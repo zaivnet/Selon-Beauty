@@ -9,14 +9,38 @@ class PwaManifestController extends Controller
 {
     public function __invoke(BrandingService $brandingService): JsonResponse
     {
-        $appName = $brandingService->getAppName();
-        $appShortName = $brandingService->getAppShortName();
+        $manifestName = $brandingService->getPwaName();
+        $manifestShortName = $brandingService->getPwaShortName();
         $themeColor = $brandingService->getPwaThemeColor();
-        $iconUrl = $brandingService->getAppIconUrl();
+
+        $customIconUrl = $brandingService->getMediaPath('pwa-icon')
+            ? $brandingService->getAppIconUrl()
+            : null;
+
+        $icons = [
+            [
+                'src' => $customIconUrl ?? asset('icons/icon-192x192.png'),
+                'sizes' => '192x192',
+                'type' => 'image/png',
+                'purpose' => 'any',
+            ],
+            [
+                'src' => $customIconUrl ?? asset('icons/icon-512x512.png'),
+                'sizes' => '512x512',
+                'type' => 'image/png',
+                'purpose' => 'any',
+            ],
+            [
+                'src' => $customIconUrl ?? asset('icons/maskable-icon-512x512.png'),
+                'sizes' => '512x512',
+                'type' => 'image/png',
+                'purpose' => 'maskable',
+            ],
+        ];
 
         $manifestData = [
-            'name' => $appName,
-            'short_name' => $appShortName,
+            'name' => $manifestName,
+            'short_name' => $manifestShortName,
             'description' => $brandingService->getAppTagline(),
             'start_url' => '/',
             'scope' => '/',
@@ -24,26 +48,7 @@ class PwaManifestController extends Controller
             'orientation' => 'portrait',
             'background_color' => '#ffffff',
             'theme_color' => $themeColor,
-            'icons' => [
-                [
-                    'src' => $iconUrl,
-                    'sizes' => '192x192',
-                    'type' => 'image/png',
-                    'purpose' => 'any',
-                ],
-                [
-                    'src' => $iconUrl,
-                    'sizes' => '512x512',
-                    'type' => 'image/png',
-                    'purpose' => 'any',
-                ],
-                [
-                    'src' => $iconUrl,
-                    'sizes' => '512x512',
-                    'type' => 'image/png',
-                    'purpose' => 'maskable',
-                ],
-            ],
+            'icons' => $icons,
         ];
 
         return response()->json($manifestData, 200, [

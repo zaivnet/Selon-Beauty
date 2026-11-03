@@ -16,7 +16,7 @@ class AuthenticationTest extends TestCase
         $response = $this->get('/login');
 
         $response->assertStatus(200)
-            ->assertSee('SELON BEAUTY')
+            ->assertSee('Absensi Zaiv')
             ->assertSee('Email / Nomor HP');
     }
 

@@ -45,7 +45,7 @@ class FoundationTest extends TestCase
         $response = $this->actingAs($owner)->get('/admin/dashboard');
 
         $response->assertStatus(200)
-            ->assertSee('SELON BEAUTY')
+            ->assertSee('Absensi Zaiv')
             ->assertSee('Status Operasional Global')
             ->assertSee('Backup Operasional', false);
     }

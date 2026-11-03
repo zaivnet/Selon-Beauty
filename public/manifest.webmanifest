@@ -1,13 +1,13 @@
 {
-  "name": "SELON BEAUTY Attendance",
-  "short_name": "SELON BEAUTY",
-  "description": "Sistem Presensi & Kehadiran Karyawan SELON BEAUTY",
+  "name": "Absensi Zaiv",
+  "short_name": "Absensi Zaiv",
+  "description": "Sistem Presensi & Manajemen Kerja - Absensi Zaiv",
   "start_url": "/app/dashboard",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#ffffff",
-  "theme_color": "#e11d48",
+  "theme_color": "#0F766E",
   "categories": ["business", "productivity"],
   "icons": [
     {

@@ -1044,7 +1044,7 @@ document.getElementById('selfie_file_checkout')?.addEventListener('change', vali
 let lastGpsTimestamp = null;
 const isStandalonePWA = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
 const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-const appName = "{{ $branding['app_short_name'] ?? 'SELON BEAUTY' }}";
+const appName = "{{ $branding['app_short_name'] ?? 'Absensi Zaiv' }}";
 
 function updateGpsUIState(state, message, distanceMeters = null, accuracyMeters = null) {
     const badge = document.getElementById('gps-badge-status');

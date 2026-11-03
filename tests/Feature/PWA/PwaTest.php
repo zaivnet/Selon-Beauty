@@ -42,19 +42,25 @@ class PwaTest extends TestCase
 
         $json = json_decode($response->getContent(), true);
         $this->assertIsArray($json);
-        $this->assertEquals('SELON BEAUTY Attendance', $json['name']);
-        $this->assertEquals('SELON BEAUTY', $json['short_name']);
+        $this->assertEquals('Absensi Zaiv', $json['name']);
+        $this->assertEquals('Absensi Zaiv', $json['short_name']);
         $this->assertEquals('/', $json['start_url']);
         $this->assertEquals('standalone', $json['display']);
-        $this->assertEquals('#e11d48', $json['theme_color']);
+        $this->assertEquals('#0F766E', $json['theme_color']);
         $this->assertCount(3, $json['icons']);
+        $this->assertStringEndsWith('/icons/icon-192x192.png', $json['icons'][0]['src']);
+        $this->assertEquals('192x192', $json['icons'][0]['sizes']);
+        $this->assertStringEndsWith('/icons/icon-512x512.png', $json['icons'][1]['src']);
+        $this->assertEquals('512x512', $json['icons'][1]['sizes']);
+        $this->assertStringEndsWith('/icons/maskable-icon-512x512.png', $json['icons'][2]['src']);
+        $this->assertEquals('maskable', $json['icons'][2]['purpose']);
     }
 
     public function test_service_worker_js_is_accessible(): void
     {
         $response = $this->get('/sw.js');
         $response->assertOk();
-        $this->assertStringContainsString('selon-beauty-static-v3', $response->getContent());
+        $this->assertStringContainsString('absensi-zaiv-static-v4', $response->getContent());
         $this->assertStringContainsString('offline.html', $response->getContent());
     }
 
@@ -63,7 +69,7 @@ class PwaTest extends TestCase
         $response = $this->get('/offline.html');
         $response->assertOk();
         $this->assertStringContainsString('Koneksi Terputus (Offline)', $response->getContent());
-        $this->assertStringContainsString('SELON BEAUTY', $response->getContent());
+        $this->assertStringContainsString('Absensi Zaiv', $response->getContent());
     }
 
     public function test_pwa_icons_exist_and_accessible(): void

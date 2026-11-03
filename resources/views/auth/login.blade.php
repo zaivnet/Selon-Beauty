@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masuk - {{ $branding['app_name'] }}</title>
+    <title>Masuk · {{ $branding['company_name'] }} — {{ $branding['product_name'] }}</title>
     <link rel="manifest" href="{{ route('pwa.manifest', [], false) }}">
     <meta name="theme-color" content="{{ $branding['pwa_theme_color'] }}">
     <meta name="mobile-web-app-capable" content="yes">
@@ -28,13 +28,13 @@
         <!-- Header Branding Banner -->
         <div class="bg-gradient-to-r from-rose-700 via-rose-600 to-pink-600 p-8 text-white text-center relative">
             @if($branding['app_logo_url'])
-                <img src="{{ $branding['app_logo_url'] }}" alt="{{ $branding['app_name'] }}" class="w-16 h-16 object-contain rounded-2xl mx-auto mb-3 shadow-lg shadow-rose-900/30">
+                <img src="{{ $branding['app_logo_url'] }}" alt="{{ $branding['company_name'] }}" class="w-16 h-16 object-contain rounded-2xl mx-auto mb-3 shadow-lg shadow-rose-900/30">
             @else
                 <div class="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mx-auto mb-3 text-2xl font-black shadow-lg shadow-rose-900/30 border border-white/30">
-                    {{ strtoupper(substr($branding['app_name'], 0, 2)) }}
+                    {{ strtoupper(substr($branding['company_name'], 0, 2)) }}
                 </div>
             @endif
-            <h1 class="text-2xl font-extrabold tracking-tight">{{ $branding['app_name'] }}</h1>
+            <h1 class="text-2xl font-extrabold tracking-tight">{{ $branding['company_name'] }}</h1>
             <p class="text-xs text-rose-100 mt-1 font-medium">{{ $branding['app_tagline'] }}</p>
         </div>
 

@@ -102,7 +102,7 @@ class FaceDetectorArchitectureTest extends TestCase
     {
         $worker = file_get_contents(public_path('sw.js'));
 
-        $this->assertStringContainsString("const CACHE_NAME = 'selon-beauty-static-v3';", $worker);
+        $this->assertStringContainsString("const CACHE_NAME = 'absensi-zaiv-static-v4';", $worker);
         $this->assertStringContainsString("url.pathname.startsWith('/app')", $worker);
         $this->assertStringContainsString("url.pathname.startsWith('/attendance')", $worker);
         $this->assertStringContainsString("url.pathname.startsWith('/build/')", $worker);

@@ -15,17 +15,17 @@
 
 @theme {
     --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --color-brand-primary: #be185d;
-    --color-brand-primary-hover: #9d174d;
-    --color-brand-secondary: #831843;
-    --color-brand-accent: #f43f5e;
-    --color-brand-surface: #fff1f2;
-    --color-brand-border: #ffe4e6;
+    --color-brand-primary: #0F766E;
+    --color-brand-primary-hover: #115E59;
+    --color-brand-secondary: #134E4A;
+    --color-brand-accent: #0284C7;
+    --color-brand-surface: #F0FDFA;
+    --color-brand-border: #CCFBF1;
 }
 
 :root {
-    --brand-primary: #be185d;
-    --brand-surface: #fff1f2;
+    --brand-primary: #0F766E;
+    --brand-surface: #F0FDFA;
 }
 
 body {
