@@ -1,4 +1,11 @@
+import Alpine from 'alpinejs';
 import { AttendanceFaceDetector, hasAcceptableFace, evaluateFaceAcceptance } from './attendance-face-detector';
+
+window.Alpine = Alpine;
+if (!window.__alpineStarted) {
+    window.__alpineStarted = true;
+    Alpine.start();
+}
 
 window.AttendanceFaceDetector = AttendanceFaceDetector;
 window.hasAcceptableAttendanceFace = hasAcceptableFace;

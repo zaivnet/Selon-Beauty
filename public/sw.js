@@ -5,7 +5,10 @@ const PRECACHE_ASSETS = [
     '/icons/icon-512x512.png',
     '/icons/maskable-icon-512x512.png',
     '/icons/favicon-32x32.png',
-    '/favicon.ico'
+    '/favicon.ico',
+    '/fonts/plus-jakarta-sans/plus-jakarta-sans-latin-400-normal.woff2',
+    '/fonts/plus-jakarta-sans/plus-jakarta-sans-latin-700-normal.woff2',
+    '/fonts/plus-jakarta-sans/plus-jakarta-sans-latin-800-normal.woff2'
 ];
 
 // Install Event: Pre-cache static assets

@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Lupa Password - {{ $branding['app_name'] ?? 'SELON BEAUTY' }}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <meta name="theme-color" content="{{ $branding['pwa_theme_color'] ?? '#E11D48' }}">
     <link rel="icon" type="{{ $branding['favicon_mime_type'] ?? 'image/x-icon' }}" href="{{ $branding['favicon_url'] ?? asset('favicon.ico') }}">
     <style>
