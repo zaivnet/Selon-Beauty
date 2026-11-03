@@ -20,8 +20,8 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
         <div>
             <div class="flex items-center gap-1.5">
-                <span class="inline-block w-2 h-2 rounded-full bg-rose-600 dark:bg-rose-500"></span>
-                <span class="text-[10px] font-black uppercase tracking-wider text-rose-700 dark:text-rose-400">Roster Operasional</span>
+                <span class="inline-block w-2 h-2 rounded-full bg-teal-600 dark:bg-teal-500"></span>
+                <span class="text-[10px] font-black uppercase tracking-wider text-teal-700 dark:text-teal-400">Roster Operasional</span>
             </div>
             <h2 id="duty-roster-heading" class="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight mt-0.5">
                 Jadwal Piket
@@ -35,13 +35,13 @@
         <div class="flex flex-wrap items-center gap-1.5">
             <!-- Hari Ini -->
             <a href="{{ request()->fullUrlWithQuery(['roster_date' => $todayStr]) }}"
-               class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1 {{ $isToday ? 'bg-rose-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700' }}">
+               class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1 {{ $isToday ? 'bg-teal-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700' }}">
                 <span>Hari Ini</span>
             </a>
 
             <!-- Besok -->
             <a href="{{ request()->fullUrlWithQuery(['roster_date' => $tomorrowStr]) }}"
-               class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1 {{ $isTomorrow ? 'bg-rose-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700' }}">
+               class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1 {{ $isTomorrow ? 'bg-teal-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700' }}">
                 <span>Besok</span>
             </a>
 
@@ -57,7 +57,7 @@
                        value="{{ $targetDate }}"
                        aria-label="Pilih Tanggal Jadwal Piket"
                        onchange="this.form.submit()"
-                       class="px-2 py-1 rounded-lg text-xs font-bold bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-700 focus:ring-2 focus:ring-rose-500 focus:outline-none cursor-pointer">
+                       class="px-2 py-1 rounded-lg text-xs font-bold bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-700 focus:ring-2 focus:ring-teal-500 focus:outline-none cursor-pointer">
             </form>
         </div>
     </div>
@@ -116,7 +116,7 @@
                         $isSelected = ($selectedOutletId === (int) $authOutlet->id);
                     @endphp
                     <a href="{{ request()->fullUrlWithQuery(['roster_outlet_id' => $authOutlet->id]) }}"
-                       class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all {{ $isSelected ? 'bg-rose-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700' }}">
+                       class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all {{ $isSelected ? 'bg-teal-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700' }}">
                         {{ $authOutlet->name }}
                     </a>
                 @endforeach
@@ -149,7 +149,7 @@
                         <div class="px-3.5 py-2.5 bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
                             <div>
                                 <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                                    <svg class="w-3.5 h-3.5 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                    <svg class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                                     <span>{{ $outlet->name }}</span>
                                 </h3>
                                 <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
@@ -198,7 +198,7 @@
                                                     $hasExceptionBadge = ($empItem['status_key'] !== 'scheduled');
                                                     $isAssigned = (bool) $empItem['is_temporary_assignment'];
                                                 @endphp
-                                                <div class="p-2 sm:p-2.5 bg-white dark:bg-slate-900 rounded-lg border border-slate-200/80 dark:border-slate-800 shadow-2xs flex items-center justify-between gap-2 hover:border-rose-300 dark:hover:border-rose-700 transition-colors min-w-0">
+                                                <div class="p-2 sm:p-2.5 bg-white dark:bg-slate-900 rounded-lg border border-slate-200/80 dark:border-slate-800 shadow-2xs flex items-center justify-between gap-2 hover:border-teal-300 dark:hover:border-teal-700 transition-colors min-w-0">
                                                     <!-- Left: Avatar + Identity + Secondary info -->
                                                     <div class="flex items-center gap-2 min-w-0">
                                                         <div class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-extrabold text-[10px] flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-700 shrink-0">

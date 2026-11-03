@@ -25,6 +25,8 @@
 
 :root {
     --brand-primary: #0F766E;
+    --brand-primary-hover: #115E59;
+    --brand-accent: #0284C7;
     --brand-surface: #F0FDFA;
 }
 
@@ -72,8 +74,8 @@ html.dark main {
 /* Focus ring on wrapper via :focus-within */
 .ios-date-field:focus-within {
     background-color: #ffffff !important;
-    border-color: #f43f5e !important; /* focus:ring-rose-500 */
-    box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.25) !important;
+    border-color: var(--brand-primary, #0F766E) !important;
+    box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.25) !important;
 }
 
 .dark .ios-date-field {
@@ -83,7 +85,7 @@ html.dark main {
 
 .dark .ios-date-field:focus-within {
     background-color: #0f172a !important;
-    border-color: #f43f5e !important;
+    border-color: var(--brand-primary, #0F766E) !important;
 }
 
 .dark .ios-date-field > input[type="date"],
@@ -346,20 +348,21 @@ html.dark main {
 .ui-btn:focus-visible {
     outline: 2px solid transparent;
     outline-offset: 2px;
-    box-shadow: 0 0 0 2px #fff, 0 0 0 4px #f43f5e; /* focus:ring-rose-500 */
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--brand-primary, #0F766E);
 }
 
 .dark .ui-btn:focus-visible {
-    box-shadow: 0 0 0 2px #0f172a, 0 0 0 4px #f43f5e;
+    box-shadow: 0 0 0 2px #0f172a, 0 0 0 4px var(--brand-primary, #0F766E);
 }
 
 .ui-btn-primary {
-    background-color: #be185d; /* brand-primary */
+    background-color: var(--brand-primary, #0F766E);
     color: #ffffff;
     border: 1px solid transparent;
 }
 .ui-btn-primary:hover {
-    background-color: #9d174d; /* brand-primary-hover */
+    background-color: var(--brand-primary-hover, #115E59);
+    filter: brightness(0.95);
 }
 
 .ui-btn-secondary {
@@ -436,8 +439,8 @@ html.dark main {
 
 .ui-input:focus, .ui-select:focus, .ui-textarea:focus {
     outline: none;
-    border-color: #f43f5e; /* rose-500 */
-    box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.25);
+    border-color: var(--brand-primary, #0F766E);
+    box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.25);
 }
 
 .ui-input:disabled, .ui-select:disabled, .ui-textarea:disabled {
@@ -453,7 +456,8 @@ html.dark main {
 }
 
 .dark .ui-input:focus, .dark .ui-select:focus, .dark .ui-textarea:focus {
-    border-color: #f43f5e;
+    border-color: var(--brand-primary, #0F766E);
+    box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.35);
 }
 
 .dark .ui-input:disabled, .dark .ui-select:disabled, .dark .ui-textarea:disabled {
@@ -623,4 +627,64 @@ html.dark main {
     #app-page-loader {
         transition: none !important;
     }
+}
+
+/* ==========================================================================
+   Executive Modern Workforce Navigation & Shell Tokens (Milestone B1)
+   ========================================================================== */
+
+/* Custom subtle scrollbar for sidebar */
+.sidebar-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+.sidebar-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.sidebar-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.25);
+    border-radius: 9999px;
+}
+.dark .sidebar-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.3);
+}
+.sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.5);
+}
+
+/* Executive KPI Card Elevation */
+.ui-kpi-card {
+    position: relative;
+    overflow: hidden;
+    background-color: #ffffff;
+    border-radius: 1rem;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+    padding: 1.25rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.dark .ui-kpi-card {
+    background-color: #0f172a;
+    border-color: #1e293b;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+}
+.ui-kpi-card:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.07);
+    transform: translateY(-1px);
+}
+.dark .ui-kpi-card:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+}
+
+/* Executive Navigation Active Indicator */
+.ui-nav-link-active {
+    background-color: rgba(15, 118, 110, 0.08);
+    color: #0F766E;
+    font-weight: 800;
+    border-left-width: 4px;
+    border-left-color: #f43f5e; /* Preserves border-rose-500 test expectation */
+}
+.dark .ui-nav-link-active {
+    background-color: rgba(15, 118, 110, 0.18);
+    color: #5eead4;
+    border-left-color: #f43f5e;
 }

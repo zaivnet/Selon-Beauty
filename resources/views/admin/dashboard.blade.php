@@ -21,8 +21,8 @@
     <header class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 md:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors">
         <div>
             <div class="flex items-center gap-2">
-                <span class="inline-block w-2.5 h-2.5 rounded-full bg-rose-600 dark:bg-rose-500"></span>
-                <span class="text-[11px] font-black uppercase tracking-wider text-rose-700 dark:text-rose-400">Workforce Control</span>
+                <span class="inline-block w-2.5 h-2.5 rounded-full bg-teal-600 dark:bg-teal-500 shadow-[0_0_8px_rgba(15,118,110,0.6)]"></span>
+                <span class="text-[11px] font-black uppercase tracking-wider text-teal-700 dark:text-teal-400">Workforce Control</span>
             </div>
             <h1 class="text-xl md:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight mt-1 ui-page-header">Status Operasional Hari Ini</h1>
             <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">Ringkasan operasional hari ini &bull; {{ $todayFormatted }}</p>
@@ -46,10 +46,10 @@
     <!-- Top KPI Row (5 Cards) -->
     <section aria-label="Operational KPI Summary" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
         <!-- 1. Total Karyawan -->
-        <article class="ui-card flex flex-col justify-between hover:border-blue-300 dark:hover:border-blue-700 transition-all">
+        <article class="ui-kpi-card flex flex-col justify-between hover:border-sky-300 dark:hover:border-sky-700 transition-all border-l-4 border-l-sky-500">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Karyawan</span>
-                <div class="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-extrabold shrink-0 border border-blue-100 dark:border-blue-900/50">
+                <div class="w-9 h-9 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center font-extrabold shrink-0 border border-sky-100 dark:border-sky-900/50">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                 </div>
             </div>
@@ -60,7 +60,7 @@
         </article>
 
         <!-- 2. Hadir -->
-        <article class="ui-card flex flex-col justify-between hover:border-emerald-300 dark:hover:border-emerald-700 transition-all">
+        <article class="ui-kpi-card flex flex-col justify-between hover:border-emerald-300 dark:hover:border-emerald-700 transition-all border-l-4 border-l-emerald-500">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Hadir Hari Ini</span>
                 <div class="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-extrabold shrink-0 border border-emerald-100 dark:border-emerald-900/50">
@@ -77,7 +77,7 @@
         </article>
 
         <!-- 3. Terlambat -->
-        <article class="ui-card flex flex-col justify-between hover:border-amber-300 dark:hover:border-amber-700 transition-all">
+        <article class="ui-kpi-card flex flex-col justify-between hover:border-amber-300 dark:hover:border-amber-700 transition-all border-l-4 border-l-amber-500">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Terlambat</span>
                 <div class="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-extrabold shrink-0 border border-amber-100 dark:border-amber-900/50">
@@ -91,7 +91,7 @@
         </article>
 
         <!-- 4. Belum Check-in -->
-        <article class="ui-card flex flex-col justify-between hover:border-rose-300 dark:hover:border-rose-700 transition-all">
+        <article class="ui-kpi-card flex flex-col justify-between hover:border-rose-300 dark:hover:border-rose-700 transition-all border-l-4 border-l-rose-500">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Belum Check-in</span>
                 <div class="w-9 h-9 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center font-extrabold shrink-0 border border-rose-100 dark:border-rose-900/50">
@@ -105,7 +105,7 @@
         </article>
 
         <!-- 5. Izin / Cuti / Sakit -->
-        <article class="ui-card flex flex-col justify-between hover:border-indigo-300 dark:hover:border-indigo-700 transition-all">
+        <article class="ui-kpi-card flex flex-col justify-between hover:border-indigo-300 dark:hover:border-indigo-700 transition-all border-l-4 border-l-indigo-500">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Izin / Cuti / Sakit</span>
                 <div class="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-extrabold shrink-0 border border-indigo-100 dark:border-indigo-900/50">
@@ -150,10 +150,10 @@
                             @endphp
                             <div class="flex flex-col items-center gap-2 text-center group">
                                 <span class="text-[11px] font-bold text-slate-600 dark:text-slate-300 font-mono">{{ $day['total'] }}</span>
-                                <div class="w-full h-32 bg-slate-100 dark:bg-slate-800 rounded-xl overflow-hidden flex flex-col justify-end p-1 relative">
-                                    <div class="w-full rounded-lg transition-all duration-300 {{ $isTodayDay ? 'bg-gradient-to-t from-rose-600 to-pink-500' : 'bg-slate-700 dark:bg-slate-600' }}" style="height: {{ $heightPercent }}%;"></div>
+                                <div class="w-full h-32 bg-slate-100 dark:bg-slate-800/80 rounded-xl overflow-hidden flex flex-col justify-end p-1 relative border border-slate-200/50 dark:border-slate-800/60">
+                                    <div class="w-full rounded-lg transition-all duration-300 {{ $isTodayDay ? 'bg-gradient-to-t from-teal-600 to-sky-500 shadow-sm' : 'bg-slate-600 dark:bg-slate-500 group-hover:bg-slate-500 dark:group-hover:bg-slate-400' }}" style="height: {{ $heightPercent }}%;"></div>
                                 </div>
-                                <span class="text-xs font-bold {{ $isTodayDay ? 'text-rose-600 dark:text-rose-400 font-black' : 'text-slate-500 dark:text-slate-400' }}">{{ $day['label'] }}</span>
+                                <span class="text-xs font-bold {{ $isTodayDay ? 'text-teal-700 dark:text-teal-400 font-black' : 'text-slate-500 dark:text-slate-400' }}">{{ $day['label'] }}</span>
                             </div>
                         @endforeach
                     </div>
@@ -186,7 +186,7 @@
                         <h2 class="text-base font-extrabold text-slate-900 dark:text-slate-100">Status Karyawan Hari Ini</h2>
                         <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Monitoring absensi real-time karyawan aktif</p>
                     </div>
-                    <a href="{{ route('admin.attendance.index') }}" class="text-xs font-extrabold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 flex items-center gap-1">
+                    <a href="{{ route('admin.attendance.index') }}" class="text-xs font-extrabold text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 flex items-center gap-1">
                         <span>Lihat Monitoring Lengkap &rarr;</span>
                     </a>
                 </div>
@@ -243,9 +243,16 @@
                                 @endphp
                                 <tr x-show="(search === '' || '{{ strtolower(addslashes($emp->full_name)) }}'.includes(search.toLowerCase()) || '{{ strtolower(addslashes($emp->employee_code ?? '')) }}'.includes(search.toLowerCase())) && (statusFilter === 'all' || '{{ $statusKey }}' === statusFilter || (statusFilter === 'leave' && ['permission', 'sick', 'leave'].includes('{{ $statusKey }}')))"
                                     class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                                    <td class="py-2.5 px-3.5 font-extrabold text-slate-900 dark:text-slate-100">
-                                        {{ $emp->full_name }}
-                                        <span class="block text-[10px] font-semibold text-slate-400 dark:text-slate-500">{{ $emp->jobTitle?->name ?? 'Karyawan' }}</span>
+                                    <td class="py-2.5 px-3.5">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-extrabold text-[11px] flex items-center justify-center shrink-0 border border-slate-200/60 dark:border-slate-700/60">
+                                                {{ strtoupper(substr($emp->full_name, 0, 2)) }}
+                                            </div>
+                                            <div>
+                                                <span class="font-extrabold text-slate-900 dark:text-slate-100 block">{{ $emp->full_name }}</span>
+                                                <span class="block text-[10px] font-semibold text-slate-400 dark:text-slate-500">{{ $emp->jobTitle?->name ?? 'Karyawan' }}</span>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="py-2.5 px-3.5 text-slate-600 dark:text-slate-300 font-bold">
                                         {{ $item['effective_schedule']['shift']?->name ?? 'OFF' }}
@@ -259,7 +266,7 @@
                                         </span>
                                     </td>
                                     <td class="py-2.5 px-3.5 text-right">
-                                        <a href="{{ route('admin.attendance.index', ['employee_id' => $emp->id]) }}" class="text-xs font-extrabold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300">
+                                        <a href="{{ route('admin.attendance.index', ['employee_id' => $emp->id]) }}" class="text-xs font-extrabold text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300">
                                             Detail &rarr;
                                         </a>
                                     </td>
@@ -309,7 +316,7 @@
                     </div>
 
                     <div class="pt-2">
-                        <a href="{{ route('admin.operational-exceptions.index') }}" class="ui-btn ui-btn-secondary w-full border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60">
+                        <a href="{{ route('admin.operational-exceptions.index') }}" class="ui-btn ui-btn-secondary w-full border-teal-200 dark:border-teal-800 text-teal-800 dark:text-teal-300 bg-teal-50/60 hover:bg-teal-100 dark:bg-teal-950/40 dark:hover:bg-teal-900/60">
                             <span>Lihat Semua Pusat Perhatian</span>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                         </a>
@@ -325,54 +332,54 @@
                 </div>
 
                 <div class="space-y-1.5">
-                    <a href="{{ route('admin.employees.create') }}" class="p-2.5 rounded-xl border border-slate-200/70 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700 hover:bg-rose-50/50 dark:hover:bg-rose-950/30 transition-all flex items-center justify-between group">
+                    <a href="{{ route('admin.employees.create') }}" class="p-2.5 rounded-xl border border-slate-200/70 dark:border-slate-800 hover:border-teal-300 dark:hover:border-teal-700 hover:bg-teal-50/50 dark:hover:bg-teal-950/30 transition-all flex items-center justify-between group">
                         <div class="flex items-center gap-2.5">
-                            <div class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+                            <div class="w-7 h-7 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center font-bold">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
                             </div>
-                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-rose-700 dark:group-hover:text-rose-400">Tambah Karyawan</span>
+                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-teal-700 dark:group-hover:text-teal-400">Tambah Karyawan</span>
                         </div>
-                        <svg class="w-4 h-4 text-slate-400 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        <svg class="w-4 h-4 text-slate-400 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </a>
 
-                    <a href="{{ route('admin.schedules.index') }}" class="p-2.5 rounded-xl border border-slate-200/70 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700 hover:bg-rose-50/50 dark:hover:bg-rose-950/30 transition-all flex items-center justify-between group">
+                    <a href="{{ route('admin.schedules.index') }}" class="p-2.5 rounded-xl border border-slate-200/70 dark:border-slate-800 hover:border-teal-300 dark:hover:border-teal-700 hover:bg-teal-50/50 dark:hover:bg-teal-950/30 transition-all flex items-center justify-between group">
                         <div class="flex items-center gap-2.5">
                             <div class="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                             </div>
-                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-rose-700 dark:group-hover:text-rose-400">Atur Jadwal & Kalender</span>
+                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-teal-700 dark:group-hover:text-teal-400">Atur Jadwal & Kalender</span>
                         </div>
-                        <svg class="w-4 h-4 text-slate-400 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        <svg class="w-4 h-4 text-slate-400 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </a>
 
-                    <a href="{{ route('admin.leave-requests.index') }}" class="p-2.5 rounded-xl border border-slate-200/70 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700 hover:bg-rose-50/50 dark:hover:bg-rose-950/30 transition-all flex items-center justify-between group">
+                    <a href="{{ route('admin.leave-requests.index') }}" class="p-2.5 rounded-xl border border-slate-200/70 dark:border-slate-800 hover:border-teal-300 dark:hover:border-teal-700 hover:bg-teal-50/50 dark:hover:bg-teal-950/30 transition-all flex items-center justify-between group">
                         <div class="flex items-center gap-2.5">
                             <div class="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                             </div>
-                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-rose-700 dark:group-hover:text-rose-400">Persetujuan Izin & Cuti</span>
+                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-teal-700 dark:group-hover:text-teal-400">Persetujuan Izin & Cuti</span>
                         </div>
-                        <svg class="w-4 h-4 text-slate-400 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        <svg class="w-4 h-4 text-slate-400 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </a>
 
-                    <a href="{{ route('admin.shift-swaps.index') }}" class="p-2.5 rounded-xl border border-slate-200/70 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700 hover:bg-rose-50/50 dark:hover:bg-rose-950/30 transition-all flex items-center justify-between group">
+                    <a href="{{ route('admin.shift-swaps.index') }}" class="p-2.5 rounded-xl border border-slate-200/70 dark:border-slate-800 hover:border-teal-300 dark:hover:border-teal-700 hover:bg-teal-50/50 dark:hover:bg-teal-950/30 transition-all flex items-center justify-between group">
                         <div class="flex items-center gap-2.5">
-                            <div class="w-7 h-7 rounded-lg bg-pink-50 dark:bg-pink-950/60 text-pink-600 dark:text-pink-400 flex items-center justify-center font-bold">
+                            <div class="w-7 h-7 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
                             </div>
-                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-rose-700 dark:group-hover:text-rose-400">Permintaan Tukar Jadwal</span>
+                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-teal-700 dark:group-hover:text-teal-400">Permintaan Tukar Jadwal</span>
                         </div>
-                        <svg class="w-4 h-4 text-slate-400 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        <svg class="w-4 h-4 text-slate-400 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </a>
 
-                    <a href="{{ route('admin.reports.attendance') }}" class="p-2.5 rounded-xl border border-slate-200/70 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700 hover:bg-rose-50/50 dark:hover:bg-rose-950/30 transition-all flex items-center justify-between group">
+                    <a href="{{ route('admin.reports.attendance') }}" class="p-2.5 rounded-xl border border-slate-200/70 dark:border-slate-800 hover:border-teal-300 dark:hover:border-teal-700 hover:bg-teal-50/50 dark:hover:bg-teal-950/30 transition-all flex items-center justify-between group">
                         <div class="flex items-center gap-2.5">
                             <div class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z"/></svg>
                             </div>
-                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-rose-700 dark:group-hover:text-rose-400">Laporan & Recap Periode</span>
+                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-teal-700 dark:group-hover:text-teal-400">Laporan & Recap Periode</span>
                         </div>
-                        <svg class="w-4 h-4 text-slate-400 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        <svg class="w-4 h-4 text-slate-400 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </a>
                 </div>
             </section>
