@@ -19,22 +19,22 @@
     @endif
 
     <div class="flex flex-wrap items-center justify-between gap-3">
-        <a href="{{ route('admin.employees.index') }}" class="text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 flex items-center gap-1">
+        <a href="{{ route('admin.employees.index') }}" class="text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 flex items-center gap-1 min-h-[44px]">
             &larr; Kembali ke Daftar Karyawan
         </a>
         <div class="flex items-center gap-2">
             @if($canTransfer)
-                <button id="pindah-outlet" type="button" @click="showTransferModal = true" class="px-3.5 py-1.5 bg-rose-600 dark:bg-rose-500 text-white font-extrabold text-xs rounded-lg hover:bg-rose-700 dark:hover:bg-rose-600 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs ui-btn ui-btn-primary">
+                <button id="pindah-outlet" type="button" @click="showTransferModal = true" class="px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs min-h-[44px] ui-btn ui-btn-primary">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
                     <span>Pindah Outlet</span>
                 </button>
             @endif
-            <a href="{{ route('admin.employees.edit', $employee) }}" class="px-3.5 py-1.5 bg-blue-600 text-white font-bold text-xs rounded-lg hover:bg-blue-700 transition-colors">
+            <a href="{{ route('admin.employees.edit', $employee) }}" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold text-xs rounded-xl transition-colors min-h-[44px] flex items-center shadow-xs">
                 Edit Data
             </a>
             <form action="{{ route('admin.employees.toggle-status', $employee) }}" method="POST" class="inline">
                 @csrf
-                <button type="submit" class="px-3.5 py-1.5 bg-slate-800 dark:bg-slate-700 text-white font-bold text-xs rounded-lg hover:bg-slate-900 dark:hover:bg-slate-600 transition-colors cursor-pointer">
+                <button type="submit" class="px-3.5 py-2 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold text-xs rounded-xl transition-colors cursor-pointer min-h-[44px]">
                     {{ $employee->status === 'active' ? 'Nonaktifkan' : 'Aktifkan Kembali' }}
                 </button>
             </form>
@@ -42,10 +42,10 @@
     </div>
 
     <!-- Main Profile Card -->
-    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 md:p-8 space-y-6 transition-colors">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-6 md:p-8 space-y-6 transition-colors">
         <div class="flex flex-col sm:flex-row items-center sm:items-start gap-5">
             <!-- Photo Avatar -->
-            <div class="w-24 h-24 rounded-2xl bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-extrabold text-2xl flex items-center justify-center overflow-hidden border-2 border-slate-300 dark:border-slate-700 shadow-sm flex-shrink-0">
+            <div class="w-24 h-24 rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 font-extrabold text-2xl flex items-center justify-center overflow-hidden border-2 border-teal-200/60 dark:border-teal-800/60 shadow-sm flex-shrink-0">
                 @if($employee->profile_photo_path)
                     <img src="{{ asset('storage/' . $employee->profile_photo_path) }}" class="w-full h-full object-cover">
                 @else
@@ -56,7 +56,7 @@
             <!-- Identity Overview -->
             <div class="space-y-1 text-center sm:text-left flex-1">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <h2 class="text-xl font-extrabold text-slate-900 dark:text-slate-100">{{ $employee->full_name }}</h2>
+                    <h2 class="text-xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">{{ $employee->full_name }}</h2>
                     <div>
                         @if($employee->status === 'active')
                             <span class="px-3 py-1 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-bold text-xs rounded-full">Aktif</span>
@@ -66,15 +66,17 @@
                     </div>
                 </div>
 
-                <p class="text-xs font-mono font-bold text-rose-600 dark:text-rose-400">Kode: {{ $employee->employee_code }}</p>
-                <div class="flex flex-wrap items-center gap-2 pt-1 justify-center sm:justify-start">
-                    <span class="inline-flex items-center gap-1 text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700" title="Jabatan Pekerjaan Operasional">
+                <p class="text-xs font-mono font-bold text-slate-700 dark:text-slate-300 mt-0.5">
+                    <span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-md border border-slate-200 dark:border-slate-700">Kode: {{ $employee->employee_code }}</span>
+                </p>
+                <div class="flex flex-wrap items-center gap-2 pt-2 justify-center sm:justify-start">
+                    <span class="inline-flex items-center gap-1.5 text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700" title="Jabatan Pekerjaan Operasional">
                         <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                         <span>Jabatan: {{ $employee->jobTitle?->name ?: 'Belum Ada Jabatan' }}</span>
                     </span>
 
-                    <span class="inline-flex items-center gap-1 text-xs font-semibold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 px-2.5 py-1 rounded-lg border border-rose-200 dark:border-rose-800/60" title="Home Outlet permanen karyawan">
-                        <svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h4m-4 0V11a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002-2v-2a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 002 2"/></svg>
+                    <span class="inline-flex items-center gap-1.5 text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700" title="Home Outlet permanen karyawan">
+                        <svg class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h4m-4 0V11a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002-2v-2a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 002 2"/></svg>
                         <span>Home Outlet: {{ $employee->outlet?->name ?? 'Lokasi Belum Dikonfigurasi' }}</span>
                     </span>
 
@@ -85,11 +87,11 @@
                             $badgeColor = match($employee->user->role) {
                                 'superadmin' => 'bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800/60',
                                 'owner' => 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800/60',
-                                'admin' => 'bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800/60',
+                                'admin' => 'bg-sky-100 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border-sky-200 dark:border-sky-800/60',
                                 default => 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700',
                             };
                         @endphp
-                        <span class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg border {{ $badgeColor }}" title="Role Hak Akses Aplikasi">
+                        <span class="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl border {{ $badgeColor }}" title="Role Hak Akses Aplikasi">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                             <span>Role Aplikasi: {{ $roleLabel }}</span>
                         </span>
@@ -98,26 +100,36 @@
             </div>
         </div>
 
-        <hr class="border-slate-100 dark:border-slate-800">
+        <hr class="border-slate-100 dark:border-slate-800/80">
 
         <!-- Detail Information Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-            <div class="p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
+            <div class="p-4 bg-slate-50/70 dark:bg-slate-800/50 rounded-2xl border border-slate-200/80 dark:border-slate-800">
                 <span class="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Email</span>
-                <span class="font-semibold text-slate-800 dark:text-slate-200 mt-0.5 block">{{ $employee->email ?: '-' }}</span>
+                <span class="font-semibold text-slate-800 dark:text-slate-200 mt-1 block">{{ $employee->email ?: '-' }}</span>
             </div>
-            <div class="p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
+            <div class="p-4 bg-slate-50/70 dark:bg-slate-800/50 rounded-2xl border border-slate-200/80 dark:border-slate-800">
                 <span class="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Nomor HP / WA</span>
-                <span class="font-semibold text-slate-800 dark:text-slate-200 mt-0.5 block">{{ $employee->phone ?: '-' }}</span>
+                <span class="font-semibold text-slate-800 dark:text-slate-200 mt-1 block">{{ $employee->phone ?: '-' }}</span>
             </div>
-            <div class="p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
+            <div class="p-4 bg-slate-50/70 dark:bg-slate-800/50 rounded-2xl border border-slate-200/80 dark:border-slate-800">
                 <span class="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Jabatan Pekerjaan</span>
-                <span class="font-semibold text-slate-800 dark:text-slate-200 mt-0.5 block">{{ $employee->jobTitle?->name ?: '-' }}</span>
+                <span class="font-semibold text-slate-800 dark:text-slate-200 mt-1 block">{{ $employee->jobTitle?->name ?: '-' }}</span>
                 <span class="text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5">Jabatan = posisi operasional kerja</span>
             </div>
-            <div class="p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800">
+            <div class="p-4 bg-slate-50/70 dark:bg-slate-800/50 rounded-2xl border border-slate-200/80 dark:border-slate-800">
                 <span class="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Status & Role Akun Login</span>
-                <span class="font-semibold mt-0.5 block">
+                <span class="font-semibold mt-1 block">
+                    @if($employee->user)
+                        <span class="text-emerald-600 dark:text-emerald-400 font-bold">✓ Akun Aktif</span>
+                        <span class="text-slate-600 dark:text-slate-300 font-normal"> (Role: {{ \App\Enums\UserRole::tryFrom($employee->user->role)?->label() ?? ucfirst($employee->user->role) }})</span>
+                    @else
+                        <span class="text-slate-400 dark:text-slate-500">Belum Memiliki Akun Login</span>
+                    @endif
+                </span>
+                <span class="text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5">Role = hak akses aplikasi terpisah dari Jabatan</span>
+            </div>
+        </div>
                     @if($employee->user)
                         <span class="text-emerald-600 dark:text-emerald-400 font-bold">✓ Akun Aktif</span>
                         <span class="text-slate-600 dark:text-slate-300 font-normal"> (Role: {{ \App\Enums\UserRole::tryFrom($employee->user->role)?->label() ?? ucfirst($employee->user->role) }})</span>
@@ -167,12 +179,12 @@
         @endif
 
         @if(auth()->user()->role === 'superadmin' && $employee->user)
-            <div class="p-5 bg-rose-50/60 dark:bg-rose-950/30 rounded-2xl border border-rose-200/80 dark:border-rose-900/60 space-y-4">
-                <div class="flex items-center gap-2 text-rose-900 dark:text-rose-300">
+            <div class="p-5 sm:p-6 bg-slate-50/70 dark:bg-slate-800/40 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-4">
+                <div class="flex items-center gap-2 text-slate-900 dark:text-slate-100">
                     <svg class="w-5 h-5 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                    <h3 class="text-xs font-extrabold uppercase tracking-wider">Reset Password Akun Administratif (Khusus Superadmin)</h3>
+                    <h3 class="text-xs font-black uppercase tracking-wider">Reset Password Akun Administratif (Khusus Superadmin)</h3>
                 </div>
-                <p class="text-[11px] text-rose-700 dark:text-rose-400 leading-relaxed">
+                <p class="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
                     Aksi ini akan mereset password akun karyawan ini dan menghentikan seluruh sesi aktifnya. Superadmin wajib mengonfirmasi password pribadinya untuk otorisasi.
                 </p>
                 <form action="{{ route('admin.employees.reset-password', $employee) }}" method="POST" class="space-y-3">
@@ -180,25 +192,25 @@
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                         <div>
                             <label for="superadmin_password" class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Password Superadmin Anda *</label>
-                            <input type="password" name="superadmin_password" id="superadmin_password" required placeholder="Password Superadmin Anda" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-rose-500 text-xs">
+                            <input type="password" name="superadmin_password" id="superadmin_password" required placeholder="Password Superadmin Anda" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 text-xs min-h-[44px]">
                             @error('superadmin_password')
                                 <p class="text-[11px] text-rose-600 dark:text-rose-400 font-semibold mt-1">{{ $message }}</p>
                             @enderror
                         </div>
                         <div>
                             <label for="new_password" class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Password Baru Karyawan *</label>
-                            <input type="password" name="new_password" id="new_password" required placeholder="Minimal 8 karakter" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-rose-500 text-xs">
+                            <input type="password" name="new_password" id="new_password" required placeholder="Minimal 8 karakter" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 text-xs min-h-[44px]">
                             @error('new_password')
                                 <p class="text-[11px] text-rose-600 dark:text-rose-400 font-semibold mt-1">{{ $message }}</p>
                             @enderror
                         </div>
                         <div>
                             <label for="new_password_confirmation" class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Konfirmasi Password Baru *</label>
-                            <input type="password" name="new_password_confirmation" id="new_password_confirmation" required placeholder="Ulangi password baru" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-rose-500 text-xs">
+                            <input type="password" name="new_password_confirmation" id="new_password_confirmation" required placeholder="Ulangi password baru" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 text-xs min-h-[44px]">
                         </div>
                     </div>
                     <div class="flex justify-end pt-1">
-                        <button type="submit" class="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white font-extrabold text-xs rounded-xl shadow-xs transition-colors cursor-pointer">
+                        <button type="submit" class="min-h-[44px] px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-colors cursor-pointer ui-btn ui-btn-primary">
                             Reset Password Akun Karyawan
                         </button>
                     </div>
@@ -210,17 +222,18 @@
             <form action="{{ route('admin.employees.destroy', $employee) }}" method="POST" onsubmit="return confirm('Hapus karyawan ini?\n\nAkun login akan dinonaktifkan dan email/nomor HP akan dilepas agar dapat digunakan kembali. Riwayat absensi dan data historis tetap disimpan.')">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="text-xs font-bold text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 underline cursor-pointer">
+                <button type="submit" class="min-h-[44px] text-xs font-bold text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 underline cursor-pointer flex items-center">
                     Hapus Data Karyawan (Soft Delete)
                 </button>
             </form>
         </div>
+    </div>
 
     <!-- Riwayat Outlet History Card -->
-    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-4 transition-colors">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-6 space-y-4 transition-colors">
         <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
             <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
                 <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Riwayat Outlet Karyawan</h3>
@@ -234,30 +247,30 @@
             <div class="overflow-x-auto ui-table-container">
                 <table class="w-full text-left text-xs border-collapse ui-table">
                     <thead>
-                        <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/40">
-                            <th class="p-2.5">Tanggal Efektif</th>
-                            <th class="p-2.5">Perubahan Outlet</th>
-                            <th class="p-2.5">Dipindahkan Oleh</th>
-                            <th class="p-2.5">Catatan</th>
+                        <tr class="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider bg-slate-50/80 dark:bg-slate-800/60 text-[11px]">
+                            <th class="py-3 px-3 rounded-l-xl">Tanggal Efektif</th>
+                            <th class="py-3 px-3">Perubahan Outlet</th>
+                            <th class="py-3 px-3">Dipindahkan Oleh</th>
+                            <th class="py-3 px-3 rounded-r-xl">Catatan</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                         @foreach($employee->outletTransfers as $transfer)
-                            <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
-                                <td class="p-2.5 font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                            <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                                <td class="py-3 px-3 font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
                                     {{ $transfer->effective_date->locale('id')->isoFormat('D MMMM YYYY') }}
                                 </td>
-                                <td class="p-2.5 whitespace-nowrap">
+                                <td class="py-3 px-3 whitespace-nowrap">
                                     <span class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-200">
                                         <span class="text-slate-500 dark:text-slate-400">{{ $transfer->fromOutlet?->name ?? 'Outlet Hapus' }}</span>
-                                        <svg class="w-3 h-3 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                                        <span class="text-rose-600 dark:text-rose-400">{{ $transfer->toOutlet?->name ?? 'Outlet Hapus' }}</span>
+                                        <svg class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                        <span class="text-teal-700 dark:text-teal-300 font-extrabold">{{ $transfer->toOutlet?->name ?? 'Outlet Hapus' }}</span>
                                     </span>
                                 </td>
-                                <td class="p-2.5 text-slate-600 dark:text-slate-400 font-medium whitespace-nowrap">
+                                <td class="py-3 px-3 text-slate-600 dark:text-slate-400 font-medium whitespace-nowrap">
                                     {{ $transfer->transferredBy?->name ?? 'Sistem' }}
                                 </td>
-                                <td class="p-2.5 text-slate-500 dark:text-slate-400">
+                                <td class="py-3 px-3 text-slate-500 dark:text-slate-400">
                                     {{ $transfer->notes ?: '-' }}
                                 </td>
                             </tr>
@@ -270,14 +283,14 @@
 
     <!-- Pindah Outlet Modal -->
     @if($canTransfer)
-        <div x-show="showTransferModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-            <div @click.away="showTransferModal = false" class="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-xl border border-slate-200 dark:border-slate-800 space-y-4">
+        <div x-show="showTransferModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div @click.away="showTransferModal = false" class="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-2xl border border-slate-200/80 dark:border-slate-800 space-y-4">
                 <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                    <h3 class="text-base font-black text-slate-900 dark:text-slate-100">Pindah Outlet Karyawan</h3>
-                    <button type="button" @click="showTransferModal = false" class="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 text-xl font-bold">&times;</button>
+                    <h3 class="text-base font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Pindah Outlet Karyawan</h3>
+                    <button type="button" @click="showTransferModal = false" class="min-h-[44px] min-w-[44px] flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 text-xl font-bold">&times;</button>
                 </div>
 
-                <div class="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl text-xs text-amber-900 dark:text-amber-300 space-y-1">
+                <div class="p-4 bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 rounded-2xl text-xs text-amber-900 dark:text-amber-300 space-y-1">
                     <p class="font-extrabold">Informasi Pemindahan:</p>
                     <p class="font-medium">Anda akan memindahkan <span class="font-bold underline">{{ $employee->full_name }}</span> dari <span class="font-bold underline">{{ $employee->outlet?->name ?? 'Outlet Saat Ini' }}</span>.</p>
                     <p class="text-[11px] text-amber-800 dark:text-amber-400">Data absensi sebelumnya tetap tercatat di outlet lama. Absensi selanjutnya akan menggunakan geofence outlet baru.</p>
@@ -287,8 +300,8 @@
                     @csrf
 
                     <div>
-                        <label for="destination_outlet_id" class="block text-xs font-black text-slate-700 dark:text-slate-300 mb-1">Outlet Tujuan <span class="text-rose-600 dark:text-rose-400">*</span></label>
-                        <select name="destination_outlet_id" id="destination_outlet_id" required class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-bold p-2.5 focus:border-rose-500 focus:ring-rose-500 ui-input ui-select">
+                        <label for="destination_outlet_id" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Outlet Tujuan <span class="text-rose-600 dark:text-rose-400">*</span></label>
+                        <select name="destination_outlet_id" id="destination_outlet_id" required class="min-h-[44px] w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs font-bold p-2.5 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 ui-input ui-select">
                             <option value="">-- Pilih Outlet Tujuan --</option>
                             @foreach($availableOutlets as $outlet)
                                 <option value="{{ $outlet->id }}">{{ $outlet->name }} ({{ $outlet->code }})</option>
@@ -297,18 +310,18 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-black text-slate-700 dark:text-slate-300 mb-1">Tanggal Efektif</label>
-                        <input type="text" readonly value="Hari Ini ({{ \Carbon\Carbon::now(config('app.timezone'))->locale('id')->isoFormat('D MMMM YYYY') }})" class="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold p-2.5 cursor-not-allowed">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tanggal Efektif</label>
+                        <input type="text" readonly value="Hari Ini ({{ \Carbon\Carbon::now(config('app.timezone'))->locale('id')->isoFormat('D MMMM YYYY') }})" class="min-h-[44px] w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold p-2.5 cursor-not-allowed">
                     </div>
 
                     <div>
-                        <label for="transfer_notes" class="block text-xs font-black text-slate-700 dark:text-slate-300 mb-1">Catatan / Alasan Pemindahan (Opsional)</label>
-                        <textarea name="notes" id="transfer_notes" rows="3" placeholder="Contoh: Rotasi operasional outlet..." class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs p-2.5 focus:border-rose-500 focus:ring-rose-500 ui-input"></textarea>
+                        <label for="transfer_notes" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Catatan / Alasan Pemindahan (Opsional)</label>
+                        <textarea name="notes" id="transfer_notes" rows="3" placeholder="Contoh: Rotasi operasional outlet..." class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs p-3 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 ui-input placeholder-slate-400 dark:placeholder-slate-500"></textarea>
                     </div>
 
-                    <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                        <button type="button" @click="showTransferModal = false" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">Batal</button>
-                        <button type="submit" class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-xs font-black text-white shadow-xs transition-colors cursor-pointer ui-btn ui-btn-primary">Ya, Pindahkan Outlet</button>
+                    <div class="flex justify-end gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <button type="button" @click="showTransferModal = false" class="min-h-[44px] px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">Batal</button>
+                        <button type="submit" class="min-h-[44px] px-5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-xs font-black text-white shadow-xs transition-colors cursor-pointer ui-btn ui-btn-primary">Ya, Pindahkan Outlet</button>
                     </div>
                 </form>
             </div>
