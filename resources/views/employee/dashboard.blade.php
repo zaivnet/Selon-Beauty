@@ -10,13 +10,13 @@
 
     <!-- Flash Alerts -->
     @if(session('success'))
-        <div class="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-200 rounded-xl text-xs font-semibold flex items-center gap-2">
+        <div class="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-200 rounded-2xl text-xs font-semibold flex items-center gap-2.5 shadow-xs">
             <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
             <span>{{ session('success') }}</span>
         </div>
     @endif
     @if(session('error'))
-        <div class="p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-800 dark:text-rose-200 rounded-xl text-xs font-semibold flex items-center gap-2">
+        <div class="p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-800 dark:text-rose-200 rounded-2xl text-xs font-semibold flex items-center gap-2.5 shadow-xs">
             <svg class="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <span>{{ session('error') }}</span>
         </div>
@@ -34,31 +34,41 @@
 
     <!-- PWA Install Prompt Banner (Shown only for attendance participants when installable) -->
     @if(!$employee || ($user->role !== 'superadmin' && $employee->attendance_enabled !== false))
-    <div id="pwa-install-banner" class="hidden bg-gradient-to-r from-rose-700 via-rose-600 to-pink-600 text-white rounded-2xl p-4 shadow-md flex items-center justify-between gap-3">
-        <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center font-black text-xs shrink-0">
-                SB
+    <div id="pwa-install-banner" class="hidden bg-gradient-to-r from-teal-800 via-teal-700 to-slate-800 text-white rounded-2xl p-4 shadow-md flex items-center justify-between gap-3 border border-teal-600/30">
+        <div class="flex items-center gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center font-black text-xs shrink-0 backdrop-blur-xs">
+                {{ strtoupper(substr($branding['company_name'], 0, 2)) }}
             </div>
-            <div>
-                <h4 class="text-xs font-black">Pasang Aplikasi SELON BEAUTY</h4>
-                <p class="text-[11px] text-rose-100 font-medium">Tambahkan ke Home Screen untuk presensi lebih cepat.</p>
+            <div class="min-w-0">
+                <h4 class="text-xs font-black truncate">Pasang Aplikasi {{ $branding['app_short_name'] }}</h4>
+                <p class="text-[11px] text-teal-100 font-medium truncate">Tambahkan ke Layar Utama untuk presensi lebih cepat.</p>
             </div>
         </div>
-        <button type="button" onclick="triggerPwaInstall()" class="px-3.5 py-2 bg-white text-rose-700 hover:bg-rose-50 font-extrabold text-xs rounded-xl shadow-xs shrink-0 cursor-pointer">
+        <button type="button" onclick="triggerPwaInstall()" class="px-3.5 py-2 bg-white text-teal-800 hover:bg-teal-50 font-extrabold text-xs rounded-xl shadow-xs shrink-0 cursor-pointer transition-all">
             Pasang
         </button>
     </div>
     @endif
 
     <!-- Greeting & Header Card -->
-    <div class="bg-gradient-to-br from-rose-600 to-rose-700 text-white rounded-2xl p-5 shadow-lg shadow-rose-900/10">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-xs text-rose-200 font-medium">Selamat Datang 👋</p>
-                <h2 class="text-xl font-extrabold tracking-tight mt-0.5">{{ $employee?->full_name ?? $user->name }}</h2>
-                <p class="text-xs text-rose-100 mt-1 font-semibold">{{ $today }}</p>
+    <div class="bg-gradient-to-br from-teal-800 via-teal-900 to-slate-900 text-white rounded-2xl p-5 shadow-lg shadow-teal-950/20 border border-teal-700/30 relative overflow-hidden">
+        <!-- Ambient decorative glow -->
+        <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-teal-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="relative z-10 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-teal-300 font-medium">Selamat Datang 👋</span>
+                    @if($todayWorkOutlet)
+                        <span class="text-[10px] bg-teal-500/20 text-teal-200 border border-teal-400/30 px-2 py-0.5 rounded-full font-bold">📍 {{ $todayWorkOutlet->name }}</span>
+                    @endif
+                </div>
+                <h2 class="text-xl font-extrabold tracking-tight mt-1 truncate">{{ $employee?->full_name ?? $user->name }}</h2>
+                <div class="flex items-center gap-2 mt-1 text-xs text-teal-100 font-semibold">
+                    <svg class="w-3.5 h-3.5 text-teal-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span>{{ $today }}</span>
+                </div>
             </div>
-            <div class="w-12 h-12 rounded-full bg-white/20 border-2 border-white/30 text-white flex items-center justify-center font-bold text-lg">
+            <div class="w-12 h-12 rounded-full bg-white/15 border-2 border-white/25 text-white flex items-center justify-center font-bold text-lg shadow-inner shrink-0">
                 {{ substr($employee?->full_name ?? $user->name, 0, 2) }}
             </div>
         </div>
@@ -92,18 +102,18 @@
     @else
     <!-- Quick Menu Shortcuts -->
     <div class="grid grid-cols-3 gap-2.5">
-        <a href="{{ route('employee.leave-requests.index') }}" class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-indigo-300 dark:hover:border-indigo-500 transition-all flex flex-col items-center text-center gap-1.5 group">
-            <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold group-hover:scale-105 transition-transform">
+        <a href="{{ route('employee.leave-requests.index') }}" class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-teal-300 dark:hover:border-teal-600 transition-all flex flex-col items-center text-center gap-1.5 group min-h-[44px]">
+            <div class="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold group-hover:scale-105 transition-transform">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             </div>
             <div>
-                <h4 class="text-xs font-extrabold text-slate-900 dark:text-slate-100 leading-tight">Izin & Cuti</h4>
+                <h4 class="text-xs font-extrabold text-slate-900 dark:text-slate-100 leading-tight">Izin &amp; Cuti</h4>
                 <p class="text-[9px] text-slate-500 dark:text-slate-400 font-semibold">Pengajuan</p>
             </div>
         </a>
 
-        <a href="{{ route('employee.overtime-requests.index') }}" class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-amber-300 dark:hover:border-amber-500 transition-all flex flex-col items-center text-center gap-1.5 group">
-            <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold group-hover:scale-105 transition-transform">
+        <a href="{{ route('employee.overtime-requests.index') }}" class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-sky-300 dark:hover:border-sky-600 transition-all flex flex-col items-center text-center gap-1.5 group min-h-[44px]">
+            <div class="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 flex items-center justify-center font-bold group-hover:scale-105 transition-transform">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
             <div>
@@ -112,7 +122,7 @@
             </div>
         </a>
 
-        <a href="{{ route('employee.shift-swaps.index') }}" class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs hover:border-rose-300 dark:hover:border-rose-500 transition-all flex flex-col items-center text-center gap-1.5 group">
+        <a href="{{ route('employee.shift-swaps.index') }}" class="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-rose-300 dark:hover:border-rose-600 transition-all flex flex-col items-center text-center gap-1.5 group min-h-[44px]">
             <div class="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold group-hover:scale-105 transition-transform">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
             </div>
@@ -130,7 +140,7 @@
         $displayShift = $effectiveShift ?: $activeShift;
         $isCarryoverShift = ! $effectiveShift && $activeShift;
     @endphp
-    <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
         <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Jadwal Efektif Hari Ini</span>
             @if($isCarryoverShift)
@@ -142,9 +152,12 @@
         </div>
 
         @if($displayShift)
-                <div class="{{ $isCarryoverShift || $todayEffective['source'] === 'employee_override' ? 'bg-indigo-50/70 dark:bg-indigo-950/30 border-indigo-200/80 dark:border-indigo-800/60' : ($todayEffective['source'] === 'special_working_day' ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-200/80 dark:border-emerald-800/60' : 'bg-rose-50/70 dark:bg-rose-950/20 border-rose-200/80 dark:border-rose-800/50') }} border rounded-xl p-4 space-y-2">
+                <div class="{{ $isCarryoverShift || $todayEffective['source'] === 'employee_override' ? 'bg-indigo-50/70 dark:bg-indigo-950/30 border-indigo-200/80 dark:border-indigo-800/60' : ($todayEffective['source'] === 'special_working_day' ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-200/80 dark:border-emerald-800/60' : 'bg-teal-50/70 dark:bg-teal-950/20 border-teal-200/80 dark:border-teal-800/50') }} border rounded-xl p-4 space-y-2">
                     <div class="flex items-center justify-between">
-                        <div><span class="mb-1 inline-block rounded-md border border-current/20 bg-white/60 dark:bg-slate-900/60 px-2 py-0.5 font-mono text-[10px] font-black text-rose-800 dark:text-rose-300">{{ $displayShift->code }}</span><h4 class="text-base font-extrabold text-slate-900 dark:text-slate-100">{{ $displayShift->name }}</h4></div>
+                        <div>
+                            <span class="mb-1 inline-block rounded-md border border-current/20 bg-white/60 dark:bg-slate-900/60 px-2 py-0.5 font-mono text-[10px] font-black text-teal-800 dark:text-teal-300">{{ $displayShift->code }}</span>
+                            <h4 class="text-base font-extrabold text-slate-900 dark:text-slate-100">{{ $displayShift->name }}</h4>
+                        </div>
                         @if($displayShift->crosses_midnight)
                             <span class="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 px-2 py-0.5 rounded-md">
                                 Lintas Tengah Malam
@@ -153,14 +166,14 @@
                     </div>
 
                     <div class="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 font-mono">
-                        <svg class="w-4 h-4 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <svg class="w-4 h-4 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         <span>{{ substr($displayShift->start_time, 0, 5) }} — {{ substr($displayShift->end_time, 0, 5) }} WIB</span>
                         <span class="text-[11px] text-slate-500 dark:text-slate-400 font-normal">({{ $displayShift->formatted_work_hours }})</span>
                     </div>
                     @if($isCarryoverShift)
                         <p class="text-xs text-indigo-700 dark:text-indigo-300 border-t border-indigo-200/60 dark:border-indigo-800/60 pt-2 mt-1">Shift ini dimulai pada work date sebelumnya dan tetap aktif sampai waktu pulang.</p>
                     @elseif($todayEffective['reason'])
-                        <p class="text-xs text-slate-600 dark:text-slate-400 italic border-t border-rose-200/60 dark:border-rose-800/60 pt-2 mt-1">
+                        <p class="text-xs text-slate-600 dark:text-slate-400 italic border-t border-teal-200/60 dark:border-teal-800/60 pt-2 mt-1">
                             "{{ $todayEffective['reason'] }}"
                         </p>
                     @endif
@@ -187,9 +200,9 @@
 
     <!-- Attendance Summary / Record Card if Already Recorded -->
     @if($todayAttendance)
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
             <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Status Presensi Hari Ini</span>
-            
+
             <div class="space-y-3">
                 @if($todayAttendance->is_manually_adjusted)
                     <div class="rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/40 p-3 text-[11px] font-bold text-amber-800 dark:text-amber-200">
@@ -199,14 +212,14 @@
                 <!-- Check-in Status Box -->
                 <div class="p-3.5 bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-xl flex items-center gap-3">
                     @if($todayAttendance->check_in_selfie_path)
-                        <img src="{{ route('attendance.selfie', ['record' => $todayAttendance->id, 'type' => 'check_in']) }}" alt="Selfie Masuk" class="w-14 h-14 rounded-lg object-cover border border-emerald-300 dark:border-emerald-700 shadow-2xs shrink-0 bg-slate-200 dark:bg-slate-800">
+                        <img src="{{ route('attendance.selfie', ['record' => $todayAttendance->id, 'type' => 'check_in']) }}" alt="Selfie Masuk" class="w-14 h-14 rounded-xl object-cover border border-emerald-300 dark:border-emerald-700 shadow-2xs shrink-0 bg-slate-200 dark:bg-slate-800">
                     @else
-                        <div class="w-14 h-14 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700 flex items-center justify-center text-emerald-700 dark:text-emerald-300 font-bold text-xs shrink-0">
+                        <div class="w-14 h-14 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700 flex items-center justify-center text-emerald-700 dark:text-emerald-300 font-bold text-xs shrink-0">
                             Masuk
                         </div>
                     @endif
-                    
-                    <div class="flex-1">
+
+                    <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-extrabold text-emerald-900 dark:text-emerald-200">✓ Absen Masuk Berhasil</span>
                             <span class="text-xs font-mono font-bold text-emerald-800 dark:text-emerald-300">{{ $todayAttendance->check_in_at?->format('H:i') }} WIB</span>
@@ -219,7 +232,7 @@
                                 <span class="text-emerald-800 dark:text-emerald-300 font-extrabold">Tepat Waktu</span>
                             @endif
                         </p>
-                        <p class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5">📍 {{ $todayAttendance->outlet?->name ?? $todayAttendance->location?->name ?? $outlet?->name ?? 'Outlet' }} (±{{ round($todayAttendance->check_in_accuracy_meters) }}m)</p>
+                        <p class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5 truncate">📍 {{ $todayAttendance->outlet?->name ?? $todayAttendance->location?->name ?? $outlet?->name ?? 'Outlet' }} (±{{ round($todayAttendance->check_in_accuracy_meters) }}m)</p>
                     </div>
                 </div>
 
@@ -227,14 +240,14 @@
                 @if($todayAttendance->check_out_at)
                     <div class="p-3.5 bg-indigo-50/80 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800/60 rounded-xl flex items-center gap-3">
                         @if($todayAttendance->check_out_selfie_path)
-                            <img src="{{ route('attendance.selfie', ['record' => $todayAttendance->id, 'type' => 'check_out']) }}" alt="Selfie Pulang" class="w-14 h-14 rounded-lg object-cover border border-indigo-300 dark:border-indigo-700 shadow-2xs shrink-0 bg-slate-200 dark:bg-slate-800">
+                            <img src="{{ route('attendance.selfie', ['record' => $todayAttendance->id, 'type' => 'check_out']) }}" alt="Selfie Pulang" class="w-14 h-14 rounded-xl object-cover border border-indigo-300 dark:border-indigo-700 shadow-2xs shrink-0 bg-slate-200 dark:bg-slate-800">
                         @else
-                            <div class="w-14 h-14 rounded-lg bg-indigo-100 dark:bg-indigo-950/80 border border-indigo-300 dark:border-indigo-700 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold text-xs shrink-0">
+                            <div class="w-14 h-14 rounded-xl bg-indigo-100 dark:bg-indigo-950/80 border border-indigo-300 dark:border-indigo-700 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold text-xs shrink-0">
                                 Pulang
                             </div>
                         @endif
 
-                        <div class="flex-1">
+                        <div class="flex-1 min-w-0">
                             <div class="flex items-center justify-between">
                                 <span class="text-xs font-extrabold text-indigo-900 dark:text-indigo-200">
                                     @if($todayAttendance->checkout_source === 'auto_shift_end')
@@ -248,7 +261,7 @@
                             <p class="text-[11px] text-indigo-700 dark:text-indigo-400 mt-0.5 font-medium">
                                 Worked Time: <span class="font-bold text-slate-900 dark:text-slate-100 font-mono">{{ floor($todayAttendance->worked_minutes / 60) }}j {{ $todayAttendance->worked_minutes % 60 }}m</span>
                             </p>
-                            <p class="text-[10px] text-indigo-600 dark:text-indigo-400 mt-0.5">📍 {{ $todayAttendance->outlet?->name ?? $todayAttendance->location?->name ?? $outlet?->name ?? 'Outlet' }} (±{{ round($todayAttendance->check_out_accuracy_meters) }}m)</p>
+                            <p class="text-[10px] text-indigo-600 dark:text-indigo-400 mt-0.5 truncate">📍 {{ $todayAttendance->outlet?->name ?? $todayAttendance->location?->name ?? $outlet?->name ?? 'Outlet' }} (±{{ round($todayAttendance->check_out_accuracy_meters) }}m)</p>
                         </div>
                     </div>
                 @endif
@@ -313,7 +326,7 @@
 
     @if($todaySchedule && $todaySchedule->schedule_type === 'work' && (!$todayAttendance || !$todayAttendance->check_out_at) && !$todayLeave)
         <!-- GPS Geofence Section -->
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">1. Lokasi GPS</span>
                 <span id="gps-badge-status" class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full">
@@ -323,16 +336,16 @@
 
             <!-- Location Status Box -->
             <div id="gps-info-box" class="p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl space-y-3">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h5 class="text-xs font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                            <svg class="w-4 h-4 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                            <span>Outlet Kerja Hari Ini: {{ $todayWorkOutlet?->name ?? 'Lokasi Belum Dikonfigurasi' }}</span>
+                <div class="flex items-center justify-between gap-2">
+                    <div class="min-w-0">
+                        <h5 class="text-xs font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 truncate">
+                            <svg class="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            <span class="truncate">Outlet Kerja: {{ $todayWorkOutlet?->name ?? 'Lokasi Belum Dikonfigurasi' }}</span>
                         </h5>
                         <p id="gps-status-text" class="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 font-medium">Mendeteksi lokasi perangkat...</p>
                     </div>
 
-                    <button type="button" onclick="detectGPSLocation()" class="px-3 py-1.5 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 font-bold text-[11px] rounded-lg shadow-2xs transition-colors flex items-center gap-1 cursor-pointer">
+                    <button type="button" onclick="detectGPSLocation()" class="px-3 py-2 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 font-bold text-[11px] rounded-xl shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer shrink-0 min-h-[44px]">
                         <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                         <span>Perbarui Lokasi</span>
                     </button>
@@ -340,11 +353,11 @@
 
                 <!-- GPS Detail Metrics Grid -->
                 <div id="gps-metrics-grid" class="hidden grid grid-cols-2 gap-2 border-t border-slate-200/80 dark:border-slate-700/80 pt-3 text-xs">
-                    <div class="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200/70 dark:border-slate-800">
+                    <div class="bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/70 dark:border-slate-800">
                         <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">Jarak ke Toko</span>
                         <span id="gps-metric-distance" class="font-extrabold font-mono text-slate-900 dark:text-slate-100 text-sm">-- m</span>
                     </div>
-                    <div class="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200/70 dark:border-slate-800">
+                    <div class="bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/70 dark:border-slate-800">
                         <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">Akurasi GPS</span>
                         <span id="gps-metric-accuracy" class="font-extrabold font-mono text-slate-900 dark:text-slate-100 text-sm">±-- m</span>
                     </div>
@@ -363,7 +376,7 @@
 
         @if($requireSelfie)
         <!-- Selfie Camera Section -->
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">2. Foto Selfie Bukti</span>
                 <span id="camera-badge-status" class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full">
@@ -372,25 +385,29 @@
             </div>
 
             <!-- Camera Viewport / Preview Box -->
-            <div class="relative w-full overflow-hidden rounded-xl bg-slate-900 border border-slate-200 dark:border-slate-800">
+            <div class="relative w-full overflow-hidden rounded-2xl bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-inner">
                 <!-- Unopened Camera Placeholder -->
-                <div id="camera-placeholder" class="w-full h-52 sm:h-60 rounded-xl bg-slate-100 dark:bg-slate-800/60 border-2 border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center p-4 text-center">
-                    <div class="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-2">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <div id="camera-placeholder" class="w-full h-56 sm:h-64 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border-2 border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center p-5 text-center">
+                    <div class="w-14 h-14 rounded-2xl bg-teal-50 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800/60 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-2.5 shadow-xs">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     </div>
-                    <p class="text-xs font-extrabold text-slate-800 dark:text-slate-200">Kamera Belum Dibuka</p>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-xs">Klik tombol "Buka Kamera" di bawah untuk mengambil foto selfie presensi.</p>
+                    <p class="text-xs font-black text-slate-800 dark:text-slate-200">Kamera Belum Dibuka</p>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-xs leading-relaxed">Klik tombol "Buka Kamera" di bawah untuk mengambil foto selfie presensi.</p>
                 </div>
 
                 <!-- Video Element -->
-                <video id="camera-video" class="w-full h-52 sm:h-60 object-cover hidden" autoplay playsinline muted></video>
+                <video id="camera-video" class="w-full h-56 sm:h-64 object-cover hidden" autoplay playsinline muted></video>
 
+                <!-- Face Oval Alignment Guide -->
                 <div id="face-guide-overlay" class="hidden pointer-events-none absolute inset-0 items-center justify-center" aria-hidden="true">
-                    <div class="h-[72%] w-[58%] rounded-[50%] border-2 border-dashed border-white/80 shadow-[0_0_0_999px_rgba(15,23,42,0.18)]"></div>
+                    <div class="h-[74%] w-[60%] max-w-[240px] rounded-[50%] border-2 border-dashed border-white/80 shadow-[0_0_0_999px_rgba(15,23,42,0.35)] flex items-center justify-center">
+                        <div class="w-full text-center text-[10px] font-bold text-white/90 drop-shadow-sm px-2">Posisikan Wajah Di Sini</div>
+                    </div>
                 </div>
 
-                <div id="face-detection-indicator" class="hidden absolute bottom-2 left-2 right-2 flex justify-center pointer-events-none">
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-sm bg-rose-600/85 text-white shadow-lg ui-btn ui-btn-primary">
+                <!-- Live Face Detection Indicator Pill -->
+                <div id="face-detection-indicator" class="hidden absolute bottom-3 left-3 right-3 flex justify-center pointer-events-none">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-md bg-rose-600/90 text-white shadow-lg ui-btn ui-btn-primary">
                         <span id="face-indicator-dot" class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
                         <span id="face-indicator-label">WAJAH BELUM TERDETEKSI</span>
                     </span>
@@ -400,7 +417,7 @@
                 <canvas id="camera-canvas" class="hidden"></canvas>
 
                 <!-- Image Preview after capture -->
-                <img id="selfie-preview" class="w-full h-52 sm:h-60 object-cover hidden" alt="Preview Selfie">
+                <img id="selfie-preview" class="w-full h-56 sm:h-64 object-cover hidden" alt="Preview Selfie">
             </div>
 
             <!-- Camera Status Text -->
@@ -411,17 +428,17 @@
             <!-- Camera Action Buttons -->
             <div class="space-y-2">
                 <!-- Initial Action: Open Camera -->
-                <button type="button" id="btn-open-camera" onclick="openCamera()" class="w-full py-3 px-4 bg-slate-900 dark:bg-rose-600 hover:bg-slate-800 dark:hover:bg-rose-700 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer ui-btn ui-btn-primary">
+                <button type="button" id="btn-open-camera" onclick="openCamera()" class="w-full py-3 px-4 bg-slate-900 dark:bg-teal-600 hover:bg-slate-800 dark:hover:bg-teal-700 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer ui-btn ui-btn-primary min-h-[44px]">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     <span>Buka Kamera</span>
                 </button>
 
                 <!-- Active Camera Actions: Capture Photo & Close -->
                 <div id="camera-actions-active" class="hidden grid grid-cols-2 gap-2">
-                    <button type="button" id="btn-close-camera" onclick="closeCamera()" class="py-2.5 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-extrabold rounded-xl text-xs transition-colors cursor-pointer">
+                    <button type="button" id="btn-close-camera" onclick="closeCamera()" class="py-2.5 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-extrabold rounded-xl text-xs transition-colors cursor-pointer min-h-[44px]">
                         Batal
                     </button>
-                    <button type="button" id="btn-capture-photo" onclick="capturePhoto()" class="py-2.5 px-3 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer ui-btn ui-btn-primary">
+                    <button type="button" id="btn-capture-photo" onclick="capturePhoto()" class="py-2.5 px-3 bg-teal-600 hover:bg-teal-700 text-white font-extrabold rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer ui-btn ui-btn-primary min-h-[44px]">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         <span>Ambil Foto</span>
                     </button>
@@ -429,11 +446,11 @@
 
                 <!-- Captured Actions: Retake & Confirm -->
                 <div id="camera-actions-captured" class="hidden grid grid-cols-2 gap-2">
-                    <button type="button" onclick="retakePhoto()" class="py-2.5 px-3 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 font-extrabold rounded-xl text-xs transition-colors flex items-center justify-center gap-1 cursor-pointer">
+                    <button type="button" onclick="retakePhoto()" class="py-2.5 px-3 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 font-extrabold rounded-xl text-xs transition-colors flex items-center justify-center gap-1 cursor-pointer min-h-[44px]">
                         <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                         <span>Foto Ulang</span>
                     </button>
-                    <button type="button" id="btn-use-photo" onclick="confirmPhoto()" class="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs transition-colors flex items-center justify-center gap-1 cursor-pointer">
+                    <button type="button" id="btn-use-photo" onclick="confirmPhoto()" class="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs transition-colors flex items-center justify-center gap-1 cursor-pointer min-h-[44px]">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                         <span>Gunakan Foto</span>
                     </button>
@@ -473,7 +490,7 @@
         @endif
 
         <!-- Submit Attendance Form Container -->
-        <div id="absen-card" class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+        <div id="absen-card" class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
             @if(!$todayAttendance)
                 <!-- Check-In Form -->
                 <form id="form-check-in" action="{{ route('employee.attendance.check-in') }}" method="POST" enctype="multipart/form-data">
@@ -484,7 +501,7 @@
                     <input type="hidden" name="selfie_base64" id="selfie_base64_checkin">
                     <input type="file" name="selfie" id="selfie_file_checkin" class="hidden" accept="image/*">
 
-                    <button type="submit" id="btn-check-in" disabled class="w-full py-3.5 px-4 bg-gradient-to-r from-rose-600 to-pink-600 text-white font-extrabold rounded-xl text-sm flex items-center justify-center gap-2 shadow-md transition-all opacity-50 cursor-not-allowed">
+                    <button type="submit" id="btn-check-in" disabled class="w-full py-4 px-4 bg-gradient-to-r from-teal-600 via-teal-500 to-sky-600 text-white font-extrabold rounded-xl text-sm flex items-center justify-center gap-2 shadow-md transition-all opacity-50 cursor-not-allowed min-h-[48px]">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
                         <span>Absen Masuk (Lengkapi Lokasi{{ $requireSelfie ? ' & Selfie' : '' }})</span>
                     </button>
@@ -499,7 +516,7 @@
                     <input type="hidden" name="selfie_base64" id="selfie_base64_checkout">
                     <input type="file" name="selfie" id="selfie_file_checkout" class="hidden" accept="image/*">
 
-                    <button type="submit" id="btn-check-out" disabled class="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-extrabold rounded-xl text-sm flex items-center justify-center gap-2 shadow-md transition-all opacity-50 cursor-not-allowed">
+                    <button type="submit" id="btn-check-out" disabled class="w-full py-4 px-4 bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 text-white font-extrabold rounded-xl text-sm flex items-center justify-center gap-2 shadow-md transition-all opacity-50 cursor-not-allowed min-h-[48px]">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                         <span>Absen Keluar (Lengkapi Lokasi{{ $requireSelfie ? ' & Selfie' : '' }})</span>
                     </button>
@@ -507,8 +524,8 @@
             @endif
         </div>
     @elseif($todayEffective && ! $todayEffective['is_working_day'])
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 text-center">
-            <button disabled class="w-full py-3.5 px-4 bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold rounded-xl text-sm flex items-center justify-center gap-2 cursor-not-allowed">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 text-center">
+            <button disabled class="w-full py-3.5 px-4 bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold rounded-xl text-sm flex items-center justify-center gap-2 cursor-not-allowed min-h-[44px]">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <span>Presensi Nonaktif (Bukan Shift Kerja)</span>
             </button>
@@ -612,19 +629,19 @@ function updateFaceIndicator(state, diagnosticCode = null) {
     indicator.classList.remove('hidden');
     const pill = indicator.querySelector('span');
     if (state === 'detected') {
-        if (pill) pill.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-sm bg-emerald-600/90 text-white shadow-lg';
+        if (pill) pill.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-md bg-emerald-600/90 text-white shadow-lg';
         if (dot) dot.className = 'w-2 h-2 rounded-full bg-white';
         label.textContent = '✓ WAJAH TERDETEKSI';
     } else if (state === 'loading') {
-        if (pill) pill.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-sm bg-indigo-600/90 text-white shadow-lg';
+        if (pill) pill.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-md bg-indigo-600/90 text-white shadow-lg';
         if (dot) dot.className = 'w-2 h-2 rounded-full bg-white animate-pulse';
         label.textContent = 'MEMUAT DETEKSI WAJAH...';
     } else if (state === 'error') {
-        if (pill) pill.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-sm bg-rose-700/90 text-white shadow-lg';
+        if (pill) pill.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-md bg-rose-700/90 text-white shadow-lg';
         if (dot) dot.className = 'w-2 h-2 rounded-full bg-white';
         label.textContent = `DETEKSI WAJAH BERMASALAH${diagnosticCode ? ` [${diagnosticCode}]` : ''}`;
     } else {
-        if (pill) pill.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-sm bg-rose-600/85 text-white shadow-lg';
+        if (pill) pill.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold backdrop-blur-md bg-rose-600/85 text-white shadow-lg';
         if (dot) dot.className = 'w-2 h-2 rounded-full bg-white animate-pulse';
         label.textContent = 'WAJAH BELUM TERDETEKSI';
     }

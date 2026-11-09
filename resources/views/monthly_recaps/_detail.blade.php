@@ -33,9 +33,9 @@
 
 <div class="space-y-4 md:space-y-5">
     @if($isEmployeeView)
-        <nav class="flex gap-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1 shadow-xs" aria-label="Jadwal dan rekap">
-            <a href="{{ route('employee.schedules.index') }}" class="flex min-h-[44px] flex-1 items-center justify-center rounded-lg px-3 text-[11px] font-extrabold text-slate-500 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-800">Jadwal</a>
-            <a href="{{ route('employee.monthly-recap.show', ['year' => $period['year'], 'month' => $period['month']]) }}" aria-current="page" class="flex min-h-[44px] flex-1 items-center justify-center rounded-lg bg-slate-900 dark:bg-rose-600 px-3 text-[11px] font-extrabold text-white">Rekap Saya</a>
+        <nav class="flex gap-1 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-1.5 shadow-xs" aria-label="Jadwal dan rekap">
+            <a href="{{ route('employee.schedules.index') }}" class="flex min-h-[44px] flex-1 items-center justify-center rounded-xl px-3 text-[11px] font-extrabold text-slate-500 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-800">Jadwal</a>
+            <a href="{{ route('employee.monthly-recap.show', ['year' => $period['year'], 'month' => $period['month']]) }}" aria-current="page" class="flex min-h-[44px] flex-1 items-center justify-center rounded-xl bg-teal-700 dark:bg-teal-600 px-3 text-[11px] font-extrabold text-white shadow-xs transition-all ui-btn ui-btn-primary">Rekap Saya</a>
         </nav>
     @endif
 
