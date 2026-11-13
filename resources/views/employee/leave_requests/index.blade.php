@@ -25,18 +25,18 @@
     @endif
 
     <!-- Navigation Tabs -->
-    <div class="flex bg-slate-200/80 dark:bg-slate-900 p-1 rounded-xl gap-1 text-xs font-bold border border-transparent dark:border-slate-800">
-        <a href="{{ route('employee.leave-requests.index') }}" class="flex-1 text-center py-2 rounded-lg transition-all {{ request()->routeIs('employee.leave-requests.*') ? 'bg-white dark:bg-slate-800 text-rose-700 dark:text-rose-400 shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200' }}">
+    <div class="flex bg-slate-200/80 dark:bg-slate-900 p-1 rounded-2xl gap-1 text-xs font-bold border border-transparent dark:border-slate-800">
+        <a href="{{ route('employee.leave-requests.index') }}" class="flex-1 text-center py-2.5 px-2 rounded-xl transition-all min-h-[44px] flex items-center justify-center {{ request()->routeIs('employee.leave-requests.*') ? 'bg-white dark:bg-slate-800 text-rose-700 dark:text-rose-400 shadow-xs font-extrabold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200' }}">
             Izin / Sakit / Cuti
         </a>
-        <a href="{{ route('employee.overtime-requests.index') }}" class="flex-1 text-center py-2 rounded-lg transition-all {{ request()->routeIs('employee.overtime-requests.*') ? 'bg-white dark:bg-slate-800 text-rose-700 dark:text-rose-400 shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200' }}">
+        <a href="{{ route('employee.overtime-requests.index') }}" class="flex-1 text-center py-2.5 px-2 rounded-xl transition-all min-h-[44px] flex items-center justify-center {{ request()->routeIs('employee.overtime-requests.*') ? 'bg-white dark:bg-slate-800 text-rose-700 dark:text-rose-400 shadow-xs font-extrabold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200' }}">
             Lembur
         </a>
         @if(auth()->user()?->role !== 'superadmin' && auth()->user()?->employee?->attendance_enabled !== false)
             @php
                 $pendingSwapCount = \App\Models\ShiftSwapRequest::where('target_employee_id', auth()->user()?->employee_id)->where('status', 'pending_target')->count();
             @endphp
-            <a href="{{ route('employee.shift-swaps.index') }}" class="flex-1 text-center py-2 rounded-lg transition-all flex items-center justify-center gap-1 {{ request()->routeIs('employee.shift-swaps.*') ? 'bg-white dark:bg-slate-800 text-rose-700 dark:text-rose-400 shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200' }}">
+            <a href="{{ route('employee.shift-swaps.index') }}" class="flex-1 text-center py-2.5 px-2 rounded-xl transition-all min-h-[44px] flex items-center justify-center gap-1.5 {{ request()->routeIs('employee.shift-swaps.*') ? 'bg-white dark:bg-slate-800 text-rose-700 dark:text-rose-400 shadow-xs font-extrabold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200' }}">
                 <span>Tukar Jadwal</span>
                 @if($pendingSwapCount > 0)
                     <span class="rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-black text-white leading-none">{{ $pendingSwapCount }}</span>
@@ -47,15 +47,20 @@
 
     <!-- Header Card -->
     <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-1">
-        <h2 class="text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight">Pengajuan Izin, Sakit & Cuti</h2>
-        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">{{ auth()->user()->role !== 'superadmin' && $employee->attendance_enabled ? 'Buat pengajuan ketidakhadiran kerja dan pantau status persetujuan dari Owner/Admin.' : 'Lihat kembali riwayat pengajuan yang sudah tersimpan.' }}</p>
+        <div class="flex items-center gap-2">
+            <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            </span>
+            <h2 class="text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight">Pengajuan Izin, Sakit & Cuti</h2>
+        </div>
+        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium pl-10">{{ auth()->user()->role !== 'superadmin' && $employee->attendance_enabled ? 'Buat pengajuan ketidakhadiran kerja dan pantau status persetujuan dari Owner/Admin.' : 'Lihat kembali riwayat pengajuan yang sudah tersimpan.' }}</p>
     </div>
 
     <!-- Form Buat Pengajuan Card -->
     @if(auth()->user()->role !== 'superadmin' && $employee->attendance_enabled)
     <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
         <div class="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-            <div class="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-sm">
+            <div class="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-sm">
                 +
             </div>
             <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Buat Pengajuan Baru</h3>
@@ -66,8 +71,8 @@
 
             <!-- Jenis Pengajuan -->
             <div>
-                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Jenis Pengajuan <span class="text-rose-600">*</span></label>
-                <select name="type" required class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-none ui-select">
+                <label for="leave_type" class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Jenis Pengajuan <span class="text-rose-600">*</span></label>
+                <select id="leave_type" name="type" required class="min-h-[44px] w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-hidden ui-select">
                     <option value="permission" {{ old('type') === 'permission' ? 'selected' : '' }}>Izin (Kepentingan Pribadi)</option>
                     <option value="sick" {{ old('type') === 'sick' ? 'selected' : '' }}>Sakit (Dengan / Tanpa Surat Dokter)</option>
                     <option value="leave" {{ old('type') === 'leave' ? 'selected' : '' }}>Cuti (Cuti Tahunan / Alasan Penting)</option>
@@ -77,31 +82,31 @@
             <!-- Tanggal Range (Single Day or Multi-day) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full min-w-0 max-w-full">
                 <div class="w-full min-w-0 max-w-full">
-                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Tanggal Mulai <span class="text-rose-600">*</span></label>
-                    <x-date-input name="start_date" id="start_date" value="{{ old('start_date', date('Y-m-d')) }}" required onchange="syncSingleDayDate()" />
+                    <label for="start_date" class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Tanggal Mulai <span class="text-rose-600">*</span></label>
+                    <x-date-input name="start_date" id="start_date" value="{{ old('start_date', date('Y-m-d')) }}" required onchange="syncSingleDayDate()" wrapperClass="bg-slate-50 dark:bg-slate-800" />
                 </div>
 
                 <div class="w-full min-w-0 max-w-full">
-                    <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Tanggal Selesai <span class="text-rose-600">*</span></label>
-                    <x-date-input name="end_date" id="end_date" value="{{ old('end_date', date('Y-m-d')) }}" required />
+                    <label for="end_date" class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Tanggal Selesai <span class="text-rose-600">*</span></label>
+                    <x-date-input name="end_date" id="end_date" value="{{ old('end_date', date('Y-m-d')) }}" required wrapperClass="bg-slate-50 dark:bg-slate-800" />
                 </div>
             </div>
 
             <!-- Alasan -->
             <div>
-                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Alasan Pengajuan <span class="text-rose-600">*</span></label>
-                <textarea name="reason" rows="3" required placeholder="Jelaskan alasan pengajuan izin, sakit, atau cuti Anda secara singkat dan jelas..." class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-none">{{ old('reason') }}</textarea>
+                <label for="leave_reason" class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Alasan Pengajuan <span class="text-rose-600">*</span></label>
+                <textarea id="leave_reason" name="reason" rows="3" required placeholder="Jelaskan alasan pengajuan izin, sakit, atau cuti Anda secara singkat dan jelas..." class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-hidden">{{ old('reason') }}</textarea>
             </div>
 
             <!-- Lampiran Opsional -->
             <div>
-                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Lampiran Dokumen / Bukti (Opsional)</label>
-                <input type="file" name="attachment" accept="image/jpeg,image/png,image/webp,application/pdf" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-slate-700 dark:text-slate-300 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-rose-50 dark:file:bg-rose-950/60 file:text-rose-700 dark:file:text-rose-300 hover:file:bg-rose-100 dark:hover:file:bg-rose-900/60">
+                <label for="leave_attachment" class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Lampiran Dokumen / Bukti (Opsional)</label>
+                <input id="leave_attachment" type="file" name="attachment" accept="image/jpeg,image/png,image/webp,application/pdf" class="min-h-[44px] w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-slate-700 dark:text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-rose-50 dark:file:bg-rose-950/60 file:text-rose-700 dark:file:text-rose-300 hover:file:bg-rose-100 dark:hover:file:bg-rose-900/60">
                 <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Format yang diterima: JPG, PNG, WebP, PDF (Maksimal 5 MB).</p>
             </div>
 
             <!-- Submit Button -->
-            <button type="submit" class="w-full py-3 px-4 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-extrabold rounded-xl shadow-md shadow-rose-600/20 transition-all text-xs flex items-center justify-center gap-2 cursor-pointer">
+            <button type="submit" class="min-h-[44px] w-full py-3 px-4 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-extrabold rounded-xl shadow-md shadow-rose-600/20 transition-all text-xs flex items-center justify-center gap-2 cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
                 <span>Kirim Pengajuan</span>
             </button>
@@ -130,15 +135,15 @@
         </div>
 
         @if(count($requests) === 0)
-            <div class="text-center py-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-800/30">
+            <div class="text-center py-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-800/30">
                 <p class="text-xs font-bold text-slate-700 dark:text-slate-300">Belum Ada Riwayat Pengajuan</p>
                 <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Anda belum pernah membuat pengajuan izin, sakit, atau cuti.</p>
             </div>
         @else
             <div class="space-y-3">
                 @foreach($requests as $req)
-                    <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-xl space-y-3">
-                        <div class="flex items-center justify-between">
+                    <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-3">
+                        <div class="flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2">
                                 <span class="font-extrabold text-xs text-slate-900 dark:text-slate-100">{{ $req->type_label }}</span>
                                 <span class="text-[10px] text-slate-400 dark:text-slate-500 font-mono">• {{ $req->created_at->format('d M Y H:i') }}</span>
@@ -148,27 +153,24 @@
                             </span>
                         </div>
 
-                        <div class="space-y-1 text-xs">
-                            <p class="text-slate-800 dark:text-slate-200">
-                                <strong>Tanggal:</strong>
-                                <span class="font-mono font-bold">{{ $req->start_date->format('d M Y') }}</span>
-                                @if($req->start_date != $req->end_date)
-                                    s/d <span class="font-mono font-bold">{{ $req->end_date->format('d M Y') }}</span>
-                                @endif
+                        <div class="space-y-1.5 text-xs">
+                            <p class="text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                <span><strong>Tanggal:</strong> <span class="font-mono font-bold">{{ $req->start_date->format('d M Y') }}</span>@if($req->start_date != $req->end_date) s/d <span class="font-mono font-bold">{{ $req->end_date->format('d M Y') }}</span>@endif</span>
                             </p>
                             <p class="text-slate-600 dark:text-slate-400"><strong>Alasan:</strong> "{{ $req->reason }}"</p>
 
                             @if($req->reviewer_note)
-                                <div class="p-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-lg text-[11px] text-amber-900 dark:text-amber-200 mt-2">
+                                <div class="p-2.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl text-[11px] text-amber-900 dark:text-amber-200 mt-2">
                                     <strong>Catatan Penguji:</strong> "{{ $req->reviewer_note }}"
                                 </div>
                             @endif
                         </div>
 
-                        <div class="flex items-center justify-between border-t border-slate-200/60 dark:border-slate-700/60 pt-2 text-[11px]">
+                        <div class="flex items-center justify-between border-t border-slate-200/60 dark:border-slate-700/60 pt-2.5 text-[11px]">
                             <div>
                                 @if($req->attachment_path)
-                                    <a href="{{ route('leave-requests.attachment', $req->id) }}" target="_blank" class="inline-flex items-center gap-1 font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300">
+                                    <a href="{{ route('leave-requests.attachment', $req->id) }}" target="_blank" class="min-h-[44px] inline-flex items-center gap-1 font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
                                         <span>Lihat Lampiran</span>
                                     </a>
@@ -180,7 +182,7 @@
                             @if($req->status === 'pending')
                                 <form action="{{ route('employee.leave-requests.cancel', $req->id) }}" method="POST" onsubmit="return confirm('Yakin ingin membatalkan pengajuan ini?')">
                                     @csrf
-                                    <button type="submit" class="px-2.5 py-1 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold rounded-lg transition-colors cursor-pointer text-[10px]">
+                                    <button type="submit" class="min-h-[44px] px-3.5 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-extrabold rounded-xl transition-colors cursor-pointer text-xs">
                                         Batalkan
                                     </button>
                                 </form>

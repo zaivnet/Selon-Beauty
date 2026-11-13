@@ -32,18 +32,18 @@
     @endif
 
     <!-- Navigation Tabs -->
-    <div class="flex bg-slate-200/80 dark:bg-slate-900 p-1 rounded-xl gap-1 text-xs font-bold border border-transparent dark:border-slate-800">
-        <a href="{{ route('employee.leave-requests.index') }}" class="flex-1 text-center py-2 rounded-lg transition-all {{ request()->routeIs('employee.leave-requests.*') ? 'bg-white dark:bg-slate-800 text-rose-700 dark:text-rose-400 shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200' }}">
+    <div class="flex bg-slate-200/80 dark:bg-slate-900 p-1 rounded-2xl gap-1 text-xs font-bold border border-transparent dark:border-slate-800">
+        <a href="{{ route('employee.leave-requests.index') }}" class="flex-1 text-center py-2.5 px-2 rounded-xl transition-all min-h-[44px] flex items-center justify-center {{ request()->routeIs('employee.leave-requests.*') ? 'bg-white dark:bg-slate-800 text-rose-700 dark:text-rose-400 shadow-xs font-extrabold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200' }}">
             Izin / Sakit / Cuti
         </a>
-        <a href="{{ route('employee.overtime-requests.index') }}" class="flex-1 text-center py-2 rounded-lg transition-all {{ request()->routeIs('employee.overtime-requests.*') ? 'bg-white dark:bg-slate-800 text-rose-700 dark:text-rose-400 shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200' }}">
+        <a href="{{ route('employee.overtime-requests.index') }}" class="flex-1 text-center py-2.5 px-2 rounded-xl transition-all min-h-[44px] flex items-center justify-center {{ request()->routeIs('employee.overtime-requests.*') ? 'bg-white dark:bg-slate-800 text-rose-700 dark:text-rose-400 shadow-xs font-extrabold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200' }}">
             Lembur
         </a>
         @if(auth()->user()?->role !== 'superadmin' && auth()->user()?->employee?->attendance_enabled !== false)
             @php
                 $pendingSwapCount = \App\Models\ShiftSwapRequest::where('target_employee_id', auth()->user()?->employee_id)->where('status', 'pending_target')->count();
             @endphp
-            <a href="{{ route('employee.shift-swaps.index') }}" class="flex-1 text-center py-2 rounded-lg transition-all flex items-center justify-center gap-1 {{ request()->routeIs('employee.shift-swaps.*') ? 'bg-white dark:bg-slate-800 text-rose-700 dark:text-rose-400 shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200' }}">
+            <a href="{{ route('employee.shift-swaps.index') }}" class="flex-1 text-center py-2.5 px-2 rounded-xl transition-all min-h-[44px] flex items-center justify-center gap-1.5 {{ request()->routeIs('employee.shift-swaps.*') ? 'bg-white dark:bg-slate-800 text-rose-700 dark:text-rose-400 shadow-xs font-extrabold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200' }}">
                 <span>Tukar Jadwal</span>
                 @if($pendingSwapCount > 0)
                     <span class="rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-black text-white leading-none">{{ $pendingSwapCount }}</span>
@@ -54,15 +54,20 @@
 
     <!-- Header Card -->
     <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-1">
-        <h2 class="text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight">Pengajuan Lembur</h2>
-        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">{{ auth()->user()->role !== 'superadmin' && $employee->attendance_enabled ? 'Buat pengajuan kerja lembur dan pantau durasi persetujuan dari Owner/Admin.' : 'Lihat kembali riwayat lembur yang sudah tersimpan.' }}</p>
+        <div class="flex items-center gap-2">
+            <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </span>
+            <h2 class="text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight">Pengajuan Lembur</h2>
+        </div>
+        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium pl-10">{{ auth()->user()->role !== 'superadmin' && $employee->attendance_enabled ? 'Buat pengajuan kerja lembur dan pantau durasi persetujuan dari Owner/Admin.' : 'Lihat kembali riwayat lembur yang sudah tersimpan.' }}</p>
     </div>
 
     <!-- Form Buat Pengajuan Lembur Card -->
     @if(auth()->user()->role !== 'superadmin' && $employee->attendance_enabled)
     <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
         <div class="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-            <div class="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-sm">
+            <div class="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-sm">
                 +
             </div>
             <h3 class="text-sm font-extrabold text-slate-900 dark:text-slate-100">Ajukan Lembur Baru</h3>
@@ -73,8 +78,8 @@
 
             <!-- Tanggal Kerja -->
             <div>
-                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Tanggal Kerja <span class="text-rose-600">*</span></label>
-                <select name="work_date" id="work_date_select" required onchange="updateAttendanceContext()" class="min-h-[44px] w-full min-w-0 px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-none ui-select">
+                <label for="work_date_select" class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Tanggal Kerja <span class="text-rose-600">*</span></label>
+                <select name="work_date" id="work_date_select" required onchange="updateAttendanceContext()" class="min-h-[44px] w-full min-w-0 px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-hidden ui-select">
                     <option value="">-- Pilih Tanggal Lembur --</option>
                     @foreach($availableSchedules as $sch)
                         @php
@@ -92,44 +97,44 @@
             </div>
 
             <!-- Attendance Context Preview Card -->
-            <div id="attendance_context_card" class="bg-rose-50/60 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/50 rounded-xl p-3 space-y-2 hidden">
+            <div id="attendance_context_card" class="bg-rose-50/60 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/50 rounded-xl p-3.5 space-y-2.5 hidden">
                 <div class="flex items-center justify-between">
                     <span class="text-[11px] font-extrabold text-rose-800 dark:text-rose-300 uppercase tracking-wider">Konteks Absensi (Referensi)</span>
-                    <span id="ctx_shift" class="text-[10px] font-bold text-rose-700 dark:text-rose-300 bg-rose-100/80 dark:bg-rose-900/50 px-2 py-0.5 rounded-full"></span>
+                    <span id="ctx_shift" class="text-[10px] font-bold text-rose-700 dark:text-rose-300 bg-rose-100/80 dark:bg-rose-900/50 px-2.5 py-0.5 rounded-full"></span>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300">
-                    <div>Check-in: <span id="ctx_checkin" class="font-bold text-slate-900 dark:text-slate-100">-</span></div>
-                    <div>Check-out: <span id="ctx_checkout" class="font-bold text-slate-900 dark:text-slate-100">-</span></div>
-                    <div>Worked Time: <span id="ctx_worked" class="font-bold text-slate-900 dark:text-slate-100">-</span></div>
-                    <div>Candidate Lembur: <span id="ctx_candidate" class="font-bold text-rose-600 dark:text-rose-400">-</span></div>
+                    <div>Check-in: <span id="ctx_checkin" class="font-mono font-bold text-slate-900 dark:text-slate-100">-</span></div>
+                    <div>Check-out: <span id="ctx_checkout" class="font-mono font-bold text-slate-900 dark:text-slate-100">-</span></div>
+                    <div>Worked Time: <span id="ctx_worked" class="font-mono font-bold text-slate-900 dark:text-slate-100">-</span></div>
+                    <div>Candidate Lembur: <span id="ctx_candidate" class="font-mono font-bold text-rose-600 dark:text-rose-400">-</span></div>
                 </div>
-                <p class="text-[10px] text-slate-500 dark:text-slate-400 italic">* Data absensi di atas hanya sebagai referensi dan tidak otomatis menyetujui pengajuan.</p>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 italic border-t border-rose-200/50 dark:border-rose-800/40 pt-1.5">* Data absensi di atas hanya sebagai referensi dan tidak otomatis menyetujui pengajuan.</p>
             </div>
 
             <!-- Durasi Lembur (menit) -->
             <div>
-                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Durasi Lembur (Menit) <span class="text-rose-600">*</span></label>
+                <label for="requested_minutes" class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Durasi Lembur (Menit) <span class="text-rose-600">*</span></label>
                 <div class="flex items-center gap-2">
-                    <input type="number" name="requested_minutes" id="requested_minutes" value="{{ old('requested_minutes', 60) }}" min="1" max="1440" required placeholder="Contoh: 60" class="flex-1 w-full min-w-0 max-w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-extrabold text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-none min-h-[44px]">
+                    <input type="number" name="requested_minutes" id="requested_minutes" value="{{ old('requested_minutes', 60) }}" min="1" max="1440" required placeholder="Contoh: 60" class="flex-1 w-full min-w-0 max-w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-extrabold text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-hidden min-h-[44px] font-mono">
                     <span class="text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0">Menit</span>
                 </div>
                 <!-- Quick Preset Buttons -->
-                <div class="flex flex-wrap gap-2 mt-2">
-                    <button type="button" onclick="setPreset(30)" class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200 transition-colors min-h-[36px]">30 Menit</button>
-                    <button type="button" onclick="setPreset(60)" class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200 transition-colors min-h-[36px]">60 Menit (1 Jam)</button>
-                    <button type="button" onclick="setPreset(90)" class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200 transition-colors min-h-[36px]">90 Menit (1.5 Jam)</button>
-                    <button type="button" onclick="setPreset(120)" class="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-200 transition-colors min-h-[36px]">120 Menit (2 Jam)</button>
+                <div class="flex flex-wrap gap-2 mt-2.5">
+                    <button type="button" onclick="setPreset(30)" class="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 transition-colors min-h-[44px] flex items-center justify-center cursor-pointer">30 Menit</button>
+                    <button type="button" onclick="setPreset(60)" class="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 transition-colors min-h-[44px] flex items-center justify-center cursor-pointer">60 Menit (1 Jam)</button>
+                    <button type="button" onclick="setPreset(90)" class="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 transition-colors min-h-[44px] flex items-center justify-center cursor-pointer">90 Menit (1.5 Jam)</button>
+                    <button type="button" onclick="setPreset(120)" class="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-200 transition-colors min-h-[44px] flex items-center justify-center cursor-pointer">120 Menit (2 Jam)</button>
                 </div>
             </div>
 
             <!-- Alasan -->
             <div>
-                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Alasan Lembur <span class="text-rose-600">*</span></label>
-                <textarea name="reason" rows="3" required placeholder="Contoh: Menyelesaikan pekerjaan setelah jam operasional..." class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-none">{{ old('reason') }}</textarea>
+                <label for="ot_reason" class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Alasan Lembur <span class="text-rose-600">*</span></label>
+                <textarea id="ot_reason" name="reason" rows="3" required placeholder="Contoh: Menyelesaikan pekerjaan setelah jam operasional..." class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-rose-500 focus:outline-hidden">{{ old('reason') }}</textarea>
             </div>
 
             <!-- Submit Button -->
-            <button type="submit" class="w-full py-3 px-4 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-extrabold rounded-xl shadow-md shadow-rose-600/20 transition-all text-xs flex items-center justify-center gap-2 cursor-pointer">
+            <button type="submit" class="min-h-[44px] w-full py-3 px-4 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-extrabold rounded-xl shadow-md shadow-rose-600/20 transition-all text-xs flex items-center justify-center gap-2 cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <span>Ajukan Lembur</span>
             </button>
@@ -158,7 +163,7 @@
         </div>
 
         @if(count($requests) === 0)
-            <div class="text-center py-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-800/30">
+            <div class="text-center py-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-800/30">
                 <p class="text-xs font-bold text-slate-700 dark:text-slate-300">Belum Ada Riwayat Lembur</p>
                 <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Anda belum pernah membuat pengajuan lembur.</p>
             </div>
@@ -173,27 +178,27 @@
                         $regularAttendanceReady = ! $isEffectiveWorkingDay || (bool) $att?->check_out_at;
                         $canStartSession = ! $req->session && $req->approved_minutes > 0 && $req->isStartDateValid($sch) && $regularAttendanceReady;
                     @endphp
-                    <div id="overtime-{{ $req->id }}" class="p-4 rounded-xl border {{ request('highlight') == $req->id ? 'border-rose-400 ring-2 ring-rose-100 dark:ring-rose-950' : 'border-slate-200 dark:border-slate-800' }} bg-slate-50/30 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800 transition-all space-y-2.5">
-                        <div class="flex items-start justify-between">
+                    <div id="overtime-{{ $req->id }}" class="p-4 rounded-2xl border {{ request('highlight') == $req->id ? 'border-rose-400 ring-2 ring-rose-100 dark:ring-rose-950' : 'border-slate-200 dark:border-slate-800' }} bg-slate-50/40 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800/80 transition-all space-y-3">
+                        <div class="flex items-start justify-between gap-2">
                             <div>
                                 <span class="text-xs font-extrabold text-slate-900 dark:text-slate-100">{{ $req->work_date->translatedFormat('l, d F Y') }}</span>
                                 @if($sch && $sch->shift)
-                                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Shift: {{ $sch->shift->name }} ({{ substr($sch->shift->start_time, 0, 5) }} - {{ substr($sch->shift->end_time, 0, 5) }})</p>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">Shift: {{ $sch->shift->name }} ({{ substr($sch->shift->start_time, 0, 5) }} - {{ substr($sch->shift->end_time, 0, 5) }})</p>
                                 @endif
                             </div>
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold border {{ $req->status_badge_class }}">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border {{ $req->status_badge_class }}">
                                 {{ $req->status_label }}
                             </span>
                         </div>
 
                         <!-- Duration Info Grid -->
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 text-xs">
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-xs font-mono">
                             <div>
-                                <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold block uppercase tracking-wider">Requested</span>
+                                <span class="text-[10px] text-slate-400 dark:text-slate-500 font-bold block uppercase tracking-wider font-sans">Requested</span>
                                 <span class="font-extrabold text-slate-800 dark:text-slate-200">{{ $req->formatted_requested_duration }}</span>
                             </div>
                             <div>
-                                <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold block uppercase tracking-wider">Approved</span>
+                                <span class="text-[10px] text-slate-400 dark:text-slate-500 font-bold block uppercase tracking-wider font-sans">Approved</span>
                                 @if($req->status === 'approved')
                                     <span class="font-extrabold text-emerald-700 dark:text-emerald-400">{{ $req->formatted_approved_duration }}</span>
                                 @else
@@ -201,17 +206,17 @@
                                 @endif
                             </div>
                             <div>
-                                <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold block uppercase tracking-wider">Actual</span>
+                                <span class="text-[10px] text-slate-400 dark:text-slate-500 font-bold block uppercase tracking-wider font-sans">Actual</span>
                                 <span class="font-extrabold text-indigo-700 dark:text-indigo-400">{{ ($req->session?->isCompleted() || $req->session?->isCancelled()) ? \App\Models\OvertimeSession::formatMinutes($req->session->actual_minutes) : '-' }}</span>
                             </div>
                             <div>
-                                <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold block uppercase tracking-wider">Credited</span>
+                                <span class="text-[10px] text-slate-400 dark:text-slate-500 font-bold block uppercase tracking-wider font-sans">Credited</span>
                                 <span class="font-extrabold text-violet-700 dark:text-violet-400">{{ ($req->session?->isCompleted() || $req->session?->isCancelled()) ? \App\Models\OvertimeSession::formatMinutes($req->session->credited_minutes) : '-' }}</span>
                             </div>
                         </div>
 
                         @if($req->status === 'approved')
-                            <div class="rounded-xl border border-indigo-100 dark:border-indigo-900/50 bg-indigo-50/60 dark:bg-indigo-950/30 p-3 space-y-2">
+                            <div class="rounded-xl border border-indigo-100 dark:border-indigo-900/50 bg-indigo-50/60 dark:bg-indigo-950/30 p-3.5 space-y-2.5">
                                 <div class="flex items-center justify-between gap-2">
                                     <span class="text-[10px] font-black uppercase tracking-wider text-indigo-800 dark:text-indigo-300">Sesi Lembur</span>
                                     <span class="text-[10px] font-bold text-indigo-700 dark:text-indigo-400">
@@ -221,9 +226,9 @@
 
                                 @if($req->session)
                                     @if($req->session->corrected_at)
-                                        <p class="rounded-lg bg-amber-100 dark:bg-amber-950/80 px-2 py-1 text-[10px] font-bold text-amber-800 dark:text-amber-200">Dikoreksi Admin · {{ $req->session->corrected_at->format('d M Y H:i') }}</p>
+                                        <p class="rounded-lg bg-amber-100 dark:bg-amber-950/80 px-2.5 py-1 text-[10px] font-bold text-amber-800 dark:text-amber-200">Dikoreksi Admin · {{ $req->session->corrected_at->format('d M Y H:i') }}</p>
                                     @endif
-                                    <p class="text-[11px] text-slate-700 dark:text-slate-300">
+                                    <p class="text-[11px] text-slate-700 dark:text-slate-300 font-mono">
                                         Mulai: <strong>{{ $req->session->check_in_at?->format('d/m H:i') }}</strong>
                                         @if($req->session->check_out_at) · Selesai: <strong>{{ $req->session->check_out_at->format('d/m H:i') }}</strong> @endif
                                     </p>
@@ -232,16 +237,18 @@
                                 @if(auth()->user()->role === 'superadmin' || !$employee->attendance_enabled)
                                     <p class="rounded-lg border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 text-[11px] font-semibold leading-relaxed text-amber-900 dark:text-amber-200">Aksi mulai atau selesai lembur tidak tersedia karena akun ini tidak mengikuti sistem kehadiran.</p>
                                 @elseif($canStartSession || $req->session?->isActive())
-                                    <form action="{{ !$req->session ? route('employee.overtime-requests.start', $req) : route('employee.overtime-sessions.finish', $req->session) }}" method="POST" enctype="multipart/form-data" class="overtime-session-form space-y-2">
+                                    <form action="{{ !$req->session ? route('employee.overtime-requests.start', $req) : route('employee.overtime-sessions.finish', $req->session) }}" method="POST" enctype="multipart/form-data" class="overtime-session-form space-y-2.5">
                                         @csrf
                                         <input type="hidden" name="latitude" class="overtime-latitude">
                                         <input type="hidden" name="longitude" class="overtime-longitude">
                                         <input type="hidden" name="accuracy" class="overtime-accuracy">
                                         @if($requireSelfie)
-                                            <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400">Selfie bukti</label>
-                                            <input type="file" name="selfie" accept="image/*" capture="user" required class="block w-full text-[11px] text-slate-600 dark:text-slate-400 file:mr-2 file:min-h-[36px] file:rounded-lg file:border-0 file:bg-white dark:file:bg-slate-800 file:px-3 file:font-bold file:text-indigo-700 dark:file:text-indigo-300">
+                                            <div>
+                                                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">Selfie Bukti</label>
+                                                <input type="file" name="selfie" accept="image/*" capture="user" required class="block w-full min-h-[44px] text-[11px] text-slate-600 dark:text-slate-400 file:mr-2.5 file:min-h-[40px] file:rounded-xl file:border-0 file:bg-white dark:file:bg-slate-800 file:px-3.5 file:font-bold file:text-indigo-700 dark:file:text-indigo-300">
+                                            </div>
                                         @endif
-                                        <button type="button" onclick="submitOvertimeWithGps(this)" class="w-full min-h-[44px] rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-xs font-extrabold text-white">
+                                        <button type="button" onclick="submitOvertimeWithGps(this)" class="w-full min-h-[44px] rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-xs font-extrabold text-white shadow-xs cursor-pointer transition-colors">
                                             {{ !$req->session ? 'Mulai Lembur' : 'Selesai Lembur' }}
                                         </button>
                                         <p class="overtime-gps-status text-center text-[10px] text-slate-500 dark:text-slate-400">GPS akan diverifikasi saat tombol ditekan.</p>
@@ -256,7 +263,7 @@
 
                         <!-- Attendance Info if available -->
                         @if($att)
-                            <div class="text-[11px] text-slate-600 dark:text-slate-300 bg-rose-50/40 dark:bg-rose-950/30 p-2 rounded-lg border border-rose-100/60 dark:border-rose-900/40 flex items-center justify-between">
+                            <div class="text-[11px] text-slate-600 dark:text-slate-300 bg-rose-50/40 dark:bg-rose-950/30 p-2.5 rounded-xl border border-rose-100/60 dark:border-rose-900/40 flex items-center justify-between font-mono">
                                 <span>Check-in: <strong>{{ $att->check_in_at ? $att->check_in_at->format('H:i') : '-' }}</strong> | Check-out: <strong>{{ $att->check_out_at ? $att->check_out_at->format('H:i') : '-' }}</strong></span>
                                 <span>Candidate: <strong class="text-rose-700 dark:text-rose-400">{{ $att->overtime_minutes }}m</strong></span>
                             </div>
@@ -265,14 +272,14 @@
                         <!-- Reason -->
                         <div class="text-xs">
                             <span class="font-bold text-slate-700 dark:text-slate-300">Alasan: </span>
-                            <span class="text-slate-600 dark:text-slate-400 font-medium">{{ $req->reason }}</span>
+                            <span class="text-slate-600 dark:text-slate-400 font-medium">"{{ $req->reason }}"</span>
                         </div>
 
                         <!-- Reviewer Note -->
                         @if($req->reviewer_note)
-                            <div class="text-xs bg-slate-100 dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
+                            <div class="text-xs bg-slate-100 dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
                                 <span class="font-bold text-slate-700 dark:text-slate-300">Catatan Reviewer ({{ $req->reviewer?->name ?? 'Admin' }}): </span>
-                                <span class="text-slate-600 dark:text-slate-400 font-medium">{{ $req->reviewer_note }}</span>
+                                <span class="text-slate-600 dark:text-slate-400 font-medium">"{{ $req->reviewer_note }}"</span>
                             </div>
                         @endif
 
@@ -281,7 +288,7 @@
                             <div class="pt-1 flex justify-end">
                                 <form action="{{ route('employee.overtime-requests.cancel', $req->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pengajuan lembur ini?')">
                                     @csrf
-                                    <button type="submit" class="px-3 py-1.5 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 rounded-lg text-[11px] font-bold transition-all cursor-pointer">
+                                    <button type="submit" class="min-h-[44px] px-4 py-2 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 rounded-xl text-xs font-bold transition-all cursor-pointer">
                                         Batalkan Pengajuan
                                     </button>
                                 </form>
